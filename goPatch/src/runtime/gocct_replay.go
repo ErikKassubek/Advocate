@@ -58,7 +58,7 @@ var ExitCodeNames = map[int]string{
 var (
 	hasReturnedExitCode = false
 	ignoreAtomicsReplay = true
-	printDebug          = false
+	printDebug          = true
 
 	tPostWhenFirstTimeout    = 0
 	tPostWhenReplayDisabled  = 0

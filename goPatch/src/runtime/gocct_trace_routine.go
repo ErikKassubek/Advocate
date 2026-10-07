@@ -49,9 +49,9 @@ func GoCCTSpawnCaller(callerRoutine *GoCCTRoutine, newID uint64, file string,
 
 	timer := GetNextTimeStep()
 
-	// if GoCCTIgnore(file) {
-	// 	return
-	// }
+	if GoCCTIgnore(file) {
+		return
+	}
 
 	elem := GoCCTTraceSpawn{
 		t:     timer,

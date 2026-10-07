@@ -71,7 +71,7 @@ func CreateMutations(mutNumber int) error {
 	if flags.FuzzingMode != f_base.GoPie || len(SchedulingChains) == 0 {
 		sc := startChains(maxSCStart)
 		for _, c := range sc {
-			if c.Len() != 0 {
+			if c.Len() > 1 {
 				SchedulingChains = append(SchedulingChains, c)
 			}
 		}

@@ -27,13 +27,13 @@ benchmark:
 	cd benchmark/runner/ && ./runner
 
 benchmark-gfuzz:
-	cd benchmark/runnter/ && ./runner -mode gfuzz
+	cd benchmark/runner/ && ./runner -mode fuzzing -fuzzingMode gfuzz 
 
 benchmark-gopie:
-	cd benchmark/runnter/ && ./runner -mode gopie
+	cd benchmark/runner/ && ./runner -mode fuzzing -fuzzingMode gopie
 
 paper-gfuzz:
-	cd goCCT && ./gocct fuzzing -path $(PROJECT_ROOT)/benchmark/paper/ -mode GFuzz -exec TestBlkBug
+	cd goCCT && ./gocct fuzzing -path $(PROJECT_ROOT)/benchmark/paper/ -mode GFuzz -exec TestBlkBug -stats -time
 
 paper-gopie:
-	cd goCCT && ./gocct fuzzing -path $(PROJECT_ROOT)/benchmark/paper/ -mode GoPie -exec TestPanicBug
+	cd goCCT && ./gocct fuzzing -path $(PROJECT_ROOT)/benchmark/paper/ -mode GoPie -exec TestPanicBug -stats -time
