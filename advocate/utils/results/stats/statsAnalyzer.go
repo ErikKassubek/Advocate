@@ -96,6 +96,7 @@ func statsAnalyzer(fuzzing int) (map[statsType]map[helper.ResultType]int, map[st
 			}
 		} else {
 			if strings.HasPrefix(info.Name(), "bug_"+strconv.Itoa(fuzzing)+"_") ||
+				strings.HasPrefix(info.Name(), "potential_"+strconv.Itoa(fuzzing)+"_") ||
 				strings.HasPrefix(info.Name(), "diagnostics_"+strconv.Itoa(fuzzing)+"_") ||
 				strings.HasPrefix(info.Name(), "leak_"+strconv.Itoa(fuzzing)+"_") {
 				err := processBugFile(path, foundBugs, resTotal, resUnique)

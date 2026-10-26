@@ -146,6 +146,7 @@ func runWorkflowMain(
 	}
 
 	rewrittenTraces := make([]string, 0)
+	total := fuzzing != -1
 	if runReplay {
 		log.Info("Run replay")
 		// Find rewrittenTrace directories
@@ -160,10 +161,11 @@ func runWorkflowMain(
 			}
 		}
 
+		collect(paths.ProgDir, paths.ProgDir, paths.Result, total, false)
+
 		timer.Start(timer.Replay)
 		for _, trace := range rewrittenTraces {
 			traceNum := extractTraceNum(trace)
-			fmt.Printf("Apply replay header for file f %s and trace %s\n", paths.Prog, traceNum)
 			buildFlags, err := buildArgsMain(paths.Prog, true, traceNum, true, fuzzing, fuzzingTrace, false)
 			if err != nil {
 				return 0, 0, err
@@ -180,6 +182,15 @@ func runWorkflowMain(
 			log.Info("Run program for replay")
 			execPath := paths.MakePathLocal(flags.ExecName)
 			command.RunCommand(origStdout, origStderr, command.NoTimeout, execPath)
+
+			analyzerOutput := filepath.Join(paths.ProgDir, paths.NameTrace)
+
+			err = runAnalyzer(analyzerOutput, paths.NameResultReadable, paths.NameResultMachine,
+				"", fuzzing, "", "main")
+
+			if err != nil {
+				return 0, 0, err
+			}
 		}
 		timer.Stop(timer.Replay)
 	}
@@ -188,8 +199,7 @@ func runWorkflowMain(
 		RemoveTraces(paths.Prog)
 	}
 
-	total := fuzzing != -1
-	collect(paths.ProgDir, paths.ProgDir, paths.Result, total)
+	collect(paths.ProgDir, paths.ProgDir, paths.Result, total, true)
 
 	// Generate Bug Reports
 	var numberResults int

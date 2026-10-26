@@ -221,10 +221,11 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr, ignored
 
 	// ADVOCATE-START
 	// wait until the replay has reached the current point
+	var chWait chan int = nil
 	if !ignored && !c.advocateIgnore {
-		ch := WaitForReplay(OperationChannelSend, CallerSkipChanSendRecv)
-		if ch != nil {
-			<-ch
+		chWait = WaitForReplay(OperationChannelSend, CallerSkipChanSendRecv)
+		if chWait != nil {
+			<-chWait
 		}
 	}
 
@@ -517,16 +518,18 @@ func closechan(c *hchan) {
 	// ADVOCATE-START
 	// AdvocateChanClose is called when a channel is closed. It creates a close event
 	// in the trace.
+	var chWait chan int = nil
 	if !c.advocateIgnore {
-		ch := WaitForReplay(OperationChannelClose, CallerSkipChanClose)
-		if ch != nil {
-			<-ch
+		chWait = WaitForReplay(OperationChannelClose, CallerSkipChanClose)
+		if chWait != nil {
+			<-chWait
 		}
 		AdvocateChanClose(c)
 	}
 	// ADVOCATE-END
 
 	lock(&c.lock)
+
 	if c.closed != 0 {
 		unlock(&c.lock)
 		panic(plainError("close of closed channel"))
@@ -660,10 +663,11 @@ func chanrecv(c *hchan, ep unsafe.Pointer, block bool, ignored bool) (selected, 
 
 	// ADVOCATE-START
 	// wait until the replay has reached the current point
+	var chWait chan int = nil
 	if !ignored && !c.advocateIgnore {
-		ch := WaitForReplay(OperationChannelRecv, CallerSkipChanSendRecv)
-		if ch != nil {
-			<-ch
+		chWait = WaitForReplay(OperationChannelRecv, CallerSkipChanSendRecv)
+		if chWait != nil {
+			<-chWait
 		}
 	}
 
@@ -966,11 +970,11 @@ func chanparkcommit(gp *g, chanLock unsafe.Pointer) bool {
 func selectnbsend(c *hchan, elem unsafe.Pointer) (selected bool) {
 	// ADVOCATE-START
 	selectedCase := 0
-	var ch chan int = nil
+	var chWait chan int = nil
 	if c != nil && !c.advocateIgnore {
-		ch = WaitForReplay(OperationSelect, CallerSkipSelectOneDef)
-		if ch != nil {
-			selectedCase = <-ch
+		chWait = WaitForReplay(OperationSelect, CallerSkipSelectOneDef)
+		if chWait != nil {
+			selectedCase = <-chWait
 		}
 	}
 
@@ -983,7 +987,7 @@ func selectnbsend(c *hchan, elem unsafe.Pointer) (selected bool) {
 
 	fuzzingEnabled, fuzzingIndex := AdvocateFuzzingGetPreferredCase(2)
 
-	if ch != nil {
+	if chWait != nil {
 		fuzzingIndex = min(fuzzingIndex, selectedCase)
 	}
 
@@ -1032,11 +1036,11 @@ func selectnbrecv(elem unsafe.Pointer, c *hchan) (selected, received bool) {
 	// ADVOCATE-START
 	// see selectnbsend
 	selectedCase := 0
-	var ch chan int = nil
+	var chWait chan int = nil
 	if c != nil && !c.advocateIgnore {
-		ch := WaitForReplay(OperationSelect, CallerSkipSelectOneDef)
-		if ch != nil {
-			selectedCase = <-ch
+		chWait = WaitForReplay(OperationSelect, CallerSkipSelectOneDef)
+		if chWait != nil {
+			selectedCase = <-chWait
 		}
 	}
 
@@ -1049,13 +1053,13 @@ func selectnbrecv(elem unsafe.Pointer, c *hchan) (selected, received bool) {
 
 	fuzzingEnabled, fuzzingIndex := AdvocateFuzzingGetPreferredCase(2)
 
-	if ch != nil {
+	if chWait != nil {
 		fuzzingIndex = min(fuzzingIndex, selectedCase)
 	}
 
 	res := false
 	recv := false
-	if !fuzzingEnabled && ch != nil {
+	if !fuzzingEnabled && chWait != nil {
 		res, recv = chanrecv(c, elem, false, true)
 	} else {
 		if fuzzingIndex != -1 { // not the default

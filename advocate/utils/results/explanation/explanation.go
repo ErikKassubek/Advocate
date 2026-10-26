@@ -107,7 +107,6 @@ func writeBug(bugType helper.ResultType, positions map[int][]string) bool {
 //   - error: if an error occurred
 func CreateOverview(ignoreDouble bool, traceID, fuzzing int) (int, error) {
 	// get the code info (main file, test name, commands)
-	log.Info("Create bug reports")
 
 	// remove possible partner information if not searched for
 	if fuzzing >= 0 {
@@ -327,6 +326,10 @@ func writeFile(path string, index string, description map[bugKeys]string,
 		res += " are located at the following positions:\n\n"
 
 		for key := range positions {
+			if len(positions[key]) == 0 {
+				continue
+			}
+
 			res += "###  "
 
 			closeBracket := false
@@ -358,56 +361,61 @@ func writeFile(path string, index string, description map[bugKeys]string,
 		}
 	}
 
-	confirmed := false
+	// Replay now in own file
 
-	if description[class] == consts.Possible { // replay only for possible bugs
-		// write the info about the replay, if possible including the command to read the bug
-		replayPossible := replay[replaySuc] != "was not possible" && replay[replaySuc] != "was not run"
-		replayDouble := replay[exitCode] == "double"
+	// confirmed := false
 
-		res += "## Replay\n"
-		if replayPossible && !replayDouble {
-			res += replay[desc] + "\n\n"
-		}
+	// if description[class] == consts.Possible { // replay only for possible bugs
+	// 	// write the info about the replay, if possible including the command to read the bug
+	// 	replayPossible := replay[replaySuc] != "was not possible" && replay[replaySuc] != "was not run"
+	// 	replayDouble := replay[exitCode] == "double"
 
-		if replayDouble {
-			res += "The replay was not performed, because the same bug had been found before."
-		} else {
-			res += "**Replaying " + replay[replaySuc] + "**.\n\n"
-			if replayPossible {
-				// res += "The replayed trace can be found in: "
-				// res += consts.RewrittenConsts + "_" + index + "\n\n"
-				if replay[replaySuc] == "panicked" {
-					res += "It panicked with the following message:\n\n"
-					res += replay[replaySuc] + "\n\n"
-				} else if replay[exitCode] == "fail" {
-					res += replay[exitCodeDesc] + "\n\n"
-				} else {
-					res += consts.ItExitedWithTheFollowingCode
-					res += replay[exitCode] + "\n\n"
-					res += replay[exitCodeDesc] + "\n\n"
-				}
-			}
-		}
+	// 	res += "## Replay\n"
+	// 	if replayPossible && !replayDouble {
+	// 		res += replay[desc] + "\n\n"
+	// 	}
 
-		if description[crit] == "Bug" {
-			if replayDouble || replay[replaySuc] == "confirmed the bug" ||
-				strings.HasPrefix(description[name], consts.Actual) {
-				confirmed = true
-			}
-		}
+	// 	if replayDouble {
+	// 		res += "The replay was not performed, because the same bug had been found before."
+	// 	} else {
+	// 		res += "**Replaying " + replay[replaySuc] + "**.\n\n"
+	// 		if replayPossible {
+	// 			// res += "The replayed trace can be found in: "
+	// 			// res += consts.RewrittenConsts + "_" + index + "\n\n"
+	// 			if replay[replaySuc] == "panicked" {
+	// 				res += "It panicked with the following message:\n\n"
+	// 				res += replay[replaySuc] + "\n\n"
+	// 			} else if replay[exitCode] == "fail" {
+	// 				res += replay[exitCodeDesc] + "\n\n"
+	// 			} else {
+	// 				res += consts.ItExitedWithTheFollowingCode
+	// 				res += replay[exitCode] + "\n\n"
+	// 				res += replay[exitCodeDesc] + "\n\n"
+	// 			}
+	// 		}
+	// 	}
 
-	}
+	// 	if description[crit] == "Bug" {
+	// 		if replayDouble || replay[replaySuc] == "confirmed the bug" ||
+	// 			strings.HasPrefix(description[name], consts.Actual) {
+	// 			confirmed = true
+	// 		}
+	// 	}
 
-	dep := strings.TrimPrefix(description[name], consts.Possible)
+	// }
+
+	confirmed := !strings.HasPrefix(description[bugType], "P")
 	id := progInfo[file] + "#" + progInfo[name]
-	if replay[replaySuc] == "was not run" {
-		log.Resultf(true, confirmed, id, "Found %s.", description[name])
-	} else if replay[replaySuc] == "confirmed the bug" {
-		log.Resultf(true, confirmed, id, "Found %s.", dep)
-	} else if !confirmed {
-		return nil
-	}
+	log.Resultf(true, confirmed, id, "Found %s.", description[name])
+
+	// dep := strings.TrimPrefix(description[name], consts.Possible)
+	// if replay[replaySuc] == "was not run" {
+	// 	log.Resultf(true, confirmed, id, "Found %s.", description[name])
+	// } else if replay[replaySuc] == "confirmed the bug" {
+	// 	log.Resultf(true, confirmed, id, "Found %s.", dep)
+	// } else if !confirmed {
+	// 	return nil
+	// }
 
 	// if in path, the folder "bugs" does not exist, create it
 	if _, err := os.Stat(path + consts.Sep + "bugs"); os.IsNotExist(err) {

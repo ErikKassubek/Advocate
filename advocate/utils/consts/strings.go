@@ -10,6 +10,7 @@ const (
 	TheAnalyzerHasTriedToRewriteTheTraceInSuchAWay = "The analyzer has tried to rewrite the trace in such a way"
 
 	Bug        = "Bug"
+	Potential  = "Potential"
 	Leak       = "Leak"
 	Diagnostic = "Diagnostic"
 

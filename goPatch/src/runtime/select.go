@@ -122,14 +122,14 @@ func block() {
 // ADVOCATE-START
 func selectgo(cas0 *scase, order0 *uint16, pc0 *uintptr, nsends, nrecvs int, block bool) (int, bool) {
 
-	ch := WaitForReplay(OperationSelect, CallerSkipSelectRepl)
+	chWait := WaitForReplay(OperationSelect, CallerSkipSelectRepl)
 
 	gFuzzEnabled, fuzzingIndex := AdvocateFuzzingGetPreferredCase(2)
 
 	ai := -1
 
-	if ch != nil {
-		selectedCase := <-ch
+	if chWait != nil {
+		selectedCase := <-chWait
 
 		if selectedCase == constraintElemNoInfo {
 			return originalSelect(cas0, order0, pc0, nsends, nrecvs, block, ai)

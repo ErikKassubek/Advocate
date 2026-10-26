@@ -5417,7 +5417,7 @@ func newproc(fn *funcval) {
 	}
 	file, line := funcline(f, tracepc)
 
-	ch := WaitForReplayPath(OperationSpawn, file, int(line))
+	chWait := WaitForReplayPath(OperationSpawn, file, int(line))
 	index := 1
 
 	// main routine
@@ -5429,8 +5429,8 @@ func newproc(fn *funcval) {
 
 	// non internal routine
 	if !advocateIgnoreFork(file) {
-		if ch != nil {
-			<-ch
+		if chWait != nil {
+			<-chWait
 		}
 
 		if replayEnabled {

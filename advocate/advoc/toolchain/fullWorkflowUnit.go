@@ -180,7 +180,7 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 
 			// Move logs and results to the appropriate directory
 			total := fuzzing != -1
-			collect(paths.Prog, packagePath, paths.CurrentResult, total)
+			collect(paths.Prog, packagePath, paths.CurrentResult, total, true)
 
 			if err != nil {
 				log.Error(err.Error())
@@ -657,10 +657,10 @@ func unitTestReplay(dir, pkg, file,
 
 		os.Setenv("GOROOT", paths.GoPatch)
 
-		log.Infof("Run guided execution %d/%d", i+1, len(rewrittenConstraints))
+		log.Infof("Run Program for Replay %d/%d", i+1, len(rewrittenConstraints))
 		pkgPath := paths.MakePathLocal(pkg)
 		command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "test", buildFlags, "-v", "-count=1", "-run="+testName, pkgPath)
-		log.Infof("Finished  guided execution %d/%d", i+1, len(rewrittenConstraints))
+		log.Infof("Finish Replay %d/%d", i+1, len(rewrittenConstraints))
 
 		if wasReplaySuc(output) {
 			results.AddBug(bugString, true)

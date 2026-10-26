@@ -78,6 +78,10 @@ func CalcuateStableClosure(s *Constraint) *Constraint {
 
 		// (b)
 		for elem := tIter.Next(); elem != nil; elem = tIter.Next() {
+			if !elem.Replayable() {
+				continue
+			}
+
 			id := elem.ID()
 			if elems[id] {
 				continue

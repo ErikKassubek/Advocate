@@ -241,7 +241,6 @@ func writeForkMap(fuzzingTracePath string, tr *trace.Trace) error {
 	}
 
 	return nil
-
 }
 
 func WriteConstraint(tracePath string, tr *trace.Trace, mut, closure *f_roc.Constraint) error {
@@ -250,10 +249,8 @@ func WriteConstraint(tracePath string, tr *trace.Trace, mut, closure *f_roc.Cons
 
 	if closure != nil {
 		closure.Len()
-		mut.Merge(closure)
+		mut = f_roc.Merge(closure, mut)
 	}
-
-	log.Debug2("WRITE: ", tracePath)
 
 	err := os.MkdirAll(tracePath, 0755)
 	if err != nil {

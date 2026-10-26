@@ -25,6 +25,7 @@ const (
 	Purple = "\033[35m"
 	Grey   = "\033[97m"
 	Pink   = "\033[95m"
+	Cyan   = "\033[96m"
 )
 
 var numberErr = 0
@@ -45,6 +46,7 @@ type InfoLevel int
 const (
 	InfoLv InfoLevel = iota
 	ImportantLv
+	CommandLv
 	DebugLv
 	Debug2Lv
 	ResultLv
@@ -128,6 +130,31 @@ func Importantf(format string, v ...any) {
 	}
 }
 
+// Command logs terminal calls to the terminal
+//
+// Parameter:
+//   - v ...any: the content of the log
+func Command(v ...any) {
+	if guiChanSet {
+		guiChan <- GuiInfo{fmt.Sprint(v...), CommandLv}
+	} else {
+		log.Print(Cyan, fmt.Sprint(v...), Reset, "\n")
+	}
+}
+
+// Command logs terminal calls to the terminal
+//
+// Parameter:
+//   - format string: the format (e.g. "%s")
+//   - v ...any: the content of the log
+func Commandf(format string, v ...any) {
+	if guiChanSet {
+		guiChan <- GuiInfo{fmt.Sprintf(format, v...), CommandLv}
+	} else {
+		log.Printf(Cyan+format+Reset, v...)
+	}
+}
+
 // Debug logs an debug information to the terminal
 // Printed in yellow
 //
@@ -206,10 +233,10 @@ func Todof(format string, v ...any) {
 //
 // Parameter:
 //   - count bool: wether to count for the number of results
-//   - confirmed bool: true of bug is actual or replay was suc, false otherwise\
+//   - actual bool: true of bug is actual or replay was suc, false otherwise\
 //   - name string: unique id for the program or test
 //   - v ...any: the content of the log
-func Result(count, confirmed bool, name string, v ...any) {
+func Result(count, actual bool, name string, v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprint(v...), ResultLv}
 	} else {
@@ -222,7 +249,7 @@ func Result(count, confirmed bool, name string, v ...any) {
 			seenTests[name] = struct{}{}
 			numberTestWithRes++
 		}
-		if confirmed {
+		if actual {
 			numberResultsConf++
 		}
 	}
@@ -233,11 +260,11 @@ func Result(count, confirmed bool, name string, v ...any) {
 //
 // Parameter:
 //   - count bool: wether to count for the number of results
-//   - confirmed bool: true of bug is actual or replay was suc, false otherwise\
+//   - actual bool: true of bug is actual or replay was suc, false otherwise\
 //   - name string: unique id for the program or test
 //   - format string: the format (e.g. "%s")
 //   - v ...any: the content of the log
-func Resultf(count, confirmed bool, name string, format string, v ...any) {
+func Resultf(count, actual bool, name string, format string, v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprintf(format, v...), ResultLv}
 	} else {
@@ -250,7 +277,7 @@ func Resultf(count, confirmed bool, name string, format string, v ...any) {
 			seenTests[name] = struct{}{}
 			numberTestWithRes++
 		}
-		if confirmed {
+		if actual {
 			numberResultsConf++
 		}
 	}

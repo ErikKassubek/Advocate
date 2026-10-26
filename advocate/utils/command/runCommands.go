@@ -51,7 +51,7 @@ func RunCommand(osOut, osErr *os.File, timeout int, name string, args ...string)
 
 	cmd := exec.CommandContext(ctx, name, args...)
 
-	log.Debug2(cmd.String())
+	log.Command(cmd.String())
 
 	if flags.Output {
 		if osOut != nil {

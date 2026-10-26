@@ -38,7 +38,7 @@ import (
 //   - outReadable string: path to the readable result file
 //   - outMachine string: path to the machine result file
 //   - fifo bool: assume, that the channels work as a fifo queue
-//   - newTrace string: path to where the rewritten trace should be created
+//   - newTrace string: path to where the rewritten trace should be created, set to "" to disable rewrite
 //   - fuzzingRun int: number of fuzzing run (0 for recording, then always add 1)
 //   - testFile string: name of the analzed test file
 //   - testName string: name of the analzed test, "main" if main
@@ -48,6 +48,8 @@ import (
 func runAnalyzer(pathTrace string,
 	outReadable string, outMachine string,
 	newTrace string, fuzzingRun int, testFile, testName string) error {
+
+	log.Info("Run Analyzer")
 
 	if pathTrace == "" {
 		return fmt.Errorf("Please provide a path to the trace files. Set with -trace [folder]")
@@ -113,10 +115,6 @@ func runAnalyzer(pathTrace string,
 		return nil
 	}
 
-	if numberOfResults != 0 {
-		log.Info("Start rewrite")
-	}
-
 	rewrittenBugs := make(map[helper.ResultType][]string) // bug type -> paths string
 
 	file := filepath.Base(pathTrace)
@@ -126,38 +124,44 @@ func runAnalyzer(pathTrace string,
 		rewriteNr = spl[len(spl)-1]
 	}
 
-	for resultIndex := 0; resultIndex < numberOfResults; resultIndex++ {
-		needed, err := rewriteTrace(outMachine,
-			newTrace+"_"+strconv.Itoa(resultIndex+1)+consts.Sep, resultIndex, &rewrittenBugs)
-
-		if !needed {
-			notNeededRewrites++
-			fmt.Printf("Bugreport info: %s_%d,fail\n", rewriteNr, resultIndex+1)
-		} else if err != nil {
-			failedRewrites++
-			fmt.Printf("Bugreport info: %s_%d,fail\n", rewriteNr, resultIndex+1)
-		} else { // needed && err == nil
-			numberRewrittenTrace++
-			fmt.Printf("Bugreport info: %s_%d,suc\n", rewriteNr, resultIndex+1)
+	if newTrace != "" {
+		if numberOfResults != 0 {
+			log.Info("Start rewrite")
 		}
 
-		if control.WasCanceled() {
-			failedRewrites += max(0, numberOfResults-resultIndex-1)
-			break
+		for resultIndex := 0; resultIndex < numberOfResults; resultIndex++ {
+			needed, err := rewriteTrace(outMachine,
+				newTrace+"_"+strconv.Itoa(resultIndex+1)+consts.Sep, resultIndex, &rewrittenBugs)
+
+			if !needed {
+				notNeededRewrites++
+				fmt.Printf("Bugreport info: %s_%d,fail\n", rewriteNr, resultIndex+1)
+			} else if err != nil {
+				failedRewrites++
+				fmt.Printf("Bugreport info: %s_%d,fail\n", rewriteNr, resultIndex+1)
+			} else { // needed && err == nil
+				numberRewrittenTrace++
+				fmt.Printf("Bugreport info: %s_%d,suc\n", rewriteNr, resultIndex+1)
+			}
+
+			if control.WasCanceled() {
+				failedRewrites += max(0, numberOfResults-resultIndex-1)
+				break
+			}
 		}
-	}
-	if control.WasCanceledRAM() {
-		log.Error("Rewrite Canceled: Not enough RAM")
-	} else {
-		log.Info("Finished Rewrite")
-	}
-	log.Info("Number Results: ", numberOfResults)
-	log.Info("Successfully rewrites: ", numberRewrittenTrace)
-	log.Info("No need/not possible to rewrite: ", notNeededRewrites)
-	if failedRewrites > 0 {
-		log.Info("Failed rewrites: ", failedRewrites)
-	} else {
-		log.Info("Failed rewrites: ", failedRewrites)
+		if control.WasCanceledRAM() {
+			log.Error("Rewrite Canceled: Not enough RAM")
+		} else {
+			log.Info("Finished Rewrite")
+		}
+		log.Info("Number Results: ", numberOfResults)
+		log.Info("Successfully rewrites: ", numberRewrittenTrace)
+		log.Info("No need/not possible to rewrite: ", notNeededRewrites)
+		if failedRewrites > 0 {
+			log.Info("Failed rewrites: ", failedRewrites)
+		} else {
+			log.Info("Failed rewrites: ", failedRewrites)
+		}
 	}
 
 	return nil

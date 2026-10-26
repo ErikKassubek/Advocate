@@ -80,7 +80,8 @@ func CreateStatsTotal(pathFolder string) error {
 		}
 
 		if !(strings.HasPrefix(info.Name(), "leak_") ||
-			strings.HasPrefix(info.Name(), "bug_") ||
+			strings.HasPrefix(info.Name(), "potential_") ||
+			strings.HasPrefix(info.Name(), "potential_") ||
 			strings.HasPrefix(info.Name(), "diagnostics_")) {
 			return nil
 		}

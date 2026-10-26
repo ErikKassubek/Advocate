@@ -17,7 +17,6 @@ import (
 	"advocate/utils/consts"
 	"advocate/utils/flags"
 	"advocate/utils/io"
-	"advocate/utils/log"
 	"bufio"
 	"errors"
 	"fmt"
@@ -30,8 +29,6 @@ func getBuildArg(fileName string, replay bool, tracePath string,
 	replayTimeout int, record bool, fuzzing int, isMain bool) (buildArg string) {
 
 	buildArg = buildFlagsDefault + " "
-
-	log.Debug2("TP: ", tracePath)
 
 	if replay { // replay
 		if record {

@@ -249,10 +249,16 @@ func (this *Constraint) sort() {
 }
 
 // Merge two constraints
-func (this *Constraint) Merge(other *Constraint) {
-	for _, e := range other.Elems {
-		this.Add(e)
+func Merge(first, second *Constraint) *Constraint {
+	new := NewConstraint()
+
+	for _, e := range first.Elems {
+		new.Add(e)
 	}
 
-	this.sort()
+	for _, e := range second.Elems {
+		new.Add(e)
+	}
+
+	return &new
 }

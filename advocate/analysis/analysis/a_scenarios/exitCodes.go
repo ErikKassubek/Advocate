@@ -109,8 +109,8 @@ func RunAnalysisOnExitCodes(all bool) {
 			[]results.ResultElem{arg1}, nil)
 		a_base.BugWasFound = true
 	case helper.ExitCodeTimeout: // timeout
-		results.Result(results.CRITICAL, helper.RTimeout,
-			[]results.ResultElem{}, nil)
+		// results.Result(results.CRITICAL, helper.RTimeout,
+		// 	[]results.ResultElem{}, nil)
 	}
 	if all {
 		if a_base.ExitCode == helper.ExitCodeSendClose { // send on closed

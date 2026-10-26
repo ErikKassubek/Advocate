@@ -38,11 +38,11 @@ func rewriteCyclicDeadlock(bug bugs.Bug) (*f_roc.Constraint, error) {
 
 	constr := f_roc.NewConstraint()
 
-	for _, elem := range bug.TraceElement1 {
+	for _, elem := range bug.TraceElement2 { // acquired
 		constr.Add(elem)
 	}
 
-	for _, elem := range bug.TraceElement2 {
+	for _, elem := range bug.TraceElement1 { // blocking
 		constr.Add(elem)
 	}
 

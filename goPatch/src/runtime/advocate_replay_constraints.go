@@ -167,6 +167,7 @@ func (this *Constraint) releaseBlocked() {
 		if printDebug {
 			println("ReleaseW: ", next.key)
 		}
+
 		c <- next.info
 		waiting.remove(next)
 		this.update(next.key)

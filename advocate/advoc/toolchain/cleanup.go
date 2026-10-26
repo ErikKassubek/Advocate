@@ -30,7 +30,8 @@ var LastMovedTraceDest = ""
 //   - packagePath string: path to the package directory
 //   - destination string: path to the destination directory
 //   - total bool: merge all already created logs into total log, for fuzzing
-func collect(progPath, packagePath, destination string, total bool) {
+//   - collectConstr bool: collect the constraint files
+func collect(progPath, packagePath, destination string, total bool, collectConstr bool) {
 	filesToMove := []string{
 		paths.NameTrace,
 		paths.NameResultMachine,
@@ -40,7 +41,10 @@ func collect(progPath, packagePath, destination string, total bool) {
 
 	pattersToMove := []string{
 		"rewrittenTrace*",
-		consts.RewrittenConsts + "*",
+	}
+
+	if collectConstr {
+		pattersToMove = append(pattersToMove, consts.RewrittenConsts+"*")
 	}
 
 	logsToCollect := []string{
