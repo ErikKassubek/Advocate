@@ -84,3 +84,8 @@ var (
 	NoSkipRewrite bool
 	DeleteTraces  bool
 )
+
+// contains gui
+var (
+	ContainsGui bool
+)

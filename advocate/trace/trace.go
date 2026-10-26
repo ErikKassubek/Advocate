@@ -43,6 +43,7 @@ import (
 //   - request bool: if true, requests and commits are separate elements, otherwise they are the same
 type Trace struct {
 	routines              map[int]*Routine
+	numberRoutines        int
 	hbWasCalc             bool
 	hasPassedMain         bool
 	minTraceID            int
@@ -64,6 +65,7 @@ type Trace struct {
 func NewTrace() Trace {
 	return Trace{
 		routines:              make(map[int]*Routine),
+		numberRoutines:        0,
 		hbWasCalc:             false,
 		minTraceID:            0,
 		channelWithoutPartner: make(map[int]map[int]*ElementChannel),
@@ -80,6 +82,7 @@ func NewTrace() Trace {
 func (this *Trace) Clear() {
 	this.routines = make(map[int]*Routine)
 	this.hbWasCalc = false
+	this.numberRoutines = 0
 	this.minTraceID = 0
 	this.channelWithoutPartner = make(map[int]map[int]*ElementChannel)
 	this.blocked = make(map[int]Element)
@@ -145,6 +148,7 @@ func (this *Trace) AddResource(elem Element) {
 func (this *Trace) AddRoutine(routine int) *Routine {
 	if _, ok := this.routines[routine]; !ok {
 		this.routines[routine] = NewRoutine(routine)
+		this.numberRoutines = len(this.routines)
 	}
 
 	return this.routines[routine]
@@ -918,6 +922,44 @@ func (this *Trace) NormalizeRequestCommit() {
 		elem.SetT(Commit, i)
 		i++
 	}
+}
+
+// TODO: print in color
+// TODO: print select with case
+func (this *Trace) PrintAsTab() {
+	colSize := "%-30.30s"
+
+	trIter := this.AsIterator()
+	numberRout := this.numberRoutines
+
+	printCol := func(rout int, val string) string {
+		res := "| "
+		for i := 0; i < rout-1; i++ {
+			res += fmt.Sprintf(colSize, "") + "| "
+		}
+		res += fmt.Sprintf(colSize, val)
+		for i := rout - 1; i < numberRout; i++ {
+			res += "| " + fmt.Sprintf(colSize, "")
+		}
+
+		return res
+	}
+
+	header := "| "
+
+	for i := 0; i < numberRout; i++ {
+		header += fmt.Sprintf(colSize, "G"+fmt.Sprintf("%d", i)) + "| "
+	}
+	header += "\n"
+	for i := 0; i < numberRout+1; i++ {
+		header += "| " + fmt.Sprintf(colSize, "")
+	}
+	println(header)
+
+	for elem := trIter.Next(); elem != nil; elem = trIter.Next() {
+		println(printCol(elem.RoutineID(), elem.StringMin()))
+	}
+
 }
 
 // ========================================================

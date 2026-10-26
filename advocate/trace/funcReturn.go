@@ -171,7 +171,15 @@ func (this *ElementReturn) StringDebug() string {
 }
 
 func (this *ElementReturn) StringGui() string {
-	return "R"
+	return string(FuncReturn)
+}
+
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementReturn) StringMin() string {
+	return fmt.Sprintf(string(FuncReturn))
 }
 
 // ========================================================

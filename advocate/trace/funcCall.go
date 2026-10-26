@@ -223,6 +223,14 @@ func (this *ElementFunc) StringGui() string {
 	return fmt.Sprintf("F,%s,%s\n%s", this.name, this.PosDef().Short(), this.Pos().Short())
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementFunc) StringMin() string {
+	return fmt.Sprintf("%s,-,%s", string(FuncCall), this.Pos().Short())
+}
+
 // ========================================================
 // MARK: VC
 // ========================================================

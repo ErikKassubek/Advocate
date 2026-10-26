@@ -13,6 +13,7 @@ import (
 	"advocate/advoc/toolchain"
 	"advocate/fuzzing/f_fuzzing"
 	"advocate/utils/flags"
+	"advocate/utils/io"
 	"advocate/utils/log"
 	"advocate/utils/paths"
 	"advocate/utils/results/stats"
@@ -72,6 +73,18 @@ func modeToolchain(mode string, record bool, analysis bool, replay bool) (err er
 			return err
 		}
 	}
+
+	return nil
+}
+
+// Mode to read a trace and show it in a tabular format
+func modeShowTrace() error {
+	tr, _, _, err := io.CreateTraceFromFiles(flags.TracePath, true)
+	if err != nil {
+		return err
+	}
+
+	tr.PrintAsTab()
 
 	return nil
 }

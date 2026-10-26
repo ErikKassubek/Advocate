@@ -480,6 +480,14 @@ func (this *ElementChannel) StringGui() string {
 	return fmt.Sprintf("C,%d,%s\n%s", this.objId, opString, this.Pos().Short())
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementChannel) StringMin() string {
+	return fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, this.Pos().Short())
+}
+
 // ========================================================
 // MARK: Function
 // ========================================================

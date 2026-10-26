@@ -55,6 +55,7 @@ type Element interface {
 	SetRequest(req bool)
 
 	String() string
+	StringMin() string
 	StringLocal() string
 	StringDebug() string
 	StringGui() string
@@ -410,8 +411,13 @@ func (this Position) String() string {
 }
 
 func (this Position) Short() string {
-	pp := filepath.Dir(flags.ProgPath)
-	if strings.HasSuffix(flags.ProgPath, ".go") {
+	pathPre := flags.ProgPath
+	if pathPre == "" {
+		pathPre = strings.Split(flags.TracePath, "/advocateResult/")[0]
+	}
+
+	pp := filepath.Dir(pathPre)
+	if strings.HasSuffix(pathPre, ".go") {
 		pp = filepath.Dir(pp)
 	}
 	shortFile := strings.TrimPrefix(this.file, pp)

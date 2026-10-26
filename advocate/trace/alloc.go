@@ -351,6 +351,14 @@ func (this *ElementAlloc) StringGui() string {
 	return fmt.Sprintf("N,%d,%s,%d\n%s", this.objId, string(this.elemType), this.num, this.Pos().Short())
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementAlloc) StringMin() string {
+	return fmt.Sprintf("%s,%d,%s", string(this.elemType), this.Resource().shortID, this.Pos().Short())
+}
+
 // ========================================================
 // MARK: Function
 // ========================================================

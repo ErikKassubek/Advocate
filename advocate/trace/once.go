@@ -342,6 +342,18 @@ func (this *ElementOnce) StringGui() string {
 	return res
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementOnce) StringMin() string {
+	op := OnceSuc
+	if !this.suc {
+		op = OnceFail
+	}
+	return fmt.Sprintf("%s,%d,%s", op, this.Resource().shortID, this.Pos().Short())
+}
+
 // ========================================================
 // MARK: Function
 // ========================================================

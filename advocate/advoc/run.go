@@ -87,8 +87,10 @@ func Run() error {
 		modeMainTest = "main"
 	}
 
-	CheckProg()
-	command.RunGoModTidy()
+	if flags.Mode != "show" {
+		CheckProg()
+		command.RunGoModTidy()
+	}
 
 	if flags.ModeMain && flags.ExecName == "" {
 		log.Error("Could not determine executable name from go.mod. Provide with -exec [ExecutableName]")
@@ -109,6 +111,10 @@ func Run() error {
 	case "replay":
 		flags.Mode = consts.ModeReplay
 		err = modeToolchain(modeMainTest, !record, !analysis, replay)
+	case "show":
+		flags.Mode = consts.ModeShowTrace
+		err = modeShowTrace()
+		return nil
 		// case "static": // TODO: only for testing, when working move into analysis
 		// flags.Mode = consts.ModeReplay
 	// 	flags.DeleteTraces = false

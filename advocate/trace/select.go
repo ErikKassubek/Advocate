@@ -572,6 +572,14 @@ func (this *ElementSelect) StringGui() string {
 	return res
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementSelect) StringMin() string {
+	return fmt.Sprintf("%s,%d,%s", SelectOp, this.Resource().shortID, this.Pos().Short())
+}
+
 // ========================================================
 // MARK: Function
 // ========================================================

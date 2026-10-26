@@ -31,6 +31,8 @@ func main() {
 
 	advoc.Initialize()
 
+	flags.ContainsGui = false
+
 	if flags.Mode == "gui" {
 		log.Error("Gui mode is only available if advocate was build with -tags gui (go build -tags gui).")
 		return

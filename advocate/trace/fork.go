@@ -260,6 +260,14 @@ func (this *ElementFork) StringGui() string {
 		"\n" + this.Pos().Short()
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementFork) StringMin() string {
+	return fmt.Sprintf("%s,%d,%s", ForkOp, this.objId, this.Pos().Short())
+}
+
 // ========================================================
 // MARK: Function
 // ========================================================

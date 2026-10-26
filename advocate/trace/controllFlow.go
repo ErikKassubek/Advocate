@@ -317,6 +317,14 @@ func (this *ElementControllFlow) StringDebug() string {
 	return fmt.Sprintf("%s@%s", routine, this.String())
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementControllFlow) StringMin() string {
+	return fmt.Sprintf("%s,-,%s", string(this.op), this.Pos().Short())
+}
+
 // ========================================================
 // MARK: Function
 // ========================================================

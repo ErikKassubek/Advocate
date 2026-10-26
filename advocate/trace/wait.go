@@ -392,6 +392,14 @@ func (this *ElementWait) StringGui() string {
 	return res
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementWait) StringMin() string {
+	return fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, this.Pos().Short())
+}
+
 // String returns the simple string representation of the element with leading routine
 
 // ========================================================

@@ -241,7 +241,15 @@ func (this *ElementRoutineEnd) StringDebug() string {
 // Returns:
 //   - string: The gui string representation of the element
 func (this *ElementRoutineEnd) StringGui() string {
-	return "E"
+	return string(EndRoutine)
+}
+
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementRoutineEnd) StringMin() string {
+	return fmt.Sprintf("%s,-,-", EndRoutine)
 }
 
 // ========================================================
