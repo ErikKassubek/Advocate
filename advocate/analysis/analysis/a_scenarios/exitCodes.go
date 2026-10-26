@@ -27,23 +27,6 @@ func RunAnalysisOnExitCodes(all bool) {
 	defer timer.Stop(timer.AnaExitCode)
 
 	switch a_base.ExitCode {
-	case helper.ExitCodeCloseClose: // close on closed
-		file, line, err := trace.PosFromPosString(a_base.ExitPos)
-		if err != nil {
-			log.Error("Could not read exit pos: ", err)
-		}
-
-		arg1 := results.TraceElementResult{
-			RoutineID:  0,
-			ResourceID: 0,
-			TRequest:   0,
-			ObjType:    "CC",
-			File:       file,
-			Line:       line,
-		}
-		results.Result(results.CRITICAL, helper.ACloseOnClosed,
-			[]results.ResultElem{arg1}, nil)
-		a_base.BugWasFound = true
 	case helper.ExitCodeCloseNil: // close on nil
 		file, line, err := trace.PosFromPosString(a_base.ExitPos)
 		if err != nil {
@@ -113,7 +96,25 @@ func RunAnalysisOnExitCodes(all bool) {
 		// 	[]results.ResultElem{}, nil)
 	}
 	if all {
-		if a_base.ExitCode == helper.ExitCodeSendClose { // send on closed
+		switch a_base.ExitCode {
+		case helper.ExitCodeCloseClose: // close on closed
+			file, line, err := trace.PosFromPosString(a_base.ExitPos)
+			if err != nil {
+				log.Error("Could not read exit pos: ", err)
+			}
+
+			arg1 := results.TraceElementResult{
+				RoutineID:  0,
+				ResourceID: 0,
+				TRequest:   0,
+				ObjType:    "CC",
+				File:       file,
+				Line:       line,
+			}
+			results.Result(results.CRITICAL, helper.ACloseOnClosed,
+				[]results.ResultElem{arg1}, nil)
+			a_base.BugWasFound = true
+		case helper.ExitCodeSendClose: // send on closed
 			file, line, err := trace.PosFromPosString(a_base.ExitPos)
 			if err != nil {
 				log.Error("Could not read exit pos: ", err)

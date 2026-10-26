@@ -315,11 +315,10 @@ The analysis will try to find the following situations:
 - A09: "Actual Concurrent Receive on Same Channel",
 - A10: "Actual Cyclic Deadlock with Mutex and Channel
 - P01: "Possible Send on Closed Channel",
-- P02: "Possible Receive on Closed Channel",
-- P03: "Possible Negative WaitGroup cCounter",
-- P04: "Possible unlock of not locked mutex",
-- P05: "Possible Cyclic Deadlock with Mutex",
-- P06: "Possible Cyclic Deadlock with Mutex and Channel", 
+- P02: "Possible Negative WaitGroup cCounter",
+- P03: "Possible unlock of not locked mutex",
+- P04: "Possible Cyclic Deadlock with Mutex",
+- P05: "Possible Cyclic Deadlock with Mutex and Channel", 
 - L..: "Leak" (Blocked but not necessarily finally blocked routine),
 
 Some of them are only considered warnings. To ignore them, you can set `-noWarning`.

@@ -128,8 +128,6 @@ func (this Bug) ToString() string {
 		typeStr = "Actual unlock of not locked mutex:"
 	case helper.PSendOnClosed:
 		typeStr = "Possible send on closed channel:"
-	case helper.PRecvOnClosed:
-		typeStr = "Possible receive on closed channel:"
 	case helper.PNegWG:
 		typeStr = "Possible negative waitgroup counter:"
 	case helper.PUnlockBeforeLock:
@@ -248,15 +246,13 @@ func ProcessBug(bugStr string) (bool, Bug, error) {
 	case "P01":
 		bug.Type = helper.PSendOnClosed
 	case "P02":
-		bug.Type = helper.PRecvOnClosed
-	case "P03":
 		bug.Type = helper.PNegWG
-	case "P04":
+	case "P03":
 		bug.Type = helper.PUnlockBeforeLock
-	case "P05":
+	case "P04":
 		bug.Type = helper.PCyclicDeadlock
 		containsArg2 = true
-	case "P06":
+	case "P05":
 		bug.Type = helper.PMixedDeadlock
 	case "L00":
 		containsArg1 = false

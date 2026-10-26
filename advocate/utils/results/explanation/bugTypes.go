@@ -30,7 +30,6 @@ var bugCrit = map[helper.ResultType]string{
 	helper.AConcurrentRecv:         consts.Diagnostic,
 	helper.AMixedDeadlock:          consts.Bug,
 	helper.PSendOnClosed:           consts.Potential,
-	helper.PRecvOnClosed:           consts.Diagnostic,
 	helper.PNegWG:                  consts.Potential,
 	helper.PUnlockBeforeLock:       consts.Potential,
 	helper.PCyclicDeadlock:         consts.Potential,
@@ -58,7 +57,6 @@ var bugClass = map[helper.ResultType]string{
 	helper.AConcurrentRecv:         consts.Actual,
 	helper.AMixedDeadlock:          consts.Actual,
 	helper.PSendOnClosed:           consts.Possible,
-	helper.PRecvOnClosed:           consts.Possible,
 	helper.PNegWG:                  consts.Possible,
 	helper.PUnlockBeforeLock:       consts.Possible,
 	helper.PCyclicDeadlock:         consts.Possible,
@@ -85,7 +83,6 @@ var bugNames = map[helper.ResultType]string{
 	helper.AMixedDeadlock:          "Actual Mixed Deadlock",
 
 	helper.PSendOnClosed:     "Possible Send on Closed Channel",
-	helper.PRecvOnClosed:     "Possible Receive on Closed Channel",
 	helper.PNegWG:            "Possible Negative WaitGroup Counter",
 	helper.PUnlockBeforeLock: "Possible Unlock of Not Locked Mutex",
 	helper.PCyclicDeadlock:   "Possible Cyclic Deadlock",
@@ -131,10 +128,6 @@ var bugExplanations = map[helper.ResultType]string{
 		"Although the send on a closed channel did not occur during the recording, " +
 		"it is possible that it will occur, based on the happens before relation.\n" +
 		"Such a send on a closed channel leads to a panic.",
-	helper.PRecvOnClosed: "The analyzer detected a possible receive on a closed channel.\n" +
-		"Although the receive on a closed channel did not occur during the recording, " +
-		"it is possible that it will occur, based on the happens before relation." +
-		"This is not necessarily a bug, but it can be an indication of a bug.",
 	helper.PNegWG: "The analyzer detected a possible negative WaitGroup counter.\n" +
 		"Although the negative counter did not occur during the recording, " +
 		"it is possible that it will occur, based on the happens before relation.\n" +

@@ -38,10 +38,10 @@ The typeIDs have the following meaning:
 - A08: "Actual Deadlock (Cyclic blocking bug)",
 - A09: "Concurrent Receives on the same channel"
 - P01: "Possible Send on Closed Channel",
-- P02: "Possible Receive on Closed Channel",
-- P03: "Possible Negative WaitGroup cCounter",
-- P04: "Possible unlock of not locked mutex",
-- P05: "Possible cyclic deadlock",
+- P02: "Possible Negative WaitGroup Counter",
+- P03: "Possible unlock of not locked mutex",
+- P04: "Possible cyclic deadlock",
+- P05: "Possible mixed deadlock"
 - L00: "Leak without blocked",
 - L01: "Leak on a channel",
 - L02: "Leak on nil channel",

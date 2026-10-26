@@ -49,7 +49,7 @@ func RunAnalysis(fuzzing bool) {
 	timer.Start(timer.Analysis)
 	defer timer.Stop(timer.Analysis)
 
-	a_scenarios.RunAnalysisOnExitCodes(true)
+	a_scenarios.RunAnalysisOnExitCodes(flags.OnlyAPanicAndLeak)
 
 	if !fuzzing || f_base.UseHBInfoFuzzing {
 		RunHBAnalysis(fuzzing)

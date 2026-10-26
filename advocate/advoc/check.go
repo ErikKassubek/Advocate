@@ -52,7 +52,7 @@ func CheckProg() string {
 	var err error
 	flags.ProgPath, err = paths.CheckPath(flags.ProgPath)
 	if err != nil {
-		log.Errorf("Could not find %s", flags.ProgName)
+		log.Errorf("Could not find %s", flags.ProgPath)
 		return ""
 	}
 

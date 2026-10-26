@@ -32,11 +32,10 @@ const (
 
 	// possible
 	PSendOnClosed     ResultType = "P01"
-	PRecvOnClosed     ResultType = "P02"
-	PNegWG            ResultType = "P03"
-	PUnlockBeforeLock ResultType = "P04"
-	PCyclicDeadlock   ResultType = "P05"
-	PMixedDeadlock    ResultType = "P06"
+	PNegWG            ResultType = "P02"
+	PUnlockBeforeLock ResultType = "P03"
+	PCyclicDeadlock   ResultType = "P04"
+	PMixedDeadlock    ResultType = "P05"
 
 	// leaks
 	LUnknown   ResultType = "L00"
@@ -95,7 +94,6 @@ var ResultTypesActual = []ResultType{
 
 var ResultTypesPotential = []ResultType{
 	PSendOnClosed,
-	// PRecvOnClosed,
 	PNegWG,
 	PUnlockBeforeLock,
 	PCyclicDeadlock,
@@ -140,14 +138,12 @@ func ResultTypeFromString(code string) ResultType {
 	case "P01":
 		return PSendOnClosed
 	case "P02":
-		return PRecvOnClosed
-	case "P03":
 		return PNegWG
-	case "P04":
+	case "P03":
 		return PUnlockBeforeLock
-	case "P05":
+	case "P04":
 		return PCyclicDeadlock
-	case "P06":
+	case "P05":
 		return PMixedDeadlock
 	case "L00":
 		return LUnknown
@@ -237,8 +233,6 @@ func (rt ResultType) Args() (string, string) {
 	// possible
 	case PSendOnClosed:
 		return "send", "close"
-	case PRecvOnClosed:
-		return "recv", "close"
 	case PNegWG:
 		return "done", "add"
 	case PUnlockBeforeLock:

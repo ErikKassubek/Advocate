@@ -470,7 +470,7 @@ func unitTestFullWorkflow(
 
 	if runAnalysis {
 		pkgPath := filepath.Join(paths.Prog, pkg)
-		err = unitTestAnalyzer(pkgPath, paths.NameTrace, fuzzing, file, testName)
+		err = unitTestAnalyzer(pkgPath, paths.NameTrace, fuzzing, file, testName, true)
 		if err != nil {
 			return 0, false, err
 		}
@@ -587,12 +587,13 @@ func unitTestRecord(pkg, file, testName string,
 //   - fuzzing int: number of fuzzing run. If not fuzzing, or first fuzzing run without guidance set to 0
 //   - testFile string: name of the analzed test file
 //   - testName string: name of the analzed test, "main" if main
+//   - replay bool: true for replay to prevent additional rewrite
 //
 // Returns:
 //   - error
 //
 // The trace is expected to be at dir/pkg/traceName
-func unitTestAnalyzer(pkgPath, traceName string, fuzzing int, testFile, testName string) error {
+func unitTestAnalyzer(pkgPath, traceName string, fuzzing int, testFile, testName string, replay bool) error {
 	tracePath := filepath.Join(pkgPath, traceName)
 
 	log.Infof("Run the analyzer for %s", tracePath)
@@ -600,6 +601,11 @@ func unitTestAnalyzer(pkgPath, traceName string, fuzzing int, testFile, testName
 	outM := filepath.Join(pkgPath, paths.NameResultMachine)
 	outR := filepath.Join(pkgPath, paths.NameResultReadable)
 	outT := filepath.Join(pkgPath, consts.RewrittenConsts)
+
+	if !replay {
+		outT = ""
+	}
+
 	err := runAnalyzer(tracePath, outR, outM, outT, fuzzing, testFile, testName)
 
 	if err != nil {
@@ -669,7 +675,7 @@ func unitTestReplay(dir, pkg, file,
 
 		os.Unsetenv("GOROOT")
 
-		err := unitTestAnalyzer(pkgPath, paths.NameTrace, -1, file, testName)
+		err := unitTestAnalyzer(pkgPath, paths.NameTrace, -1, file, testName, false)
 		if err != nil {
 			return len(rewrittenConstraints), err
 		}

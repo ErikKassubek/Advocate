@@ -48,7 +48,6 @@ var resultTypeMap = map[helper.ResultType]string{
 	helper.AUnlockOfNotLockedMutex: "Actual unlock of not locked mutex",
 
 	helper.PSendOnClosed:     "Possible send on closed channel",
-	helper.PRecvOnClosed:     "Possible receive on closed channel",
 	helper.PNegWG:            "Possible negative waitgroup counter",
 	helper.PUnlockBeforeLock: "Possible unlock of a not locked mutex",
 	helper.PCyclicDeadlock:   "Possible cyclic deadlock",

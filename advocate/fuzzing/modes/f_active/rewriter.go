@@ -56,10 +56,7 @@ func RewriteTrace(bug bugs.Bug, rewrittenBugs map[helper.ResultType][]string) (c
 		err = errors.New("Rewriting trace for concurrent receive is not possible")
 	case helper.PSendOnClosed:
 		code = helper.ExitCodeSendClose
-		// err = rewriteClosedChannel(tr, bug)  // TODP: rewrite
-	case helper.PRecvOnClosed:
-		code = helper.ExitCodeRecvClose
-		// err = rewriteClosedChannel(tr, bug)  // TODO: rewrite
+		constr, err = rewriteClosedChannel(bug) // TODP: rewrite
 	case helper.PNegWG:
 		code = helper.ExitCodeNegativeWG
 		// err = rewriteGraph(tr, bug, code)  // TODO: rewrite
