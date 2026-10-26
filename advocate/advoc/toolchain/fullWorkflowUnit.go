@@ -482,7 +482,10 @@ func unitTestFullWorkflow(
 
 	numberReplay := 0
 	if runReplay {
-		numberReplay = unitTestReplay(paths.Prog, pkg, file, testName, paths.NameOutput, runAnalysis, origStdout, origStderr)
+		numberReplay, err = unitTestReplay(paths.Prog, pkg, file, testName, paths.NameOutput, runAnalysis, origStdout, origStderr)
+		if err != nil {
+			return 0, false, err
+		}
 	}
 
 	return numberReplay, runAnalysis, nil
@@ -624,7 +627,7 @@ func unitTestAnalyzer(pkgPath, traceName string, fuzzing int, testFile, testName
 // Returns:
 //   - int: number of executed replays
 func unitTestReplay(dir, pkg, file,
-	testName, output string, fromAnalysis bool, osOut, osErr *os.File) int {
+	testName, output string, fromAnalysis bool, osOut, osErr *os.File) (int, error) {
 	timer.Start(timer.Replay)
 	defer timer.Stop(timer.Replay)
 
@@ -645,7 +648,7 @@ func unitTestReplay(dir, pkg, file,
 	for i, trace := range rewrittenConstraints {
 		traceNum, bugString := extractTraceNumber(trace)
 		// record := getRerecord(trace)
-		record := false
+		record := true
 
 		// we do not need to replay a bug that has already been replayed by
 		// another replay
@@ -655,6 +658,8 @@ func unitTestReplay(dir, pkg, file,
 
 		buildFlags, _ := buildArgsUnit(file, testName, true, -1, traceNum, record)
 
+		collect(paths.Prog, pathPkg, paths.CurrentResult, false, false)
+
 		os.Setenv("GOROOT", paths.GoPatch)
 
 		log.Infof("Run Program for Replay %d/%d", i+1, len(rewrittenConstraints))
@@ -662,14 +667,13 @@ func unitTestReplay(dir, pkg, file,
 		command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "test", buildFlags, "-v", "-count=1", "-run="+testName, pkgPath)
 		log.Infof("Finish Replay %d/%d", i+1, len(rewrittenConstraints))
 
-		if wasReplaySuc(output) {
-			results.AddBug(bugString, true)
-		} else {
-			results.AddBug(bugString, false)
-		}
-
 		os.Unsetenv("GOROOT")
+
+		err := unitTestAnalyzer(pkgPath, paths.NameTrace, -1, file, testName)
+		if err != nil {
+			return len(rewrittenConstraints), err
+		}
 	}
 
-	return len(rewrittenConstraints)
+	return len(rewrittenConstraints), nil
 }

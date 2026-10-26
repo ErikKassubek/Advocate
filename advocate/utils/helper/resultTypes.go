@@ -244,7 +244,7 @@ func (rt ResultType) Args() (string, string) {
 	case PUnlockBeforeLock:
 		return "unlock", "lock"
 	case PCyclicDeadlock:
-		return "blocked", "acquired"
+		return "blocking", "acquired"
 	case PMixedDeadlock:
 		return "send", "recv"
 

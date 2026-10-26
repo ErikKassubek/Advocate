@@ -15,6 +15,7 @@ import (
 	"advocate/utils/helper"
 	"advocate/utils/results/results"
 	"advocate/utils/types"
+	"strings"
 )
 
 func Blocked() error {
@@ -195,6 +196,11 @@ func reportLeak(l []int) {
 		last := rout.Last()
 
 		if last == nil {
+			continue
+		}
+
+		// go tRunner(t, f) for tests
+		if strings.HasSuffix(last.File(), "/goPatch/src/testing/testing.go") && last.Line() == 2262 {
 			continue
 		}
 
