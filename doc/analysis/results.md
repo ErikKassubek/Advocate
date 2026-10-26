@@ -36,7 +36,7 @@ The typeIDs have the following meaning:
 - A06: "Actual unlock of not locked mutex",
 - A07: "Actual Leak (Non-Cyclic blocking bug)",
 - A08: "Actual Deadlock (Cyclic blocking bug)",
-- A09: "Concurrent Receives on the same channel"
+- A09: "Actual Mixed Deadlock"
 - P01: "Possible Send on Closed Channel",
 - P02: "Possible Negative WaitGroup Counter",
 - P03: "Possible unlock of not locked mutex",

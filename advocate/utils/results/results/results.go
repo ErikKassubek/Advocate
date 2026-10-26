@@ -38,7 +38,6 @@ const (
 
 var resultTypeMap = map[helper.ResultType]string{
 	helper.ASendOnClosed:           "Actual Send on Closed Channel",
-	helper.ARecvOnClosed:           "Actual Receive on Closed Channel",
 	helper.ACloseOnClosed:          "Actual Close on Closed Channel",
 	helper.AConcurrentRecv:         "Concurrent Receive",
 	helper.ACloseOnNilChannel:      "Actual close on nil channel",
@@ -63,6 +62,7 @@ var resultTypeMap = map[helper.ResultType]string{
 
 	helper.RUnknownPanic: "Unknown Panic",
 	helper.RTimeout:      "Timeout",
+	helper.RReplayFail:   "ReplayFailed",
 
 	// SNotExecutedWithPartner: "Not executed select with potential partner",
 }

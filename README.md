@@ -10,15 +10,14 @@ It tries to detects concurrency bugs and gives diagnostic insight.
 AdvocateGo tries to detect the following situations:
 
 - A01: "Actual Send on Closed Channel",
-- A02: "Actual Receive on Closed Channel",
-- A03: "Actual Close on Closed Channel",
-- A04: "Actual Close on Nil Channel",
-- A05: "Actual Negative Wait Group",
-- A06: "Actual Unlock of Not Locked Mutex",
-- A07: "Actual Non-Cyclic Blocking Bug",
-- A08: "Actual Cyclic Deadlock with Mutex",
-- A09: "Actual Concurrent Receive on Same Channel",
-- A10: "Actual Cyclic Deadlock with Mutex and Channel
+- A02: "Actual Close on Closed Channel",
+- A03: "Actual Close on Nil Channel",
+- A04: "Actual Negative Wait Group",
+- A05: "Actual Unlock of Not Locked Mutex",
+- A06: "Actual Non-Cyclic Blocking Bug",
+- A07: "Actual Cyclic Deadlock with Mutex",
+- A08: "Actual Concurrent Receive on Same Channel",
+- A09: "Actual Cyclic Deadlock with Mutex and Channel
 - P01: "Possible Send on Closed Channel",
 - P02: "Possible Negative WaitGroup cCounter",
 - P03: "Possible unlock of not locked mutex",

@@ -109,12 +109,9 @@ func CreateOverview(ignoreDouble bool, traceID, fuzzing int) (int, error) {
 	// get the code info (main file, test name, commands)
 
 	// remove possible partner information if not searched for
-	if fuzzing >= 0 {
-		adaptExplanationMaps()
-	}
 	buildBugCodes()
 
-	replayCodes := getOutputCodes()
+	replayCodes, blockedByReplay := getOutputInfo()
 
 	progInfo, err := readProgInfo()
 	if err != nil {
@@ -160,6 +157,9 @@ func CreateOverview(ignoreDouble bool, traceID, fuzzing int) (int, error) {
 			}
 
 			// get the bug type description
+			if bugType.IsLeak() && blockedByReplay {
+				bugType = helper.RReplayFail
+			}
 			bugTypeDescription := getBugTypeDescription(bugType)
 
 			// get the code of the bug elements
@@ -284,10 +284,6 @@ func readAnalysisResults(path string, index int, fileWithHeader string) (helper.
 func writeFile(path string, index string, description map[bugKeys]string,
 	positions map[int][]string, bugElemType map[int]string, code map[int][]string,
 	replay map[bugKeys]string, progInfo map[bugKeys]string, fuzzing int, falsePositive bool) error {
-
-	if replay[replaySuc] == consts.ConfirmedTheBug {
-		description[name] = strings.ReplaceAll(description[name], consts.Possible, consts.Confirmed)
-	}
 
 	// write the bug type description
 	res := "# " + description[crit] + ": " + description[bugType] + " - " + description[name] + "\n\n"

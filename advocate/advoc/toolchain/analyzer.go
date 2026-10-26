@@ -42,12 +42,13 @@ import (
 //   - fuzzingRun int: number of fuzzing run (0 for recording, then always add 1)
 //   - testFile string: name of the analzed test file
 //   - testName string: name of the analzed test, "main" if main
+//   - replay bool: true if called on relpay
 //
 // Returns:
 //   - error
 func runAnalyzer(pathTrace string,
 	outReadable string, outMachine string,
-	newTrace string, fuzzingRun int, testFile, testName string) error {
+	newTrace string, fuzzingRun int, testFile, testName string, replay bool) error {
 
 	log.Info("Run Analyzer")
 
@@ -58,7 +59,9 @@ func runAnalyzer(pathTrace string,
 	// run the analysis and, if requested, create a reordered trace file
 	// based on the analysis results
 
-	results.InitResults(outReadable, outMachine)
+	if !replay {
+		results.InitResults(outReadable, outMachine)
+	}
 
 	_, numberOfRoutines, numberElems, err := io.CreateTraceFromFiles(pathTrace, true)
 
@@ -74,7 +77,7 @@ func runAnalyzer(pathTrace string,
 	}
 
 	if numberElems == 0 {
-		log.Infof("Trace at %s does not contain any elements", pathTrace)
+		log.Errorf("Trace at %s does not contain any elements", pathTrace)
 	}
 
 	log.Infof("Read trace with %d elements in %d routines", numberElems, numberOfRoutines)

@@ -188,3 +188,14 @@ func (this *Constraint) releaseAllBlocked() {
 func ReleaseAllBlocked() {
 	constraintMain.releaseAllBlocked()
 }
+
+func GetWaiting() []string {
+	res := make([]string, len(waiting.waiting))
+
+	i := 0
+	for key, _ := range waiting.waiting {
+		res[i] = key
+	}
+
+	return res
+}

@@ -20,15 +20,14 @@ const (
 
 	// actual
 	ASendOnClosed           ResultType = "A01"
-	ARecvOnClosed           ResultType = "A02"
-	ACloseOnClosed          ResultType = "A03"
-	ACloseOnNilChannel      ResultType = "A04"
-	ANegWG                  ResultType = "A05"
-	AUnlockOfNotLockedMutex ResultType = "A06"
-	ABlocking               ResultType = "A07"
-	ADeadlock               ResultType = "A08"
-	AConcurrentRecv         ResultType = "A09"
-	AMixedDeadlock          ResultType = "A10"
+	ACloseOnClosed          ResultType = "A02"
+	ACloseOnNilChannel      ResultType = "A03"
+	ANegWG                  ResultType = "A04"
+	AUnlockOfNotLockedMutex ResultType = "A05"
+	ABlocking               ResultType = "A06"
+	ADeadlock               ResultType = "A07"
+	AConcurrentRecv         ResultType = "A08"
+	AMixedDeadlock          ResultType = "A09"
 
 	// possible
 	PSendOnClosed     ResultType = "P01"
@@ -49,6 +48,7 @@ const (
 	// recording
 	RUnknownPanic ResultType = "R01"
 	RTimeout      ResultType = "R02"
+	RReplayFail   ResultType = "R03"
 
 	// not executed select
 	// SNotExecutedWithPartner = "S00"
@@ -56,7 +56,6 @@ const (
 
 var ResultTypes = []ResultType{
 	ASendOnClosed,
-	ARecvOnClosed,
 	ACloseOnClosed,
 	ACloseOnNilChannel,
 	ANegWG,
@@ -81,7 +80,6 @@ var ResultTypes = []ResultType{
 
 var ResultTypesActual = []ResultType{
 	ASendOnClosed,
-	ARecvOnClosed,
 	ACloseOnClosed,
 	ACloseOnNilChannel,
 	ANegWG,
@@ -113,6 +111,7 @@ var ResultTypesLeak = []ResultType{
 var ResultTypesRecording = []ResultType{
 	RUnknownPanic,
 	RTimeout,
+	RReplayFail,
 }
 
 func ResultTypeFromString(code string) ResultType {
@@ -120,21 +119,21 @@ func ResultTypeFromString(code string) ResultType {
 	case "A01":
 		return ASendOnClosed
 	case "A02":
-		return ARecvOnClosed
-	case "A03":
 		return ACloseOnClosed
-	case "A04":
+	case "A03":
 		return ACloseOnNilChannel
-	case "A05":
+	case "A04":
 		return ANegWG
-	case "A06":
+	case "A05":
 		return AUnlockOfNotLockedMutex
-	case "A07":
+	case "A06":
 		return ABlocking
-	case "A08":
+	case "A07":
 		return ADeadlock
-	case "A09":
+	case "A08":
 		return AConcurrentRecv
+	case "A09":
+		return AMixedDeadlock
 	case "P01":
 		return PSendOnClosed
 	case "P02":
@@ -163,6 +162,8 @@ func ResultTypeFromString(code string) ResultType {
 		return RUnknownPanic
 	case "R02":
 		return RTimeout
+	case "R03":
+		return RReplayFail
 	default:
 		return Empty // Return Empty for codes not found
 	}
@@ -211,8 +212,6 @@ func (rt ResultType) Args() (string, string) {
 	switch rt {
 	case ASendOnClosed:
 		return "send", "close"
-	case ARecvOnClosed:
-		return "recv", "close"
 	case ACloseOnClosed:
 		return "panic", "close"
 	case ACloseOnNilChannel:
@@ -262,6 +261,8 @@ func (rt ResultType) Args() (string, string) {
 	case RUnknownPanic:
 		return "panic", ""
 	case RTimeout:
+		return "", ""
+	case RReplayFail:
 		return "", ""
 	}
 

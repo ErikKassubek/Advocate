@@ -138,7 +138,7 @@ func runWorkflowMain(
 		analyzerOutput := filepath.Join(paths.ProgDir, paths.NameTrace)
 
 		err = runAnalyzer(analyzerOutput, paths.NameResultReadable, paths.NameResultMachine,
-			consts.RewrittenConsts, fuzzing, "", "main")
+			consts.RewrittenConsts, fuzzing, "", "main", false)
 
 		if err != nil {
 			return 0, 0, err
@@ -186,7 +186,7 @@ func runWorkflowMain(
 			analyzerOutput := filepath.Join(paths.ProgDir, paths.NameTrace)
 
 			err = runAnalyzer(analyzerOutput, paths.NameResultReadable, paths.NameResultMachine,
-				"", fuzzing, "", "main")
+				"", fuzzing, "", "main", true)
 
 			if err != nil {
 				return 0, 0, err

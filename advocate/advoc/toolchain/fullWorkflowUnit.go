@@ -470,7 +470,7 @@ func unitTestFullWorkflow(
 
 	if runAnalysis {
 		pkgPath := filepath.Join(paths.Prog, pkg)
-		err = unitTestAnalyzer(pkgPath, paths.NameTrace, fuzzing, file, testName, true)
+		err = unitTestAnalyzer(pkgPath, paths.NameTrace, fuzzing, file, testName, false)
 		if err != nil {
 			return 0, false, err
 		}
@@ -602,11 +602,11 @@ func unitTestAnalyzer(pkgPath, traceName string, fuzzing int, testFile, testName
 	outR := filepath.Join(pkgPath, paths.NameResultReadable)
 	outT := filepath.Join(pkgPath, consts.RewrittenConsts)
 
-	if !replay {
+	if replay {
 		outT = ""
 	}
 
-	err := runAnalyzer(tracePath, outR, outM, outT, fuzzing, testFile, testName)
+	err := runAnalyzer(tracePath, outR, outM, outT, fuzzing, testFile, testName, replay)
 
 	if err != nil {
 		return err
@@ -637,7 +637,7 @@ func unitTestReplay(dir, pkg, file,
 	timer.Start(timer.Replay)
 	defer timer.Stop(timer.Replay)
 
-	log.Info("Start guided execution")
+	log.Info("Start replay")
 
 	pathPkg := filepath.Join(dir, pkg)
 
@@ -675,7 +675,7 @@ func unitTestReplay(dir, pkg, file,
 
 		os.Unsetenv("GOROOT")
 
-		err := unitTestAnalyzer(pkgPath, paths.NameTrace, -1, file, testName, false)
+		err := unitTestAnalyzer(pkgPath, paths.NameTrace, -1, file, testName, true)
 		if err != nil {
 			return len(rewrittenConstraints), err
 		}

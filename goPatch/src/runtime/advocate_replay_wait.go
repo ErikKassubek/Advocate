@@ -202,6 +202,11 @@ func WaitForReplayFinish() bool {
 			sleep(0.001)
 		}
 
+		waiting := GetWaiting()
+		if len(waiting) != 0 {
+			println("WAITING")
+		}
+
 		DisableReplay()
 	}
 

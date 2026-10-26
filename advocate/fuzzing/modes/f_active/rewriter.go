@@ -38,8 +38,6 @@ func RewriteTrace(bug bugs.Bug, rewrittenBugs map[helper.ResultType][]string) (c
 	// ACTUAL BUGS
 	case helper.ASendOnClosed:
 		err = errors.New("Actual send on closed. Therefore no rewrite is needed")
-	case helper.ARecvOnClosed:
-		err = errors.New("Actual receive on closed in trace. Therefore no rewrite is needed")
 	case helper.ACloseOnClosed:
 		err = errors.New("Actual close on close detected. Therefore no rewrite is needed")
 	case helper.ACloseOnNilChannel:
@@ -56,18 +54,21 @@ func RewriteTrace(bug bugs.Bug, rewrittenBugs map[helper.ResultType][]string) (c
 		err = errors.New("Rewriting trace for concurrent receive is not possible")
 	case helper.PSendOnClosed:
 		code = helper.ExitCodeSendClose
-		constr, err = rewriteClosedChannel(bug) // TODP: rewrite
+		constr, err = rewriteClosedChannel(bug)
 	case helper.PNegWG:
 		code = helper.ExitCodeNegativeWG
-		// err = rewriteGraph(tr, bug, code)  // TODO: rewrite
+		// err = rewriteGraph(bug, code) // TODO: rewrite
+		err = errors.New("Rewriting trace for negative WG counter not implemented yet")
 	case helper.PUnlockBeforeLock:
 		code = helper.ExitCodeUnlockBeforeLock
 		// err = rewriteGraph(tr, bug, code)  // TODO: rewrite
+		err = errors.New("Rewriting trace for unlock before lock not implemented yet")
 	case helper.PCyclicDeadlock:
-		constr, err = rewriteCyclicDeadlock(bug) // TODO: rewrite
+		constr, err = rewriteCyclicDeadlock(bug)
 	case helper.PMixedDeadlock:
 		code = helper.ExitCodeMixedDeadlock
 		// err = rewriteMixedDeadlock(tr, bug, code)  // TODO: rewrite
+		err = errors.New("Rewriting trace for mixed deadlock not implemented yet")
 
 	// LEAKS
 	case helper.LUnknown, helper.LChan, helper.LSelect, helper.LNilChan, helper.LMutex, helper.LWaitGroup, helper.LCond:
@@ -76,6 +77,8 @@ func RewriteTrace(bug bugs.Bug, rewrittenBugs map[helper.ResultType][]string) (c
 		err = errors.New("Unknown panic. No rewrite possible")
 	case helper.RTimeout:
 		err = errors.New("Timeout. No rewrite possible")
+	case helper.RReplayFail:
+		err = errors.New("RReplayFail. No rewrite possible")
 	default:
 		err = errors.New("For the given bug type no trace rewriting is implemented")
 	}

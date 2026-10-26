@@ -14,7 +14,7 @@ import (
 	"advocate/trace"
 )
 
-// The stable closure is calculated based on the following three rules.
+// The stable closure is calculated based on the following three rules.z
 // Assume there is a constraint s and trace T.
 // The GCO-Closure CL_T(S) is the smallest set of events such that
 // (a) S ⊆ Cl_T

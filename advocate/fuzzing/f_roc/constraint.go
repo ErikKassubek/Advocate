@@ -248,17 +248,47 @@ func (this *Constraint) sort() {
 	})
 }
 
-// Merge two constraints
-func Merge(first, second *Constraint) *Constraint {
+// MergeClosureConstraint two constraints
+func MergeClosureConstraint(closure, constr *Constraint) *Constraint {
 	new := NewConstraint()
 
-	for _, e := range first.Elems {
+	for _, e := range closure.Elems {
 		new.Add(e)
 	}
 
-	for _, e := range second.Elems {
+	for _, e := range constr.Elems {
 		new.Add(e)
+	}
+
+	// must ensure, that inter routine order is keept
+	// for now we do this by removing the additional values from closure
+	for _, elem1 := range constr.Elems {
+		rConst := elem1.Routine()
+		tConst := elem1.T(trace.Commit)
+		remove := make([]int, 0, len(closure.Elems))
+		for i, elem2 := range closure.Elems {
+			rClosure := elem2.Routine()
+			tClosure := elem2.T(trace.Commit)
+
+			if rConst == rClosure && tClosure > tConst {
+				remove = append(remove, i)
+			}
+		}
+
+		closure.Elems = removeIndices(closure.Elems, remove)
 	}
 
 	return &new
+}
+
+func removeIndices(s []trace.Element, d []int) []trace.Element {
+	j := 0
+	for i := range s {
+		if j < len(d) && i == d[j] {
+			j++
+			continue
+		}
+		s[i-j] = s[i]
+	}
+	return s[:len(s)-len(d)]
 }

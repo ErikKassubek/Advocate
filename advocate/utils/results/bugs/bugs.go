@@ -108,10 +108,10 @@ func (this Bug) ToString() string {
 		typeStr = "Unknown Panic:"
 	case helper.RTimeout:
 		typeStr = "Timeout"
+	case helper.RReplayFail:
+		typeStr = "ReplayFail"
 	case helper.ASendOnClosed:
 		typeStr = "Actual Send on Closed Channel:"
-	case helper.ARecvOnClosed:
-		typeStr = "Actual Receive on Closed Channel:"
 	case helper.ACloseOnClosed:
 		typeStr = "Actual Close on Closed Channel:"
 	case helper.ACloseOnNilChannel:
@@ -216,33 +216,35 @@ func ProcessBug(bugStr string) (bool, Bug, error) {
 	case "R02":
 		bug.Type = helper.RTimeout
 		actual = true
+	case "R03":
+		bug.Type = helper.RReplayFail
+		actual = true
 	case "A01":
 		bug.Type = helper.ASendOnClosed
 		actual = true
 	case "A02":
-		bug.Type = helper.ARecvOnClosed
-		actual = true
-	case "A03":
 		bug.Type = helper.ACloseOnClosed
 		actual = true
-	case "A04":
+	case "A03":
 		bug.Type = helper.ACloseOnNilChannel
 		actual = true
-	case "A05":
+	case "A04":
 		bug.Type = helper.ANegWG
 		actual = true
-	case "A06":
+	case "A05":
 		bug.Type = helper.AUnlockOfNotLockedMutex
 		actual = true
-	case "A07":
+	case "A06":
 		bug.Type = helper.ABlocking
 		actual = true
-	case "A08":
+	case "A07":
 		bug.Type = helper.ADeadlock
 		actual = true
-	case "A09":
+	case "A08":
 		bug.Type = helper.AConcurrentRecv
 		actual = true
+	case "A09":
+		bug.Type = helper.AMixedDeadlock
 	case "P01":
 		bug.Type = helper.PSendOnClosed
 	case "P02":

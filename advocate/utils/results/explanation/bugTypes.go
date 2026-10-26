@@ -10,173 +10,192 @@
 package explanation
 
 import (
-	"advocate/utils/consts"
 	"advocate/utils/helper"
 	"advocate/utils/types"
 )
 
-// type (bug / diagnostics)
-var bugCrit = map[helper.ResultType]string{
-	helper.RUnknownPanic:           consts.Bug,
-	helper.RTimeout:                consts.Bug,
-	helper.ASendOnClosed:           consts.Bug,
-	helper.ARecvOnClosed:           consts.Diagnostic,
-	helper.ACloseOnClosed:          consts.Bug,
-	helper.ACloseOnNilChannel:      consts.Bug,
-	helper.ANegWG:                  consts.Bug,
-	helper.AUnlockOfNotLockedMutex: consts.Bug,
-	helper.ABlocking:               consts.Bug,
-	helper.ADeadlock:               consts.Bug,
-	helper.AConcurrentRecv:         consts.Diagnostic,
-	helper.AMixedDeadlock:          consts.Bug,
-	helper.PSendOnClosed:           consts.Potential,
-	helper.PNegWG:                  consts.Potential,
-	helper.PUnlockBeforeLock:       consts.Potential,
-	helper.PCyclicDeadlock:         consts.Potential,
-	helper.PMixedDeadlock:          consts.Potential,
-	helper.LUnknown:                consts.Leak,
-	helper.LChan:                   consts.Leak,
-	helper.LNilChan:                consts.Leak,
-	helper.LSelect:                 consts.Leak,
-	helper.LMutex:                  consts.Leak,
-	helper.LWaitGroup:              consts.Leak,
-	helper.LCond:                   consts.Leak,
+type BugCrit string
+
+const (
+	Bug            BugCrit = "Bug"
+	Leak           BugCrit = "Leak"
+	Diagnostic     BugCrit = "Diagnostic"
+	Replay         BugCrit = "Replay"
+	UnknownBugCrit BugCrit = "Unknown"
+)
+
+type BugClass string
+
+const (
+	Actual          BugClass = "Actual"
+	Potential       BugClass = "PossiPotentialble"
+	Runtime         BugClass = "Runtime"
+	UnknownBugClass BugClass = "Unknown"
+)
+
+type ResultTypeInfo struct {
+	Crit        BugCrit
+	Class       BugClass
+	Name        string
+	Explanation string
 }
 
-var bugClass = map[helper.ResultType]string{
-	helper.RUnknownPanic:           consts.Runtime,
-	helper.RTimeout:                consts.Runtime,
-	helper.ASendOnClosed:           consts.Actual,
-	helper.ARecvOnClosed:           consts.Actual,
-	helper.ACloseOnClosed:          consts.Actual,
-	helper.ACloseOnNilChannel:      consts.Actual,
-	helper.ANegWG:                  consts.Actual,
-	helper.AUnlockOfNotLockedMutex: consts.Actual,
-	helper.ABlocking:               consts.Actual,
-	helper.ADeadlock:               consts.Actual,
-	helper.AConcurrentRecv:         consts.Actual,
-	helper.AMixedDeadlock:          consts.Actual,
-	helper.PSendOnClosed:           consts.Possible,
-	helper.PNegWG:                  consts.Possible,
-	helper.PUnlockBeforeLock:       consts.Possible,
-	helper.PCyclicDeadlock:         consts.Possible,
-	helper.PMixedDeadlock:          consts.Possible,
-	helper.LUnknown:                consts.Leak,
-	helper.LChan:                   consts.Leak,
-	helper.LNilChan:                consts.Leak,
-	helper.LSelect:                 consts.Leak,
-	helper.LMutex:                  consts.Leak,
-	helper.LWaitGroup:              consts.Leak,
-	helper.LCond:                   consts.Leak,
-}
+var bugInfo = map[helper.ResultType]ResultTypeInfo{
+	helper.RUnknownPanic: ResultTypeInfo{Bug, Runtime, "Unknown Panic", "During the execution of the program, a unknown panic occurred"},
+	helper.RTimeout:      ResultTypeInfo{Diagnostic, Runtime, "Timeout", "The execution of the program timed out"},
+	helper.RReplayFail:   ResultTypeInfo{Diagnostic, Runtime, "Replay Failed", "The replay was not able to execute the full constraint.\nAt the end of the execution, the replay mechanism was still holding back elements."},
 
-var bugNames = map[helper.ResultType]string{
-	helper.ASendOnClosed:           "Actual Send on Closed Channel",
-	helper.ARecvOnClosed:           "Actual Receive on Closed Channel",
-	helper.ACloseOnClosed:          "Actual Close on Closed Channel",
-	helper.ACloseOnNilChannel:      "Actual Close on Nil Channel",
-	helper.ANegWG:                  "Actual Negative Wait Group",
-	helper.AUnlockOfNotLockedMutex: "Actual Unlock of Not Locked Mutex",
-	helper.ABlocking:               "Actual Non-Cyclic Blocking Bug",
-	helper.ADeadlock:               "Actual Cyclic Deadlock",
-	helper.AConcurrentRecv:         "Actual Concurrent Receive",
-	helper.AMixedDeadlock:          "Actual Mixed Deadlock",
+	helper.ASendOnClosed: ResultTypeInfo{
+		Bug, Actual,
+		"Actual Send on Closed Channel",
+		"During the execution of the program, a send on a closed channel occurred.\n" +
+			"The occurrence of a send on closed leads to a panic."},
+	helper.ACloseOnClosed: ResultTypeInfo{
+		Bug, Actual,
+		"Actual Close on Closed Channel",
+		"During the execution of the program, a close on a close channel occurred.\n" +
+			"The occurrence of a close on a closed channel lead to a panic."},
+	helper.ACloseOnNilChannel: ResultTypeInfo{
+		Bug, Actual,
+		"Actual Close on Nil Channel",
+		"During the execution of the program, a close on a nil channel occurred.\n" +
+			"The occurrence of a close on a nil channel lead to a panic."},
+	helper.ANegWG: ResultTypeInfo{
+		Bug, Actual,
+		"Actual Negative Wait Group",
+		"During the execution, a negative wait group counter occurred.\n" +
+			"The occurrence of a negative wait group counter lead to a panic."},
+	helper.AUnlockOfNotLockedMutex: ResultTypeInfo{
+		Bug, Actual,
+		"Actual Unlock of Not Locked Mutex",
+		"During the execution, a not locked mutex was unlocked.\n" +
+			"The occurrence of this lead to a panic."},
+	helper.ABlocking: ResultTypeInfo{
+		Bug, Actual,
+		"Actual Non-Cyclic Blocking Bug",
+		"During the execution, a blocking bug was detected.\n" +
+			"This means, there is a routine that is blocked, and there is not possibility of it being unblocked in the future"},
+	helper.ADeadlock: ResultTypeInfo{
+		Bug, Actual,
+		"Actual Cyclic Deadlock",
+		"During the execution, a resource deadlock was detected.\n" +
+			"This means, there is are routine that are cyclical blocked on mutexes, and there is not possibility of it being unblocked in the future"},
+	helper.AConcurrentRecv: ResultTypeInfo{
+		Diagnostic, Actual,
+		"Actual Concurrent Receive",
+		"During the execution of the program, a channel waited to receive at multiple positions at the same time.\n" +
+			"In this case, the actual receiver of a send message is chosen randomly.\n" +
+			"This can lead to nondeterministic behavior."},
+	helper.AMixedDeadlock: ResultTypeInfo{
+		Bug, Actual,
+		"Actual Mixed Deadlock",
+		"During the execution, a mixed deadlock was detected.\n" +
+			"This means, there is are routine that are cyclical blocked on a combination of channels and mutexes, and there is not possibility of it being unblocked in the future"},
 
-	helper.PSendOnClosed:     "Possible Send on Closed Channel",
-	helper.PNegWG:            "Possible Negative WaitGroup Counter",
-	helper.PUnlockBeforeLock: "Possible Unlock of Not Locked Mutex",
-	helper.PCyclicDeadlock:   "Possible Cyclic Deadlock",
-	helper.PMixedDeadlock:    "Possible Mixed Deadlock",
+	helper.PSendOnClosed: ResultTypeInfo{
+		Bug, Potential,
+		"Possible Send on Closed Channel",
+		"The analyzer detected a possible send on a closed channel.\n" +
+			"Although the send on a closed channel did not occur during the recording, " +
+			"it is possible that it will occur, based on the happens before relation.\n" +
+			"Such a send on a closed channel leads to a panic.",
+	},
+	helper.PNegWG: ResultTypeInfo{
+		Bug, Potential,
+		"Possible Negative WaitGroup Counter",
+		"The analyzer detected a possible negative WaitGroup counter.\n" +
+			"Although the negative counter did not occur during the recording, " +
+			"it is possible that it will occur, based on the happens before relation.\n" +
+			"A negative counter will lead to a panic.",
+	},
+	helper.PUnlockBeforeLock: ResultTypeInfo{
+		Bug, Potential,
+		"Possible Unlock of Not Locked Mutex",
+		"The analyzer detected a possible unlock on a not locked mutex.\n" +
+			"Although the unlock of a not locked mutex did not occur during the recording, " +
+			"it is possible that it will occur, based on the happens before relation.\n" +
+			"A unlock of a not locked mutex will result in a panic.",
+	},
+	helper.PCyclicDeadlock: ResultTypeInfo{
+		Bug, Potential,
+		"Possible Cyclic Deadlock",
+		"The analysis detected a possible cyclic deadlock.\n" +
+			"If this deadlock contains or influences the run of the main routine, this can " +
+			"result in the program getting stuck. Otherwise it can lead to an unnecessary use of " +
+			"resources.",
+	},
+	helper.PMixedDeadlock: ResultTypeInfo{
+		Bug, Potential,
+		"Possible Mixed Deadlock",
+		"The analysis detected a Possible Mixed Deadlock.\n" +
+			"A mixed deadlock is a situation, where two routines are blocked on each other, " +
+			"because they are waiting to send or receive on a channel, while holding locks " +
+			"that the other routine needs to proceed.\n" +
+			"This can lead to the program getting stuck, if one of the routines is the main routine. " +
+			"Otherwise it can lead to an unnecessary use of resources.",
+	},
 
-	helper.LUnknown:   consts.Leak,
-	helper.LChan:      "Leak on Channel",
-	helper.LNilChan:   "Leak on Nil Channel",
-	helper.LSelect:    "Leak on Select",
-	helper.LMutex:     "Leak on Sync.Mutex",
-	helper.LWaitGroup: "Leak on Sync.WaitGroup",
-	helper.LCond:      "Leak on Sync.Cond",
-
-	helper.RUnknownPanic: "Unknown Panic",
-	helper.RTimeout:      "Timeout",
+	helper.LUnknown: ResultTypeInfo{
+		Leak, Actual,
+		"Leak on unknown object",
+		"The analyzer detected a leak.\n" +
+			"This means that the routine was terminated because of a panic in another routine " +
+			"or because the main routine terminated while this routine was still running.\n" +
+			"A Leak could potentially resolve itself, if the program would run longer.\n" +
+			"This can be a desired behavior, but it can also be a signal for a not otherwise detected block.",
+	},
+	helper.LChan: ResultTypeInfo{
+		Leak, Actual,
+		"Leak on Channel",
+		"The analyzer detected a Leak on a channel.\n" +
+			"A Leak on a channel is a situation, where a channel is " +
+			"still blocking at the end of the program.\n" +
+			"A Leak could potentially resolve itself, if the program would run longer.\n",
+	},
+	helper.LNilChan: ResultTypeInfo{
+		Leak, Actual,
+		"Leak on Nil Channel",
+		"The analyzer detected a leak on a nil channel.\n" +
+			"A leak on a nil channel is a situation, where a nil channel is still blocking at the end of the program.\n" +
+			"A nil channel is a channel, which was never initialized or set to nil." +
+			"An operation on a nil channel will block indefinitely.",
+	},
+	helper.LSelect: ResultTypeInfo{
+		Leak, Actual,
+		"Leak on Select",
+		"The analyzer detected a Leak on a select with a possible partner.\n" +
+			"A Leak on a select is a situation, where a select is still blocking at the end of the program.\n" +
+			"A Leak could potentially resolve itself, if the program would run longer.\n" +
+			"The partner is a corresponding send or receive operation, which communicated with another operation, " +
+			"but could communicated with the stuck operation instead, resolving the leak.",
+	},
+	helper.LMutex: ResultTypeInfo{
+		Leak, Actual,
+		"Leak on Sync.Mutex",
+		"The analyzer detected a leak on a sync.Mutex.\n" +
+			"A leak on a sync.Mutex is a situation, where a sync.Mutex lock operations is still blocking at the end of the program.\n" +
+			"A Leak could potentially resolve itself, if the program would run longer.\n" +
+			"A sync.Mutex lock operation is a operation, which is blocking, because the lock is already acquired.",
+	},
+	helper.LWaitGroup: ResultTypeInfo{
+		Leak, Actual,
+		"Leak on Sync.WaitGroup",
+		"The analyzer detected a leak on a sync.WaitGroup.\n" +
+			"A leak on a sync.WaitGroup is a situation, where a sync.WaitGroup is still blocking at the end of the program.\n" +
+			"A Leak could potentially resolve itself, if the program would run longer.\n" +
+			"A sync.WaitGroup wait is blocking, because the counter is not zero.",
+	},
+	helper.LCond: ResultTypeInfo{
+		Leak, Actual,
+		"Leak on Sync.Cond",
+		"The analyzer detected a leak on a sync.Cond.\n" +
+			"A leak on a sync.Cond is a situation, where a sync.Cond wait is still blocking at the end of the program.\n" +
+			"A Leak could potentially resolve itself, if the program would run longer.\n" +
+			"A sync.Cond wait is blocking, because the condition is not met.",
+	},
 }
 
 var bugCodes = make(map[string]helper.ResultType) // inverse of bugNames, initialized in init
-
-// explanations
-var bugExplanations = map[helper.ResultType]string{
-	helper.ASendOnClosed: "During the execution of the program, a send on a closed channel occurred.\n" +
-		"The occurrence of a send on closed leads to a panic.",
-	helper.ARecvOnClosed: "During the execution of the program, a receive on a closed channel occurred.\n",
-	helper.ACloseOnClosed: "During the execution of the program, a close on a close channel occurred.\n" +
-		"The occurrence of a close on a closed channel lead to a panic.",
-	helper.ACloseOnNilChannel: "During the execution of the program, a close on a nil channel occurred.\n" +
-		"The occurrence of a close on a nil channel lead to a panic.",
-	helper.ANegWG: "During the execution, a negative wait group counter occurred.\n" +
-		"The occurrence of a negative wait group counter lead to a panic.",
-	helper.AUnlockOfNotLockedMutex: "During the execution, a not locked mutex was unlocked.\n" +
-		"The occurrence of this lead to a panic.",
-	helper.ABlocking: "During the execution, a blocking bug was detected.\n" +
-		"This means, there is a routine that is blocked, and there is not possibility of it being unblocked in the future",
-	helper.ADeadlock: "During the execution, a deadlock was detected.\n" +
-		"This means, there is are routine that are cyclical blocked, and there is not possibility of it being unblocked in the future",
-	helper.AConcurrentRecv: "During the execution of the program, a channel waited to receive at multiple positions at the same time.\n" +
-		"In this case, the actual receiver of a send message is chosen randomly.\n" +
-		"This can lead to nondeterministic behavior.",
-	helper.RUnknownPanic: "During the execution of the program, a unknown panic occurred",
-	helper.RTimeout:      "The execution of the program timed out",
-	helper.PSendOnClosed: "The analyzer detected a possible send on a closed channel.\n" +
-		"Although the send on a closed channel did not occur during the recording, " +
-		"it is possible that it will occur, based on the happens before relation.\n" +
-		"Such a send on a closed channel leads to a panic.",
-	helper.PNegWG: "The analyzer detected a possible negative WaitGroup counter.\n" +
-		"Although the negative counter did not occur during the recording, " +
-		"it is possible that it will occur, based on the happens before relation.\n" +
-		"A negative counter will lead to a panic.",
-	helper.PUnlockBeforeLock: "The analyzer detected a possible unlock on a not locked mutex.\n" +
-		"Although the unlock of a not locked mutex did not occur during the recording, " +
-		"it is possible that it will occur, based on the happens before relation.\n" +
-		"A unlock of a not locked mutex will result in a panic.",
-	helper.PCyclicDeadlock: "The analysis detected a possible cyclic deadlock.\n" +
-		"If this deadlock contains or influences the run of the main routine, this can " +
-		"result in the program getting stuck. Otherwise it can lead to an unnecessary use of " +
-		"resources.",
-	helper.PMixedDeadlock: "The analysis detected a Possible Mixed Deadlock.\n" +
-		"A mixed deadlock is a situation, where two routines are blocked on each other, " +
-		"because they are waiting to send or receive on a channel, while holding locks " +
-		"that the other routine needs to proceed.\n" +
-		"This can lead to the program getting stuck, if one of the routines is the main routine. " +
-		"Otherwise it can lead to an unnecessary use of resources.",
-	helper.LUnknown: "The analyzer detected a leak.\n" +
-		"This means that the routine was terminated because of a panic in another routine " +
-		"or because the main routine terminated while this routine was still running.\n" +
-		"A Leak could potentially resolve itself, if the program would run longer.\n" +
-		"This can be a desired behavior, but it can also be a signal for a not otherwise detected block.",
-	helper.LChan: "The analyzer detected a Leak on a channel.\n" +
-		"A Leak on a channel is a situation, where a channel is " +
-		"still blocking at the end of the program.\n" +
-		"A Leak could potentially resolve itself, if the program would run longer.\n",
-	helper.LNilChan: "The analyzer detected a leak on a nil channel.\n" +
-		"A leak on a nil channel is a situation, where a nil channel is still blocking at the end of the program.\n" +
-		"A nil channel is a channel, which was never initialized or set to nil." +
-		"An operation on a nil channel will block indefinitely.",
-	helper.LSelect: "The analyzer detected a Leak on a select with a possible partner.\n" +
-		"A Leak on a select is a situation, where a select is still blocking at the end of the program.\n" +
-		"A Leak could potentially resolve itself, if the program would run longer.\n" +
-		"The partner is a corresponding send or receive operation, which communicated with another operation, " +
-		"but could communicated with the stuck operation instead, resolving the leak.",
-	helper.LMutex: "The analyzer detected a leak on a sync.Mutex.\n" +
-		"A leak on a sync.Mutex is a situation, where a sync.Mutex lock operations is still blocking at the end of the program.\n" +
-		"A Leak could potentially resolve itself, if the program would run longer.\n" +
-		"A sync.Mutex lock operation is a operation, which is blocking, because the lock is already acquired.",
-	helper.LWaitGroup: "The analyzer detected a leak on a sync.WaitGroup.\n" +
-		"A leak on a sync.WaitGroup is a situation, where a sync.WaitGroup is still blocking at the end of the program.\n" +
-		"A Leak could potentially resolve itself, if the program would run longer.\n" +
-		"A sync.WaitGroup wait is blocking, because the counter is not zero.",
-	helper.LCond: "The analyzer detected a leak on a sync.Cond.\n" +
-		"A leak on a sync.Cond is a situation, where a sync.Cond wait is still blocking at the end of the program.\n" +
-		"A Leak could potentially resolve itself, if the program would run longer.\n" +
-		"A sync.Cond wait is blocking, because the condition is not met.",
-}
 
 var exitCodeExplanation = map[string]string{
 	"panic": "The replay was started but was terminated unexpectedly.\nThe main reason could be, that the runtime exceeded the timeout of the test",
@@ -272,20 +291,6 @@ var objectTypes = map[string]string{
 	"XX": "Unknown",
 }
 
-// adaptExplanationMaps changes the bugNames and bugExplanation maps, if
-// the analysis did not search for possible partners
-func adaptExplanationMaps() {
-	bugNames[helper.LChan] = "Block on channel"
-	bugNames[helper.LNilChan] = "Block on nil channel"
-	bugNames[helper.LSelect] = "Block on select"
-
-	bugExplanations[helper.LChan] = "The analyzer detected a Block on a channel .\n" +
-		"A Block on a channel is a situation, where a channel is " +
-		"still blocking at the end of the program.\n"
-	bugExplanations[helper.LSelect] = "The analyzer detected a Block on a select.\n" +
-		"A Block on a select is a situation, where a select is still blocking at the end of the program.\n"
-}
-
 // GetCodeFromDescription returns the code key from the description
 //
 // Parameter:
@@ -309,12 +314,13 @@ func GetCodeFromDescription(description string) helper.ResultType {
 //   - map[bugKeys]string: bug type descriptions
 func getBugTypeDescription(bt helper.ResultType) map[bugKeys]string {
 	args1, args2 := bt.Args()
+	info := bugInfo[bt]
 	return map[bugKeys]string{
-		crit:        bugCrit[bt],
-		name:        bugNames[bt],
+		crit:        string(info.Crit),
+		name:        info.Name,
 		bugType:     string(bt),
-		explanation: bugExplanations[bt],
-		class:       bugClass[bt],
+		explanation: info.Explanation,
+		class:       string(info.Class),
 		arg1:        types.CapitalizeFirst(args1),
 		arg2:        types.CapitalizeFirst(args2),
 	}
@@ -340,7 +346,7 @@ func buildBugCodes() {
 		return
 	}
 
-	for key, desc := range bugNames {
-		bugCodes[desc] = key
+	for key, desc := range bugInfo {
+		bugCodes[desc.Explanation] = key
 	}
 }
