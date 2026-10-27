@@ -69,9 +69,9 @@ func AdvocateAllocMutex(ptr unsafe.Pointer) {
 // blocks until the mutex is available.
 func (m *Mutex) Lock() {
 	// ADVOCATE-START
-	ch := runtime.WaitForReplay(runtime.OperationMutexLock, runtime.CallerSkipMutex)
-	if ch != nil {
-		<-ch
+	chWait, chAck := runtime.WaitForReplay(runtime.OperationMutexLock, runtime.CallerSkipMutex)
+	if chWait != nil {
+		<-chWait
 	}
 
 	// AdvocateMutexReq records, that a routine tries to lock a mutex.
@@ -80,6 +80,10 @@ func (m *Mutex) Lock() {
 	// this information. advocateIndex is used for AdvocatePost to find the
 	// pre event.
 	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexLock)
+
+	if chAck != nil {
+		close(chAck)
+	}
 	// ADVOCATE-END
 
 	m.mu.Lock()
@@ -96,14 +100,18 @@ func (m *Mutex) Lock() {
 // in a particular use of mutexes.
 func (m *Mutex) TryLock() bool {
 	// ADVOCATE-START
-	ch := runtime.WaitForReplay(runtime.OperationMutexTryLock, runtime.CallerSkipMutex)
-	if ch != nil {
-		<-ch
+	chWait, chAck := runtime.WaitForReplay(runtime.OperationMutexTryLock, runtime.CallerSkipMutex)
+	if chWait != nil {
+		<-chWait
 	}
 
 	// AdvocateMutexReq records, that a routine tries to lock a mutex.
 	// advocateIndex is used for AdvocateMutexCom to find the pre event.
 	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexTryLock)
+
+	if chAck != nil {
+		close(chAck)
+	}
 
 	res := m.mu.TryLock()
 
@@ -121,9 +129,9 @@ func (m *Mutex) TryLock() bool {
 // arrange for another goroutine to unlock it.
 func (m *Mutex) Unlock() {
 	// ADVOCATE-START
-	ch := runtime.WaitForReplay(runtime.OperationMutexUnlock, runtime.CallerSkipMutex)
-	if ch != nil {
-		<-ch
+	chWait, chAck := runtime.WaitForReplay(runtime.OperationMutexUnlock, runtime.CallerSkipMutex)
+	if chWait != nil {
+		<-chWait
 	}
 	// AdvocateMutexReq is used to record the unlocking of a mutex.
 	// AdvocatePost records the successful unlocking of a mutex.
@@ -138,6 +146,12 @@ func (m *Mutex) Unlock() {
 	// ADVOCATE-END
 
 	m.mu.Unlock()
+
+	// ADVOCATE-START
+	if chAck != nil {
+		close(chAck)
+	}
+	// ADVOCATE-END
 
 	// ADVOCATE-START
 	runtime.AdvocateMutexCom(advocateIndex, true)

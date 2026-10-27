@@ -148,6 +148,9 @@ func (this *Constraint) isInConstraint(key string) bool {
 }
 
 func (this *Constraint) update(key string) {
+	// sleep(releaseSleep)
+	<-ackChan
+
 	lock(&this.mu)
 	this.elemIndex[key]++
 	this.replayIndex++

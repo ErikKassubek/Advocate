@@ -44,14 +44,17 @@ SwapInt32 function is now implemented as
 ```go
 func SwapInt32(addr *int32, new int32) (old int32) {
 	// replay
-	wait, chWait, chAck := runtime.WaitForReplay(runtime.OperationAtomicSwap, 2, true)
-	if wait {
-		defer func() { chAck <- struct{}{} }()
+	chWait, chAck := runtime.WaitForReplay(runtime.OperationAtomicSwap, 2, true)
+	if chWait != nil {
 		<-chWait
 	}
 
 	// recording
 	runtime.AdvocateAtomic(addr, runtime.SwapOp, 2)
+
+	if chAck != nil {
+		chAck <- struct{}{}
+	}()
 
 	// original function
 	return SwapInt32Advocate(addr, new)

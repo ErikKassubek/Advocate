@@ -11,6 +11,10 @@
 
 package runtime
 
+const releaseSleep = 0.01
+
+var ackChan chan struct{}
+
 type waitingOps struct {
 	waiting map[string]chan int // key -> waiting chan
 	mu      mutex
@@ -63,15 +67,15 @@ func (this *waitingOps) remove(elem *ConstraintElem) {
 //
 // TODO:
 //   - maybe add the bool return back in so we do not need to channel if it is released without additional info
-func WaitForReplay(op Operation, skip int) chan int {
+func WaitForReplay(op Operation, skip int) (chan int, chan struct{}) {
 	if !replayEnabled {
-		return nil
+		return nil, nil
 	}
 
 	// if Caller is run in the garbage collector, the execution stops
 	// this should prevent this
 	if currentGoRoutineInfo() != nil && mgcRoutine != 0 && currentGoRoutineInfo().id == mgcRoutine {
-		return nil
+		return nil, nil
 	}
 
 	_, file, line, _ := Caller(skip)
@@ -96,13 +100,13 @@ func WaitForReplay(op Operation, skip int) chan int {
 //
 // Returns:
 //   - chan int: channel to wait on, if nil the operation does not need to wait
-func WaitForReplayPath(op Operation, file string, line int) chan int {
+func WaitForReplayPath(op Operation, file string, line int) (chan int, chan struct{}) {
 	if !replayEnabled {
-		return nil
+		return nil, nil
 	}
 
 	if AdvocateIgnoreReplay(op, file) {
-		return nil
+		return nil, nil
 	}
 
 	routine := GetReplayRoutineID()
@@ -112,10 +116,13 @@ func WaitForReplayPath(op Operation, file string, line int) chan int {
 		if printDebug {
 			println("ReleaseN: ", key)
 		}
-		return nil
+		return nil, nil
 	}
 
 	chWait := make(chan int, 1)
+	chAck := make(chan struct{}, 1)
+
+	ackChan = chAck
 
 	// is next, can be release directly
 	if ok, info := constraintMain.isNext(key); ok {
@@ -125,7 +132,7 @@ func WaitForReplayPath(op Operation, file string, line int) chan int {
 
 		chWait <- info
 		constraintMain.update(key)
-		return chWait
+		return chWait, chAck
 	}
 
 	if printDebug {
@@ -134,7 +141,7 @@ func WaitForReplayPath(op Operation, file string, line int) chan int {
 
 	waiting.add(key, chWait)
 
-	return chWait
+	return chWait, chAck
 }
 
 // AdvocateIgnoreReplay decides if an operation should be ignored for replay.

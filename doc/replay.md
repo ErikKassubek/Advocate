@@ -259,14 +259,17 @@ In each of the implementations of the operations that are considered in the
 replay, the following (or similar) code snipped has been added:
 
 ```go
-wait, chWait, chAck := runtime.WaitForReplay(runtime.OperationMutexTryLock, 2, true)
-if wait {
-	defer func() { chAck <- struct{}{} }()  // not in channel/select
+chWait, chAck := runtime.WaitForReplay(runtime.OperationMutexTryLock, 2, true)
+if chWait != nil {
 	replayElem := <-chWait
-	if replayElem.Blocked {
-		runtime.BlockForever()
-	}
 }
+
+...
+
+if chWait != nil {
+	close(chAck)
+}
+
 ```
 
 When a operation wants to execute

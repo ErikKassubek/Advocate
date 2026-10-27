@@ -92,13 +92,17 @@ func (o *Once) Do(f func()) {
 	// the o.done.Store must be delayed until after f returns.
 
 	// ADVOCATE-START
-	ch := runtime.WaitForReplay(runtime.OperationOnceDo, runtime.CallerSkipOne)
+	ch, chAck := runtime.WaitForReplay(runtime.OperationOnceDo, runtime.CallerSkipOne)
 	if ch != nil {
 		<-ch
 	}
 
 	index := runtime.AdvocateOnceReq(unsafe.Pointer(o), o.id)
 	res := false
+
+	if chAck != nil {
+		close(chAck)
+	}
 	// ADVOCATE-END
 
 	if !o.done.Load() {

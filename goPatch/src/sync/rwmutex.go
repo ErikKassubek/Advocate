@@ -74,9 +74,9 @@ const rwmutexMaxReaders = 1 << 30
 // documentation on the [RWMutex] type.
 func (rw *RWMutex) RLock() {
 	// ADVOCATE-START
-	ch := runtime.WaitForReplay(runtime.OperationRWMutexRLock, runtime.CallerSkipMutex)
-	if ch != nil {
-		<-ch
+	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexRLock, runtime.CallerSkipMutex)
+	if chWait != nil {
+		<-chWait
 	}
 
 	// AdvocateMutexReq records, that a routine tries to lock a mutex.
@@ -91,6 +91,13 @@ func (rw *RWMutex) RLock() {
 		race.Read(unsafe.Pointer(&rw.w))
 		race.Disable()
 	}
+
+	// ADVOCATE-START
+	if chAck != nil {
+		close(chAck)
+	}
+	// ADVOCATE-END
+
 	if rw.readerCount.Add(1) < 0 {
 		// A writer is pending, wait for it.
 		runtime_SemacquireRWMutexR(&rw.readerSem, false, 0)
@@ -112,9 +119,9 @@ func (rw *RWMutex) RLock() {
 // in a particular use of mutexes.
 func (rw *RWMutex) TryRLock() bool {
 	// ADVOCATE-START
-	ch := runtime.WaitForReplay(runtime.OperationRWMutexTryRLock, runtime.CallerSkipMutex)
-	if ch != nil {
-		<-ch
+	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexTryRLock, runtime.CallerSkipMutex)
+	if chWait != nil {
+		<-chWait
 	}
 
 	// AdvocateMutexReq records, that a routine tries to lock a mutex.
@@ -126,6 +133,13 @@ func (rw *RWMutex) TryRLock() bool {
 		race.Read(unsafe.Pointer(&rw.w))
 		race.Disable()
 	}
+
+	// ADVOCATE-START
+	if chAck != nil {
+		close(chAck)
+	}
+	// ADVOCATE-END
+
 	for {
 		c := rw.readerCount.Load()
 		if c < 0 {
@@ -162,9 +176,9 @@ func (rw *RWMutex) TryRLock() bool {
 // on entry to RUnlock.
 func (rw *RWMutex) RUnlock() {
 	// ADVOCATE-START
-	ch := runtime.WaitForReplay(runtime.OperationRWMutexRUnlock, runtime.CallerSkipMutex)
-	if ch != nil {
-		<-ch
+	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexRUnlock, runtime.CallerSkipMutex)
+	if chWait != nil {
+		<-chWait
 	}
 
 	// AdvocateMutexReq is used to record the unlocking of a mutex.
@@ -177,6 +191,13 @@ func (rw *RWMutex) RUnlock() {
 		race.ReleaseMerge(unsafe.Pointer(&rw.writerSem))
 		race.Disable()
 	}
+
+	// ADVOCATE-START
+	if chAck != nil {
+		close(chAck)
+	}
+	// ADVOCATE-END
+
 	if r := rw.readerCount.Add(-1); r < 0 {
 		// Outlined slow-path to allow the fast-path to be inlined
 		rw.rUnlockSlow(r)
@@ -207,9 +228,9 @@ func (rw *RWMutex) rUnlockSlow(r int32) {
 // Lock blocks until the lock is available.
 func (rw *RWMutex) Lock() {
 	// ADVOCATE-START
-	ch := runtime.WaitForReplay(runtime.OperationRWMutexLock, runtime.CallerSkipMutex)
-	if ch != nil {
-		<-ch
+	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexLock, runtime.CallerSkipMutex)
+	if chWait != nil {
+		<-chWait
 	}
 
 	// AdvocateMutexReq records, that a routine tries to lock a mutex.
@@ -224,6 +245,13 @@ func (rw *RWMutex) Lock() {
 		race.Read(unsafe.Pointer(&rw.w))
 		race.Disable()
 	}
+
+	// ADVOCATE-START
+	if chAck != nil {
+		close(chAck)
+	}
+	// ADVOCATE-END
+
 	// First, resolve competition with other writers.
 	rw.w.Lock()
 	// Announce to readers there is a pending writer.
@@ -250,9 +278,9 @@ func (rw *RWMutex) Lock() {
 // in a particular use of mutexes.
 func (rw *RWMutex) TryLock() bool {
 	// ADVOCATE-START
-	ch := runtime.WaitForReplay(runtime.OperationRWMutexTryLock, runtime.CallerSkipMutex)
-	if ch != nil {
-		<-ch
+	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexTryLock, runtime.CallerSkipMutex)
+	if chWait != nil {
+		<-chWait
 	}
 
 	// AdvocateMutexReq records, that a routine tries to lock a mutex.
@@ -264,6 +292,13 @@ func (rw *RWMutex) TryLock() bool {
 		race.Read(unsafe.Pointer(&rw.w))
 		race.Disable()
 	}
+
+	// ADVOCATE-START
+	if chAck != nil {
+		close(chAck)
+	}
+	// ADVOCATE-END
+
 	if !rw.w.TryLock() {
 		if race.Enabled {
 			race.Enable()
@@ -313,9 +348,9 @@ func (rw *RWMutex) TryLock() bool {
 // arrange for another goroutine to [RWMutex.RUnlock] ([RWMutex.Unlock]) it.
 func (rw *RWMutex) Unlock() {
 	// ADVOCATE-START
-	ch := runtime.WaitForReplay(runtime.OperationRWMutexUnlock, runtime.CallerSkipMutex)
-	if ch != nil {
-		<-ch
+	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexUnlock, runtime.CallerSkipMutex)
+	if chWait != nil {
+		<-chWait
 	}
 	// AdvocateMutexReq is used to record the unlocking of a mutex.
 	// AdvocatePost records the successful unlocking of a mutex.
@@ -329,6 +364,12 @@ func (rw *RWMutex) Unlock() {
 		race.Release(unsafe.Pointer(&rw.readerSem))
 		race.Disable()
 	}
+
+	// ADVOCATE-START
+	if chAck != nil {
+		close(chAck)
+	}
+	// ADVOCATE-END
 
 	// Announce to readers there is no active writer.
 	r := rw.readerCount.Add(rwmutexMaxReaders)

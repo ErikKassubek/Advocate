@@ -9,25 +9,34 @@ import (
 	"time"
 )
 
-const mainPath = "~/Uni/HiWi/ADVOCATE/examples/"
+const mainPath = "~/Uni/HiWi/Advocate/Experiments/Progs/PLDI/"
 
 var logMutex = sync.Mutex{}
 
 func main() {
 	names := []string{
 		// "canonicalTests",
-		"prometheus",
-		"grpc-go",
-		"go-ethereum",
-		"GoBench",
-		"syncthing",
-		"beego",
-		"nsq",
+		"argo-cd",
 		"bleve",
 		"bosun",
-		"argo-cd",
-		"hugo",
+		"caddy",
+		"dns",
+		"etcd",
+		"fabiolb",
+		"frp",
+		"gin",
+		"go-ethereum",
+		"gorums",
+		"grpc",
+		"kubernetes",
 		"moby",
+		"nsq",
+		"ollama",
+		"pholcus",
+		"prometheus",
+		"syncthing",
+		"terraform",
+		"zinx",
 	}
 
 	if err := os.Chdir("../../toolchain"); err != nil {

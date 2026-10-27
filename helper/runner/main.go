@@ -13,37 +13,29 @@ import (
 )
 
 const advocatePath = "/home/advocate/Advocate/Advocate/advocate/"
-const srcPath = "/home/advocate/Advocate/Experiments/Progs/Working/"
+const srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDI/"
 
 var progs = []string{
-	// "argo-cd",
+	"argo-cd",
 	"bleve",
 	"bosun",
 	"caddy",
 	"dns",
-	// "etcd",
-	// "fabiolb",
-	// "flannel",
-	// "frp",
-	// "gin",
+	"etcd",
+	"fabiolb",
+	"frp",
+	"gin",
 	"go-ethereum",
-	// "gofiber",
 	"gorums",
-	// "gravitational",
 	"grpc",
-	// "hugo",
 	"kubernetes",
-	// "moby",
+	"moby",
 	"nsq",
-	// "octant",
 	"ollama",
-	// "pholcus",
-	// "pipeline",
-	// "ponzu-cms",
+	"pholcus",
 	"prometheus",
-	// "syncthing",
+	"syncthing",
 	"terraform",
-	// "traefik",
 	"zinx",
 }
 
@@ -57,9 +49,9 @@ var modes = []string{
 	// "GoCR",
 }
 
-var settings = "-timeoutRec 30 -timeoutRep 30 -stats -noInfo -maxNumberElements 1000000"
+var settings = "-timeoutRun 30 -stats -noInfo -maxNumberElements 10000000"
 
-var maxWorker = 10
+var maxWorker = 2
 
 var fileMutex sync.Mutex
 
@@ -84,7 +76,6 @@ func main() {
 func readFlag() {
 	valuesFlag := flag.String("p", "", "Space-separated list of progs")
 	threadsFlags := flag.String("w", "", "Number of progs run parallel")
-	sectionFlag := flag.Int("s", 0, "Section")
 
 	// Parse the flags
 	flag.Parse()
@@ -100,44 +91,6 @@ func readFlag() {
 		if err != nil {
 			fmt.Println("Error:", err)
 			panic("Invalid value t")
-		}
-	}
-
-	switch *sectionFlag {
-	case 1:
-		progs = []string{
-			// "bleve",
-			// "bosun",
-			// "caddy",
-			// "dns",
-			// "etcd",
-			// "fabiolb",
-			// "flannel",
-			// "frp",
-			// "gin",
-			// "gofiber",
-			// "gorums",
-			// "gravitational",
-			// "argo-cd",
-			"terraform",
-		}
-	case 2:
-		progs = []string{
-			// "hugo",
-			// "kubernetes",
-			// "moby",
-			// "nsq",
-			// "octant",
-			// "ollama",
-			// "pholcus",
-			// "pipeline",
-			// "ponzu-cms",
-			// "syncthing",
-			// "traefik",
-			// "zinx",
-			// "prometheus",
-			// "grpc",
-			"go-ethereum",
 		}
 	}
 
