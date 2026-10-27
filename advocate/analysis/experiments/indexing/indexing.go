@@ -135,7 +135,6 @@ func updateAlloc(elem trace.Element, routID, d int, c string) {
 	callStack[routID].Pop()
 }
 
-const onlyRoutine = true
 const ignoreInternal = true
 const printPairs = true
 
@@ -144,14 +143,17 @@ func CheckForEq() {
 	allPairs := 0
 
 	keys := make([]trace.Element, 0, len(indices))
-	for k := range indices {
-		keys = append(keys, k)
+	for i := range indices {
+		keys = append(keys, i)
 	}
 
 	for i, e1 := range keys {
 		i1 := indices[e1]
 
-		if _, ok := e1.(*trace.ElementFork); onlyRoutine && !ok {
+		_, okFork1 := e1.(*trace.ElementFork)
+		_, okAlloc1 := e1.(*trace.ElementAlloc)
+
+		if !okFork1 && !okAlloc1 {
 			continue
 		}
 
@@ -163,7 +165,17 @@ func CheckForEq() {
 			e2 := keys[j]
 			i2 := indices[e2]
 
-			if _, ok := e2.(*trace.ElementFork); onlyRoutine && !ok {
+			_, okFork2 := e2.(*trace.ElementFork)
+			_, okAlloc2 := e2.(*trace.ElementAlloc)
+			if !okFork2 && !okAlloc2 {
+				continue
+			}
+
+			if e1.Type(false) != e2.Type(false) {
+				continue
+			}
+
+			if e1.Pos() != e2.Pos() {
 				continue
 			}
 
