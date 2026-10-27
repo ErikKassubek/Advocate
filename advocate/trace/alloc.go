@@ -111,17 +111,21 @@ func (this *Trace) AddTraceElementAlloc(routine int, t string, id string, elemTy
 
 func (this *Trace) AddTraceElementAllocFromElem(elem Element) {
 	var et OperationType
-	switch elem.Type(true) {
-	case "AC":
+	switch elem.(type) {
+	case *ElementChannel:
 		et = NewChannel
-	case "AD":
+	case *ElementCond:
 		et = NewCond
-	case "AM":
+	case *ElementMutex:
 		et = NewMutex
-	case "AW":
+	case *ElementWait:
 		et = NewWait
+	case *ElementOnce:
+		et = NewOnce
+	case *ElementAtomic:
+		et = NewAtomic
 	default:
-		panic("Unknown alloc type: " + elem.Type(true))
+		return
 	}
 
 	rout := elem.RoutineID()

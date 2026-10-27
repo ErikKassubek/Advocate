@@ -259,6 +259,10 @@ func (this *Trace) GetTraceElementFromBugArg(bugArg string) (Element, error) {
 		return nil, errors.New("Could not parse tPre from bug argument: " + bugArg)
 	}
 
+	if _, ok := this.routines[routine]; !ok {
+		return nil, errors.New(fmt.Sprintf("Could not get routine information for routine ID %d", routine))
+	}
+
 	for index, elem := range this.routines[routine].elems {
 		if elem.T(Request) == tPre {
 			return this.routines[routine].At(index), nil
