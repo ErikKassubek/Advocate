@@ -189,6 +189,11 @@ func writeConstraintOrder(fuzzingTracePath string, tr *trace.Trace, mut *f_roc.C
 	traceIter := tr.AsIterator()
 
 	for elem := traceIter.Next(); elem != nil; elem = traceIter.Next() {
+		// if alloc is not recorded, it has the same position as the first operation
+		// At the moment we do not use alloc in replay, we can therefore just skip it
+		if _, ok := elem.(*trace.ElementAlloc); ok {
+			continue
+		}
 		routPos := getRoutPos(elem)
 		posCounter[routPos]++
 		if _, ok := mutCounter[elem]; ok { // is in chain

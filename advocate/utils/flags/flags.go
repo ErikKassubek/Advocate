@@ -74,6 +74,8 @@ var (
 	Settings string
 
 	Scenarios string
+
+	HideFile bool
 )
 
 // execution control

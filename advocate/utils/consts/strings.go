@@ -14,7 +14,7 @@ const (
 	ModeFuzzing   = "fuzzing"
 	ModeAnalysis  = "analysis"
 	ModeGui       = "gui"
-	ModeShowTrace = "trace"
+	ModeShowTrace = "show"
 
 	ConfirmedTheBug = "confirmed the bug"
 

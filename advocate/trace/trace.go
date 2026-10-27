@@ -13,6 +13,7 @@ import (
 	"advocate/analysis/a_hb"
 	"advocate/analysis/hb/a_clock"
 	"advocate/utils/control"
+	"advocate/utils/flags"
 	"advocate/utils/log"
 	"advocate/utils/types"
 	"errors"
@@ -932,6 +933,9 @@ func (this *Trace) NormalizeRequestCommit() {
 // TODO: print select with case
 func (this *Trace) PrintAsTab() {
 	colSize := "%-30.30s"
+	if flags.HideFile {
+		colSize = "%-10.10s"
+	}
 
 	trIter := this.AsIterator()
 	numberRout := this.numberRoutines
@@ -961,7 +965,11 @@ func (this *Trace) PrintAsTab() {
 	println(header)
 
 	for elem := trIter.Next(); elem != nil; elem = trIter.Next() {
-		println(printCol(elem.RoutineID(), elem.StringMin()))
+		if elem.Committed() {
+			println(printCol(elem.RoutineID(), elem.StringMin()))
+		} else {
+			println(printCol(elem.RoutineID(), elem.StringMin()+"?"))
+		}
 	}
 
 }

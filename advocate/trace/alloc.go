@@ -11,6 +11,7 @@ package trace
 
 import (
 	"advocate/analysis/hb/a_clock"
+	"advocate/utils/flags"
 	"errors"
 	"fmt"
 	"strconv"
@@ -360,7 +361,12 @@ func (this *ElementAlloc) StringGui() string {
 // Returns:
 //   - string: The minimal string representation of the element
 func (this *ElementAlloc) StringMin() string {
-	return fmt.Sprintf("%s,%d,%s", string(this.elemType), this.Resource().shortID, this.Pos().Short())
+	pos := this.Pos().Short()
+	if flags.HideFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+
+	return fmt.Sprintf("%s,%d,%s", string(this.elemType), this.Resource().shortID, pos)
 }
 
 // ========================================================

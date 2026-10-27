@@ -228,7 +228,12 @@ func (this *ElementFunc) StringGui() string {
 // Returns:
 //   - string: The minimal string representation of the element
 func (this *ElementFunc) StringMin() string {
-	return fmt.Sprintf("%s,-,%s", string(FuncCall), this.Pos().Short())
+	pos := this.Pos().Short()
+	if flags.HideFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+
+	return fmt.Sprintf("%s,-,%s", string(FuncCall), pos)
 }
 
 // ========================================================

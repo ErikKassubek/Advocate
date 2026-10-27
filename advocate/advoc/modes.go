@@ -81,6 +81,7 @@ func modeToolchain(mode string, record bool, analysis bool, replay bool) (err er
 func modeShowTrace() error {
 	tr, _, _, err := io.CreateTraceFromFiles(flags.TracePath, true)
 	if err != nil {
+		log.Error(err)
 		return err
 	}
 

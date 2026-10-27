@@ -16,6 +16,7 @@ import (
 	"strconv"
 
 	"advocate/analysis/hb/a_clock"
+	"advocate/utils/flags"
 )
 
 // ========================================================
@@ -351,7 +352,12 @@ func (this *ElementOnce) StringMin() string {
 	if !this.suc {
 		op = OnceFail
 	}
-	return fmt.Sprintf("%s,%d,%s", op, this.Resource().shortID, this.Pos().Short())
+	pos := this.Pos().Short()
+	if flags.HideFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+
+	return fmt.Sprintf("%s,%d,%s", op, this.Resource().shortID, pos)
 }
 
 // ========================================================

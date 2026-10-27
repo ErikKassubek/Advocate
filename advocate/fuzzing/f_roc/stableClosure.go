@@ -22,7 +22,6 @@ import (
 // (c) for every (k,q,l,go(p')) in T and (k',q',l',o') with q' = p' we have that (k,q,l,go(p')) in Cl_t(S)
 //
 // THe Stable closure CL is then CL_T(S) \ S
-
 func CalcuateStableClosure(s *Constraint) *Constraint {
 	t := a_base.MainTrace
 	tIter := t.AsIterator()

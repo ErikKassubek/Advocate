@@ -127,9 +127,8 @@ func runWorkflowMain(
 		log.Info("Run program for execution")
 		timer.Start(timer.Recording)
 		execPath := paths.MakePathLocal(flags.ExecName)
-		if err := command.RunCommand(origStdout, origStderr, command.NoTimeout, execPath); err != nil {
-			log.Error("Error in Run Recording: ", err.Error())
-		}
+		command.RunCommand(origStdout, origStderr, command.NoTimeout, execPath)
+
 		timer.Stop(timer.Recording)
 	}
 

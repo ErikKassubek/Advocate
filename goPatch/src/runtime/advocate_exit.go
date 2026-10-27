@@ -123,10 +123,11 @@ func SetExitCodeFromPanicMsg(msg any) {
 // Parameter:
 //   - msg: the panic message
 func AdvocatePanic(msg any) {
-	if hasPanicked {
-		exit(1)
-	}
-	hasPanicked = true
+	// if hasPanicked {
+	// 	println("Second Panic")
+	// 	return
+	// }
+	// hasPanicked = true
 
 	constraintMain.releaseAllBlocked()
 

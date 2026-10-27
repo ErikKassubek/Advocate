@@ -133,6 +133,7 @@ func WaitForReplayPath(op Operation, file string, line int) (string, chan int) {
 
 	if printDebug {
 		println("Wait: ", key)
+		println("Next: ", constraintMain.getNext().key)
 	}
 
 	waiting.add(key, chWait)
