@@ -69,7 +69,7 @@ func AdvocateAllocMutex(ptr unsafe.Pointer) {
 // blocks until the mutex is available.
 func (m *Mutex) Lock() {
 	// ADVOCATE-START
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationMutexLock, runtime.CallerSkipMutex)
+	key, chWait := runtime.WaitForReplay(runtime.OperationMutexLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
@@ -81,8 +81,8 @@ func (m *Mutex) Lock() {
 	// pre event.
 	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexLock)
 
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 
@@ -100,7 +100,7 @@ func (m *Mutex) Lock() {
 // in a particular use of mutexes.
 func (m *Mutex) TryLock() bool {
 	// ADVOCATE-START
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationMutexTryLock, runtime.CallerSkipMutex)
+	key, chWait := runtime.WaitForReplay(runtime.OperationMutexTryLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
@@ -109,8 +109,8 @@ func (m *Mutex) TryLock() bool {
 	// advocateIndex is used for AdvocateMutexCom to find the pre event.
 	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexTryLock)
 
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 
 	res := m.mu.TryLock()
@@ -129,7 +129,7 @@ func (m *Mutex) TryLock() bool {
 // arrange for another goroutine to unlock it.
 func (m *Mutex) Unlock() {
 	// ADVOCATE-START
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationMutexUnlock, runtime.CallerSkipMutex)
+	key, chWait := runtime.WaitForReplay(runtime.OperationMutexUnlock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
@@ -148,8 +148,8 @@ func (m *Mutex) Unlock() {
 	m.mu.Unlock()
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 

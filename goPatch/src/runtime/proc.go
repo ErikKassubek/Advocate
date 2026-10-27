@@ -5417,7 +5417,7 @@ func newproc(fn *funcval) {
 	}
 	file, line := funcline(f, tracepc)
 
-	chWait, chAck := WaitForReplayPath(OperationSpawn, file, int(line))
+	key, chWait := WaitForReplayPath(OperationSpawn, file, int(line))
 	index := 1
 
 	// main routine
@@ -5458,8 +5458,8 @@ func newproc(fn *funcval) {
 			AdvocateSpawnCaller(gp.advocateRoutineInfo, newg.advocateRoutineInfo.id, file, line)
 		}
 
-		if chAck != nil {
-			close(chAck)
+		if !advocateIgnoreFork(file) && chWait != nil {
+			AckReplay(key)
 		}
 		// ADVOCATE-END
 

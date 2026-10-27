@@ -17,6 +17,7 @@ type ConstraintElem struct {
 	key   string
 	index int
 	info  int
+	chAck chan struct{}
 }
 
 func NewConstraintElem(routine int, file string, line, index, info int) *ConstraintElem {
@@ -148,9 +149,6 @@ func (this *Constraint) isInConstraint(key string) bool {
 }
 
 func (this *Constraint) update(key string) {
-	// sleep(releaseSleep)
-	<-ackChan
-
 	lock(&this.mu)
 	this.elemIndex[key]++
 	this.replayIndex++
@@ -173,7 +171,6 @@ func (this *Constraint) releaseBlocked() {
 
 		c <- next.info
 		waiting.remove(next)
-		this.update(next.key)
 	}
 }
 
@@ -196,7 +193,7 @@ func GetWaiting() []string {
 	res := make([]string, len(waiting.waiting))
 
 	i := 0
-	for key, _ := range waiting.waiting {
+	for key := range waiting.waiting {
 		res[i] = key
 	}
 

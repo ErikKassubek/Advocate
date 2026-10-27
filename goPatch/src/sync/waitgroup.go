@@ -104,7 +104,7 @@ func (wg *WaitGroup) Add(delta int) {
 	if delta > 0 {
 		skip = runtime.CallerSkipWaitGroupAddWait
 	}
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationWaitgroupAddDone, skip)
+	key, chWait := runtime.WaitForReplay(runtime.OperationWaitgroupAddDone, skip)
 	if chWait != nil {
 		<-chWait
 	}
@@ -120,8 +120,8 @@ func (wg *WaitGroup) Add(delta int) {
 	}
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 
@@ -221,7 +221,7 @@ func (wg *WaitGroup) Done() {
 // Wait blocks until the [WaitGroup] task counter is zero.
 func (wg *WaitGroup) Wait() {
 	// ADVOCATE-START
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationWaitgroupWait, runtime.CallerSkipWaitGroupAddWait)
+	key, chWait := runtime.WaitForReplay(runtime.OperationWaitgroupWait, runtime.CallerSkipWaitGroupAddWait)
 	if chWait != nil {
 		<-chWait
 	}
@@ -238,8 +238,8 @@ func (wg *WaitGroup) Wait() {
 	}
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 

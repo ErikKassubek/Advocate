@@ -74,7 +74,7 @@ const rwmutexMaxReaders = 1 << 30
 // documentation on the [RWMutex] type.
 func (rw *RWMutex) RLock() {
 	// ADVOCATE-START
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexRLock, runtime.CallerSkipMutex)
+	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexRLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
@@ -93,8 +93,8 @@ func (rw *RWMutex) RLock() {
 	}
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 
@@ -119,7 +119,7 @@ func (rw *RWMutex) RLock() {
 // in a particular use of mutexes.
 func (rw *RWMutex) TryRLock() bool {
 	// ADVOCATE-START
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexTryRLock, runtime.CallerSkipMutex)
+	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexTryRLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
@@ -135,8 +135,8 @@ func (rw *RWMutex) TryRLock() bool {
 	}
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 
@@ -176,7 +176,7 @@ func (rw *RWMutex) TryRLock() bool {
 // on entry to RUnlock.
 func (rw *RWMutex) RUnlock() {
 	// ADVOCATE-START
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexRUnlock, runtime.CallerSkipMutex)
+	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexRUnlock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
@@ -193,8 +193,8 @@ func (rw *RWMutex) RUnlock() {
 	}
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 
@@ -228,7 +228,7 @@ func (rw *RWMutex) rUnlockSlow(r int32) {
 // Lock blocks until the lock is available.
 func (rw *RWMutex) Lock() {
 	// ADVOCATE-START
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexLock, runtime.CallerSkipMutex)
+	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
@@ -247,8 +247,8 @@ func (rw *RWMutex) Lock() {
 	}
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 
@@ -278,7 +278,7 @@ func (rw *RWMutex) Lock() {
 // in a particular use of mutexes.
 func (rw *RWMutex) TryLock() bool {
 	// ADVOCATE-START
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexTryLock, runtime.CallerSkipMutex)
+	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexTryLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
@@ -294,8 +294,8 @@ func (rw *RWMutex) TryLock() bool {
 	}
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 
@@ -348,7 +348,7 @@ func (rw *RWMutex) TryLock() bool {
 // arrange for another goroutine to [RWMutex.RUnlock] ([RWMutex.Unlock]) it.
 func (rw *RWMutex) Unlock() {
 	// ADVOCATE-START
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationRWMutexUnlock, runtime.CallerSkipMutex)
+	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexUnlock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
@@ -366,8 +366,8 @@ func (rw *RWMutex) Unlock() {
 	}
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 

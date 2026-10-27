@@ -222,9 +222,9 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr, ignored
 	// ADVOCATE-START
 	// wait until the replay has reached the current point
 	var chWait chan int = nil
-	var chAck chan struct{} = nil
+	var key string
 	if !ignored && !c.advocateIgnore {
-		chWait, chAck = WaitForReplay(OperationChannelSend, CallerSkipChanSendRecv)
+		key, chWait = WaitForReplay(OperationChannelSend, CallerSkipChanSendRecv)
 		if chWait != nil {
 			<-chWait
 		}
@@ -250,8 +250,8 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr, ignored
 	// chanrecv() and closechan() to update this thread's view of c.closed and full().
 	if !block && c.closed == 0 && full(c) {
 		// ADVOCATE-START
-		if chAck != nil {
-			close(chAck)
+		if chWait != nil {
+			AckReplay(key)
 		}
 		// ADVOCATE-END
 		return false
@@ -265,8 +265,8 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr, ignored
 	lock(&c.lock)
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		AckReplay(key)
 	}
 	// ADVOCATE-END
 
@@ -531,9 +531,9 @@ func closechan(c *hchan) {
 	// AdvocateChanClose is called when a channel is closed. It creates a close event
 	// in the trace.
 	var chWait chan int = nil
-	var chAck chan struct{} = nil
+	var key string
 	if !c.advocateIgnore {
-		chWait, chAck = WaitForReplay(OperationChannelClose, CallerSkipChanClose)
+		key, chWait = WaitForReplay(OperationChannelClose, CallerSkipChanClose)
 		if chWait != nil {
 			<-chWait
 		}
@@ -544,8 +544,8 @@ func closechan(c *hchan) {
 	lock(&c.lock)
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		AckReplay(key)
 	}
 	// ADVOCATE-END
 
@@ -683,9 +683,9 @@ func chanrecv(c *hchan, ep unsafe.Pointer, block bool, ignored bool) (selected, 
 	// ADVOCATE-START
 	// wait until the replay has reached the current point
 	var chWait chan int = nil
-	var chAck chan struct{} = nil
+	var key string
 	if !ignored && !c.advocateIgnore {
-		chWait, chAck = WaitForReplay(OperationChannelRecv, CallerSkipChanSendRecv)
+		key, chWait = WaitForReplay(OperationChannelRecv, CallerSkipChanSendRecv)
 		if chWait != nil {
 			<-chWait
 		}
@@ -711,8 +711,8 @@ func chanrecv(c *hchan, ep unsafe.Pointer, block bool, ignored bool) (selected, 
 			// and report that the receive cannot proceed.
 
 			// ADVOCATE-START
-			if chAck != nil {
-				close(chAck)
+			if chWait != nil {
+				AckReplay(key)
 			}
 			// ADVOCATE-END
 
@@ -731,8 +731,8 @@ func chanrecv(c *hchan, ep unsafe.Pointer, block bool, ignored bool) (selected, 
 			}
 
 			// ADVOCATE-START
-			if chAck != nil {
-				close(chAck)
+			if chWait != nil {
+				AckReplay(key)
 			}
 			// ADVOCATE-END
 
@@ -748,8 +748,8 @@ func chanrecv(c *hchan, ep unsafe.Pointer, block bool, ignored bool) (selected, 
 	lock(&c.lock)
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		AckReplay(key)
 	}
 	// ADVOCATE-END
 
@@ -1011,9 +1011,9 @@ func selectnbsend(c *hchan, elem unsafe.Pointer) (selected bool) {
 	// ADVOCATE-START
 	selectedCase := 0
 	var chWait chan int = nil
-	var chAck chan struct{} = nil
+	var key string
 	if c != nil && !c.advocateIgnore {
-		chWait, chAck = WaitForReplay(OperationSelect, CallerSkipSelectOneDef)
+		key, chWait = WaitForReplay(OperationSelect, CallerSkipSelectOneDef)
 		if chWait != nil {
 			selectedCase = <-chWait
 		}
@@ -1033,8 +1033,8 @@ func selectnbsend(c *hchan, elem unsafe.Pointer) (selected bool) {
 	}
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		AckReplay(key)
 	}
 	// ADVOCATE-END
 
@@ -1084,9 +1084,9 @@ func selectnbrecv(elem unsafe.Pointer, c *hchan) (selected, received bool) {
 	// see selectnbsend
 	selectedCase := 0
 	var chWait chan int = nil
-	var chAck chan struct{} = nil
+	var key string
 	if c != nil && !c.advocateIgnore {
-		chWait, chAck = WaitForReplay(OperationSelect, CallerSkipSelectOneDef)
+		key, chWait = WaitForReplay(OperationSelect, CallerSkipSelectOneDef)
 		if chWait != nil {
 			selectedCase = <-chWait
 		}
@@ -1106,8 +1106,8 @@ func selectnbrecv(elem unsafe.Pointer, c *hchan) (selected, received bool) {
 	}
 
 	// ADVOCATE-START
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		AckReplay(key)
 	}
 	// ADVOCATE-END
 

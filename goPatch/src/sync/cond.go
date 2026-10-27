@@ -92,7 +92,7 @@ func (c *Cond) Wait() {
 	// ADVOCATE-START
 
 	// replay
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationCondWait, runtime.CallerSkipCond)
+	key, chWait := runtime.WaitForReplay(runtime.OperationCondWait, runtime.CallerSkipCond)
 	if chWait != nil {
 		<-chWait
 	}
@@ -101,8 +101,8 @@ func (c *Cond) Wait() {
 	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondWait)
 	defer runtime.AdvocateCondCom(advocateIndex)
 
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 	c.checker.check()
@@ -123,7 +123,7 @@ func (c *Cond) Signal() {
 	// ADVOCATE-START
 
 	// replay
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationCondSignal, runtime.CallerSkipCond)
+	key, chWait := runtime.WaitForReplay(runtime.OperationCondSignal, runtime.CallerSkipCond)
 	if chWait != nil {
 		<-chWait
 	}
@@ -131,8 +131,8 @@ func (c *Cond) Signal() {
 	// recording
 	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondSignal)
 	defer runtime.AdvocateCondCom(advocateIndex)
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 	c.checker.check()
@@ -149,7 +149,7 @@ func (c *Cond) Broadcast() {
 	// ADVOCATE-START
 
 	// replay
-	chWait, chAck := runtime.WaitForReplay(runtime.OperationCondBroadcast, runtime.CallerSkipCond)
+	key, chWait := runtime.WaitForReplay(runtime.OperationCondBroadcast, runtime.CallerSkipCond)
 	if chWait != nil {
 		<-chWait
 	}
@@ -158,8 +158,8 @@ func (c *Cond) Broadcast() {
 	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondBroadcast)
 	defer runtime.AdvocateCondCom(advocateIndex)
 
-	if chAck != nil {
-		close(chAck)
+	if chWait != nil {
+		runtime.AckReplay(key)
 	}
 	// ADVOCATE-END
 	c.checker.check()
