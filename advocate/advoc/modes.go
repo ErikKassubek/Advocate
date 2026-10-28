@@ -45,7 +45,7 @@ func modeFuzzing() error {
 //
 // Note:
 //   - If recording is false, but analysis or replay is set, -trace must be set
-func modeToolchain(mode string, record bool, analysis bool, replay bool) (err error) {
+func modeToolchain(record bool, analysis bool, replay bool) (err error) {
 	if !record && (analysis || replay) {
 		flags.TracePath, err = paths.CheckPath(flags.TracePath)
 		if err != nil {
@@ -54,14 +54,14 @@ func modeToolchain(mode string, record bool, analysis bool, replay bool) (err er
 		}
 	}
 
-	if mode == "test" && !record && replay && flags.ExecName == "" {
+	if !flags.ModeMain && !record && replay && flags.ExecName == "" {
 		log.Error("When running replay of test without recording, -exec [TestName] must be set")
 		panic("When running replay of test without recording, -exec [TestName] must be set")
 	}
 
 	firstRun := true
 	fileNumber, testNumber := 1, 0
-	_, _, err = toolchain.Run(mode, "", record, analysis,
+	_, _, err = toolchain.Run("", record, analysis,
 		replay, -1, "", firstRun, fileNumber, testNumber)
 	if err != nil {
 		return err

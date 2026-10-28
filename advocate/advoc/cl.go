@@ -70,6 +70,8 @@ func CommandLine() bool {
 
 	flag.BoolVar(&flags.HideFile, "hideFile", false, "Do not show the file name. Only used for 'show' mode")
 
+	flag.StringVar(&flags.Experiment, "experiment", "", "Name of the experiment, only in experiment mode.")
+
 	flag.StringVar(&flags.Scenarios, "scen", "", "Select which analysis scenario to run, e.g. -scen srd for the option s, r and d."+
 		"If not set, all scenarios are run.\n"+
 		"Options:\n"+

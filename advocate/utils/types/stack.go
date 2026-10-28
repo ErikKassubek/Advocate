@@ -67,3 +67,12 @@ func (this *Stack[T]) IsEmpty() bool {
 func (this *Stack[T]) Size() int {
 	return len(this.items)
 }
+
+// AsArray returns the array of the stack
+// The first element is the bottom element in the stack
+//
+// Returns:
+//   - []T: The stack as an array
+func (this *Stack[T]) AsArray() []T {
+	return this.items
+}

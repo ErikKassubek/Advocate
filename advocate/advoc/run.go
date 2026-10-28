@@ -11,6 +11,7 @@ package advoc
 
 import (
 	"advocate/analysis/a_base"
+	"advocate/experiments"
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_fuzzing"
 	"advocate/utils/command"
@@ -82,11 +83,6 @@ func Run() error {
 		return err
 	}
 
-	modeMainTest := "test"
-	if flags.ModeMain {
-		modeMainTest = "main"
-	}
-
 	if flags.Mode != "show" {
 		CheckProg()
 		command.RunGoModTidy()
@@ -100,17 +96,20 @@ func Run() error {
 	switch flags.Mode {
 	case "analysis":
 		flags.Mode = consts.ModeAnalysis
-		err = modeToolchain(modeMainTest, record, analysis, replay)
+		err = modeToolchain(record, analysis, replay)
 	case "fuzzing":
 		flags.Mode = consts.ModeFuzzing
 		err = modeFuzzing()
 	case "record", "recording", "trace":
 		flags.Mode = consts.ModeRecord
 		flags.DeleteTraces = false
-		err = modeToolchain(modeMainTest, record, !analysis, !replay)
+		err = modeToolchain(record, !analysis, !replay)
 	case "replay":
 		flags.Mode = consts.ModeReplay
-		err = modeToolchain(modeMainTest, !record, !analysis, replay)
+		err = modeToolchain(!record, !analysis, replay)
+	case "experiment":
+		flags.Mode = consts.ModeExperiment
+		experiments.Run()
 	case "show":
 		flags.Mode = consts.ModeShowTrace
 		err = modeShowTrace()

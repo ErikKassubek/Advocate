@@ -32,7 +32,7 @@ func GetConcurrentAllPairs(elem trace.Element, all, sameElem, weak bool) []trace
 	id := elem.ResourceID()
 	routId := elem.RoutineID()
 
-	for r, routine := range a_base.MainTrace.GetTraces() {
+	for r, routine := range a_base.MainTrace.Routines() {
 		// same routine
 		if routId == r {
 			continue
@@ -97,7 +97,7 @@ func GetConcurrent(elem trace.Element, all, sameElem, weak bool) []trace.Element
 
 	res := make([]trace.Element, 0)
 
-	for routID, routine := range a_base.MainTrace.GetTraces() {
+	for routID, routine := range a_base.MainTrace.Routines() {
 		if routID == elem.RoutineID() {
 			continue
 		}

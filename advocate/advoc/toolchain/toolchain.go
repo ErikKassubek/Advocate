@@ -20,7 +20,6 @@ import (
 // Run is the main function for the toolchain
 //
 // Parameter:
-//   - mode string: mode of the toolchain (main or test or explain)
 //   - pathToTest string: specify specific test path, only used for fuzzing
 //   - runRecord bool: run the recording. If set to false, but runAnalysis or runReplay is
 //     set the trace at tracePath is used
@@ -37,14 +36,14 @@ import (
 //   - int: TraceID
 //   - int: number results
 //   - error
-func Run(mode, pathToTest string,
+func Run(pathToTest string,
 	runRecord, runAnalysis, runReplay bool, fuzzing int, fuzzingTrace string,
 	firstRun bool, fileNumber, testNumber int) (int, int, error) {
 
 	a_base.Clear()
 
-	switch mode {
-	case "main":
+	switch flags.ModeMain {
+	case true:
 		if paths.Advocate == "" {
 			return 0, 0, fmt.Errorf("Path to advocate required for mode main")
 		}
@@ -59,7 +58,7 @@ func Run(mode, pathToTest string,
 		}
 		return runWorkflowMain(runRecord, runAnalysis, runReplay,
 			fuzzing, fuzzingTrace, firstRun)
-	case "test", "tests":
+	case false:
 		if paths.Advocate == "" {
 			return 0, 0, fmt.Errorf("Path to advocate required")
 		}

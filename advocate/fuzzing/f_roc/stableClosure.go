@@ -56,7 +56,7 @@ func CalcuateStableClosure(s *Constraint) *Constraint {
 		if forks[rout] {
 			continue
 		}
-		forkElem := t.GetRoutineTrace(rout).Fork()
+		forkElem := t.GetRoutine(rout).Fork()
 
 		if forkElem == nil {
 			continue
@@ -100,7 +100,7 @@ func CalcuateStableClosure(s *Constraint) *Constraint {
 			if forks[rout] {
 				continue
 			}
-			forkElem := t.GetRoutineTrace(rout).Fork()
+			forkElem := t.GetRoutine(rout).Fork()
 
 			if forkElem == nil {
 				continue

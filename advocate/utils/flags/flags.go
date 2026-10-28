@@ -76,6 +76,8 @@ var (
 	Scenarios string
 
 	HideFile bool
+
+	Experiment string
 )
 
 // execution control

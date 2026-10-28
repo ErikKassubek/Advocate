@@ -205,15 +205,9 @@ func runFuzzing(testPath string, firstRun bool, fileNumber, testNumber int) erro
 		firstRun = firstRun && (f_base.NumberFuzzingRuns == 0)
 
 		// Run the test/mutation
-
-		mode := "test"
-		if flags.ModeMain {
-			mode = "main"
-		}
-
 		runAnalysis := true
 		runRecord := true
-		traceID, numberResults, err := toolchain.Run(mode, testPath, runRecord, runAnalysis, runAnalysis,
+		traceID, numberResults, err := toolchain.Run(testPath, runRecord, runAnalysis, runAnalysis,
 			f_base.NumberFuzzingRuns, fuzzingPath, firstRun, fileNumber, testNumber)
 
 		f_base.NumberFuzzingRuns++

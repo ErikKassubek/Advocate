@@ -253,7 +253,7 @@ func CheckForSelectCaseWithPartnerClose(cl *trace.ElementChannel, vc *a_clock.Ve
 // is needed to find potential communication partners for not executed
 // select cases, if the select was executed after the channel
 func RerunCheckForSelectCaseWithPartnerChannel() {
-	for _, routine := range a_base.MainTrace.GetTraces() {
+	for _, routine := range a_base.MainTrace.Routines() {
 		for _, elem := range routine.Elems() {
 			if e, ok := elem.(*trace.ElementChannel); ok {
 				CheckForSelectCaseWithPartnerChannel(e, e.GetVC(a_clock.Strong),

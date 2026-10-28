@@ -161,7 +161,7 @@ func ShortenRoutine(routine int, time int) {
 // Returns:
 //   - *trace.Routine: The routine
 func GetRoutineTrace(id int) *trace.Routine {
-	return MainTrace.GetRoutineTrace(id)
+	return MainTrace.GetRoutine(id)
 }
 
 // ShortenRoutineIndex a given a routine to index

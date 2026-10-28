@@ -155,16 +155,16 @@ func (this *Trace) AddRoutine(routine int) *Routine {
 	return this.routines[routine]
 }
 
-// GetTraces returns the traces
+// Routines returns the traces
 //
 // Returns:
 //   - map[int][]traceElement: The traces
-func (this *Trace) GetTraces() map[int]*Routine {
+func (this *Trace) Routines() map[int]*Routine {
 	return this.routines
 }
 
-// GetTraceSize returns the number of TraceElement with cap and len
-func (this *Trace) GetTraceSize() (int, int) {
+// GetRoutineSize returns the number of TraceElement with cap and len
+func (this *Trace) GetRoutineSize() (int, int) {
 	capTot := 0
 	lenTot := 0
 	for _, rout := range this.routines {
@@ -175,14 +175,14 @@ func (this *Trace) GetTraceSize() (int, int) {
 	return capTot, lenTot
 }
 
-// GetRoutineTrace returns the trace of the given routine
+// GetRoutine returns the trace of the given routine
 //
 // Parameter:
 //   - id int: The id of the routine
 //
 // Returns:
 //   - []Element: The trace of the routine
-func (this *Trace) GetRoutineTrace(id int) *Routine {
+func (this *Trace) GetRoutine(id int) *Routine {
 	if r, ok := this.routines[id]; ok {
 		return r
 	}

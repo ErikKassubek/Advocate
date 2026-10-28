@@ -36,7 +36,7 @@ func ParseTrace(tr *trace.Trace) {
 	f_gopie.CurrentChain = f_roc.NewConstraint()
 	f_gopie.LastRoutine = -1
 
-	for _, routine := range tr.GetTraces() {
+	for _, routine := range tr.Routines() {
 
 		if control.WasCanceled() {
 			return

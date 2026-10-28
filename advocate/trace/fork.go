@@ -81,7 +81,7 @@ func (this *Trace) AddTraceElementFork(routine int, tPost string, id string, pos
 	lastCall[idInt].Push(getLastCall(routine))
 
 	// add element to created routine
-	newRoutine := this.GetRoutineTrace(elem.objId)
+	newRoutine := this.GetRoutine(elem.objId)
 
 	newRoutine.setFork(&elem)
 

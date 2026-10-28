@@ -53,7 +53,7 @@ func WriteTrace(traceToWrite *trace.Trace, path string, replay, control bool) er
 			}
 			defer file.Close()
 
-			rout := traceToWrite.GetRoutineTrace(i)
+			rout := traceToWrite.GetRoutine(i)
 			// if rout == nil {
 			// 	return
 			// }
