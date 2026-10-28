@@ -8,7 +8,7 @@
 //
 // License: BSD-3-Clause
 
-//go:build !nogui
+//go:build gui
 
 package gui
 

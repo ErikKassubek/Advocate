@@ -171,13 +171,13 @@ func CheckForEq() {
 				continue
 			}
 
-			if e1.Type(false) != e2.Type(false) {
-				continue
-			}
+			// if e1.Type(false) != e2.Type(false) {
+			// 	continue
+			// }
 
-			if e1.Pos() != e2.Pos() {
-				continue
-			}
+			// if e1.Pos() != e2.Pos() {
+			// 	continue
+			// }
 
 			if ignoreInternal && strings.Contains(e2.File(), "/Advocate/goPatch/src") {
 				continue
