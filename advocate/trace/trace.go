@@ -261,7 +261,7 @@ func (this *Trace) GetTraceElementFromBugArg(bugArg string) (Element, error) {
 	}
 
 	if _, ok := this.routines[routine]; !ok {
-		return nil, errors.New(fmt.Sprintf("Could not get routine information for routine ID %d", routine))
+		return nil, fmt.Errorf("Could not get routine information for routine ID %d", routine)
 	}
 
 	for index, elem := range this.routines[routine].elems {
@@ -509,6 +509,10 @@ func (this *Trace) CallTree() *CallTree {
 
 func (this *Trace) ForkTree() map[int][]int {
 	return this.forkTree
+}
+
+func (this *Trace) HbWasCalc() bool {
+	return this.hbWasCalc
 }
 
 // ========================================================

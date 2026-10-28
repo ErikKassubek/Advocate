@@ -28,7 +28,7 @@ type BugClass string
 
 const (
 	Actual          BugClass = "Actual"
-	Potential       BugClass = "PossiPotentialble"
+	Potential       BugClass = "Possible"
 	Runtime         BugClass = "Runtime"
 	UnknownBugClass BugClass = "Unknown"
 )

@@ -111,7 +111,7 @@ func CreateOverview(ignoreDouble bool, traceID, fuzzing int) (int, error) {
 	// remove possible partner information if not searched for
 	buildBugCodes()
 
-	replayCodes, blockedByReplay := getOutputInfo()
+	_, blockedByReplay := getOutputInfo()
 
 	progInfo, err := readProgInfo()
 	if err != nil {
@@ -169,18 +169,18 @@ func CreateOverview(ignoreDouble bool, traceID, fuzzing int) (int, error) {
 			}
 
 			// get the replay info
-			replay := getRewriteInfo(bugType, replayCodes, id)
+			// replay := getRewriteInfo(bugType, replayCodes, id)
 
-			if ignoreDouble && replay[exitCode] == "double" {
-				continue
-			}
+			// if ignoreDouble && replay[exitCode] == "double" {
+			// 	continue
+			// }
 
 			if !writeBug(bugType, bugPos) {
 				continue
 			}
 
 			err = writeFile(paths.CurrentResult, id, bugTypeDescription, bugPos, bugElemType, code,
-				replay, progInfo, fuzzing, falsePositive)
+				progInfo, fuzzing, falsePositive)
 		}
 	}
 
@@ -269,12 +269,11 @@ func readAnalysisResults(path string, index int, fileWithHeader string) (helper.
 //
 // Parameter:
 //   - path string: path where the explanation file should be created
-//   - index int: index of the bug file (name is e.g. bug_[index])
+//   - index int: index of the bug file (name is e.g. bug_actual_[index])
 //   - description map[string]string: description of the bug, containing e.g. bug/diagnostics, name, explanation
 //   - positions map[int][]string: positions of the bug elements
 //   - bugElemType map[int]string: types of the bug elements
 //   - code map[int][]string: program codes that contains the bug elements
-//   - replay map[string]string: information about the replay
 //   - progInfo map[string]sting: Info about the prog, e.g. prog/test name
 //   - fuzzing int: Fuzzing run number
 //   - falsePositive bool: true if it is likely a false positive
@@ -283,7 +282,7 @@ func readAnalysisResults(path string, index int, fileWithHeader string) (helper.
 //   - error
 func writeFile(path string, index string, description map[bugKeys]string,
 	positions map[int][]string, bugElemType map[int]string, code map[int][]string,
-	replay map[bugKeys]string, progInfo map[bugKeys]string, fuzzing int, falsePositive bool) error {
+	progInfo map[bugKeys]string, fuzzing int, falsePositive bool) error {
 
 	// write the bug type description
 	res := "# " + description[crit] + ": " + description[bugType] + " - " + description[name] + "\n\n"
@@ -434,7 +433,7 @@ func writeFile(path string, index string, description map[bugKeys]string,
 	if fuzzing == -1 {
 		fileName = filepath.Join(folderName, strings.ToLower(description[crit])) + "_" + index + ".md"
 	} else {
-		fileName = filepath.Join(folderName, fmt.Sprintf("%s_%d_%s.md", strings.ToLower(description[crit]), fuzzing, index))
+		fileName = filepath.Join(folderName, fmt.Sprintf("%s_%s_%d_%s.md", strings.ToLower(description[crit]), strings.ToLower(description[crit]), fuzzing, index))
 	}
 	file, err := os.Create(fileName)
 	if err != nil {

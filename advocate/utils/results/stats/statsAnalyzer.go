@@ -85,26 +85,16 @@ func statsAnalyzer(fuzzing int) (map[statsType]map[helper.ResultType]int, map[st
 			return nil
 		}
 
-		if fuzzing == -1 {
-			if strings.HasPrefix(info.Name(), "bug_") ||
-				strings.HasPrefix(info.Name(), "diagnostics_") ||
-				strings.HasPrefix(info.Name(), "replay_") ||
-				strings.HasPrefix(info.Name(), "leak_") {
-				err := processBugFile(path, foundBugs, resTotal, resUnique)
-				if err != nil {
-					log.Error(err)
-				}
-			}
-		} else {
-			if strings.HasPrefix(info.Name(), "bug_"+strconv.Itoa(fuzzing)+"_") ||
-				strings.HasPrefix(info.Name(), "replay_"+strconv.Itoa(fuzzing)+"_") ||
-				strings.HasPrefix(info.Name(), "potential_"+strconv.Itoa(fuzzing)+"_") ||
-				strings.HasPrefix(info.Name(), "diagnostics_"+strconv.Itoa(fuzzing)+"_") ||
-				strings.HasPrefix(info.Name(), "leak_"+strconv.Itoa(fuzzing)+"_") {
-				err := processBugFile(path, foundBugs, resTotal, resUnique)
-				if err != nil {
-					log.Error(err)
-				}
+		if (strings.HasPrefix(info.Name(), "bug_") ||
+			strings.HasPrefix(info.Name(), "diagnostics_") ||
+			strings.HasPrefix(info.Name(), "potential_") ||
+			strings.HasPrefix(info.Name(), "replay_") ||
+			strings.HasPrefix(info.Name(), "leak_")) &&
+			(fuzzing == -1 || strings.Contains(info.Name(), "_"+strconv.Itoa(fuzzing)+"_")) {
+
+			err := processBugFile(path, foundBugs, resTotal, resUnique)
+			if err != nil {
+				log.Error(err)
 			}
 		}
 
