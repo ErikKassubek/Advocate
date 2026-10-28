@@ -11,12 +11,14 @@ package advoc
 
 import (
 	"advocate/advoc/toolchain"
+	"advocate/experiments"
 	"advocate/fuzzing/f_fuzzing"
 	"advocate/utils/flags"
 	"advocate/utils/io"
 	"advocate/utils/log"
 	"advocate/utils/paths"
 	"advocate/utils/results/stats"
+	"fmt"
 )
 
 // modeFuzzing starts the fuzzing
@@ -88,4 +90,32 @@ func modeShowTrace() error {
 	tr.PrintAsTab()
 
 	return nil
+}
+
+func modeExperiments() error {
+	if flags.Experiment == "" {
+		return fmt.Errorf("No experiment selected. Select with `-experiment [name]`")
+	}
+
+	switch flags.ExecName {
+	case experiments.IndexingEx:
+		experimentIndexing()
+	default:
+		return fmt.Errorf("Unknown experiment: %s", flags.ExecName)
+	}
+
+	return nil
+}
+
+func experimentIndexing() error {
+	firstRun := true
+	fileNumber, testNumber := 1, 0
+	_, _, err := toolchain.Run("", record, analysis,
+		!replay, -1, "", firstRun, fileNumber, testNumber)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

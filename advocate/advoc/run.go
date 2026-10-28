@@ -11,7 +11,6 @@ package advoc
 
 import (
 	"advocate/analysis/a_base"
-	"advocate/experiments"
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_fuzzing"
 	"advocate/utils/command"
@@ -107,9 +106,9 @@ func Run() error {
 	case "replay":
 		flags.Mode = consts.ModeReplay
 		err = modeToolchain(!record, !analysis, replay)
-	case "experiment":
+	case "experiment", "experiments":
 		flags.Mode = consts.ModeExperiment
-		experiments.Run()
+		err = modeExperiments()
 	case "show":
 		flags.Mode = consts.ModeShowTrace
 		err = modeShowTrace()
@@ -122,7 +121,7 @@ func Run() error {
 
 	default:
 		log.Errorf("Unknown mode %s\n", os.Args[1])
-		log.Error("Select one mode from  'analysis', 'fuzzing', 'replay', 'record' or 'gui' (only if -tags gui is set)")
+		log.Error("Select one mode from  'analysis', 'fuzzing', 'replay', 'record', experiments or 'gui' (only if -tags gui is set)")
 		err = fmt.Errorf("Unknown mode %s", os.Args[1])
 		helper.PrintHelp()
 	}

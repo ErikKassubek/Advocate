@@ -12,6 +12,8 @@ package toolchain
 import (
 	"advocate/analysis/a_analysis"
 	"advocate/analysis/a_base"
+	"advocate/experiments"
+	"advocate/experiments/indexing"
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_roc"
 	"advocate/fuzzing/modes/f_active"
@@ -81,6 +83,12 @@ func runAnalyzer(pathTrace string,
 	}
 
 	log.Infof("Read trace with %d elements in %d routines", numberElems, numberOfRoutines)
+
+	if flags.Mode == consts.ModeExperiment && flags.Experiment == experiments.IndexingEx {
+		indexing.BuildExecutionIndexing()
+		indexing.CheckForEq()
+		return nil
+	}
 
 	a_analysis.RunAnalysis(fuzzingRun >= 0)
 

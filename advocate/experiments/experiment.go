@@ -9,23 +9,6 @@
 
 package experiments
 
-import (
-	"advocate/experiments/indexing"
-	"advocate/utils/flags"
-	"fmt"
+const (
+	IndexingEx = "indexing"
 )
-
-func Run() error {
-	if flags.Experiment == "" {
-		return fmt.Errorf("No experiment selected. Select with `-experiment [name]`")
-	}
-
-	switch flags.ExecName {
-	case "indexing":
-		indexing.Run()
-	default:
-		return fmt.Errorf("Unknown experiment: %s", flags.ExecName)
-	}
-
-	return nil
-}

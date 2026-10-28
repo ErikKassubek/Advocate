@@ -24,14 +24,6 @@ var totalEqual = 0
 
 const k = 15
 
-func Run() {
-	// _, _, err := toolchain.Run("", record, analysis,
-	// 	false, -1, "", true, fileNumber, testNumber)
-	// if err != nil {
-	// 	return err
-	// }
-}
-
 type stackElem struct {
 	isC bool
 	c   string

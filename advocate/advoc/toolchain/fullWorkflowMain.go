@@ -11,6 +11,7 @@
 package toolchain
 
 import (
+	"advocate/experiments"
 	"advocate/utils/command"
 	"advocate/utils/consts"
 	"advocate/utils/flags"
@@ -142,6 +143,10 @@ func runWorkflowMain(
 		if err != nil {
 			return 0, 0, err
 		}
+	}
+
+	if flags.Mode == consts.ModeExperiment && flags.Experiment == experiments.IndexingEx {
+		return 0, 0, err
 	}
 
 	rewrittenTraces := make([]string, 0)
