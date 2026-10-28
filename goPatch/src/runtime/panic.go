@@ -809,6 +809,7 @@ var panicnil = &godebugInc{name: "panicnil"}
 func gopanic(e any) {
 	// ADVOCATE-START
 	if IsTracingEnabled() || replayEnabled {
+		currentGoRoutineInfo().panicked()
 		AdvocatePanic(e)
 	}
 	// ADVOCATE-END

@@ -41,6 +41,7 @@ import (
 //   - selIndex int: index of the channel in sel.chases if sel != nil, otherwise -1
 //   - partner *ElementChannel: The partner of the channel operation
 //   - function *ElementFunc: the function the operation is in
+//   - pan bool: cause a panic
 type ElementChannel struct {
 	ElementBase
 
@@ -58,6 +59,7 @@ type ElementChannel struct {
 	selIndex int
 	partner  *ElementChannel
 	function *ElementFunc
+	pan      bool
 }
 
 // ========================================================
@@ -82,7 +84,7 @@ type ElementChannel struct {
 //   - error
 func (this *Trace) AddTraceElementChannel(routine int, tReq string,
 	tCom string, id string, opC string, cl string, oID string, qSize string,
-	qCount string, pos string) error {
+	qCount string, pos string, pan string) error {
 
 	tReqInt, err := strconv.Atoi(tReq)
 	if err != nil {
@@ -139,6 +141,11 @@ func (this *Trace) AddTraceElementChannel(routine int, tReq string,
 		return err
 	}
 
+	panBool := false
+	if pan == "P" {
+		panBool = true
+	}
+
 	elem := ElementChannel{
 		ElementBase: this.newElementBase(this, routine),
 		tReq:        tReqInt,
@@ -153,6 +160,7 @@ func (this *Trace) AddTraceElementChannel(routine int, tReq string,
 		selIndex:    -1,
 		ci:          newConcInfo(),
 		function:    getLastCall(routine),
+		pan:         panBool,
 	}
 
 	elem.findPartner(this)
@@ -468,7 +476,13 @@ func (this *ElementChannel) StringDebug() string {
 	if this.ElementBase.init {
 		routine = "   *"
 	}
-	return fmt.Sprintf("%s@%s", routine, this.String())
+	res := fmt.Sprintf("%s@%s", routine, this.String())
+
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
 }
 
 // StringGui returns the gui string representation of the element.
@@ -478,7 +492,13 @@ func (this *ElementChannel) StringDebug() string {
 func (this *ElementChannel) StringGui() string {
 	opString := string(string(this.op)[1])
 
-	return fmt.Sprintf("C,%d,%s\n%s", this.objId, opString, this.Pos().Short())
+	res := fmt.Sprintf("C,%d,%s\n%s", this.objId, opString, this.Pos().Short())
+
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
 }
 
 // StringGui returns the gui string representation of the element
@@ -487,11 +507,17 @@ func (this *ElementChannel) StringGui() string {
 //   - string: The minimal string representation of the element
 func (this *ElementChannel) StringMin() string {
 	pos := this.Pos().Short()
-	if flags.HideFile {
+	if !flags.ShowFile {
 		pos = fmt.Sprintf("%d", this.Pos().Line())
 	}
 
-	return fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, pos)
+	res := fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, pos)
+
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
 }
 
 // ========================================================

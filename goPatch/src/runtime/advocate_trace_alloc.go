@@ -101,7 +101,7 @@ func (self AdvocateTraceAlloc) toString() string {
 		operationType = "W"
 	}
 
-	return buildTraceElemString("N", self.t, self.res.id, operationType, self.qSize, posToString(self.file, self.line))
+	return buildTraceElemString("N", self.t, self.res.id, operationType, self.qSize, posToString(self.file, self.line), "-")
 }
 
 // Get the string representation for the primitive type
@@ -136,3 +136,5 @@ func (self AdvocateTraceAlloc) hasCommit() bool {
 func (self AdvocateTraceAlloc) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{self.res}
 }
+
+func (self AdvocateTraceAlloc) causedPanic() traceElem { return self }

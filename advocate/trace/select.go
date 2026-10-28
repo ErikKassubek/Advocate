@@ -36,6 +36,7 @@ import (
 //   - containsDefault bool: Whether the select statement contains a default case
 //   - chosenDefault bool: if the default case was chosen
 //   - function *ElementFunc: the function the operation is in
+//   - pan bool: Caused a panic
 type ElementSelect struct {
 	ElementBase
 
@@ -51,6 +52,7 @@ type ElementSelect struct {
 	chosenDefault       bool
 	casesWithPosPartner []int
 	function            *ElementFunc
+	pan                 bool
 }
 
 // ========================================================
@@ -67,8 +69,9 @@ type ElementSelect struct {
 //   - cases string: The cases of the select statement
 //   - chosenIndex string: The internal index of chosen case
 //   - pos string: The position of the select statement in the code
-func (this *Trace) AddTraceElementSelect(routine int, tReq string,
-	tCom string, id string, cases string, chosenIndex string, pos string) error {
+//   - pan string: Caused a panic
+func (this *Trace) AddTraceElementSelect(routine int, tReq,
+	tCom, id, cases, chosenIndex, pos, pan string) error {
 
 	tReqInt, err := strconv.Atoi(tReq)
 	if err != nil {
@@ -95,6 +98,11 @@ func (this *Trace) AddTraceElementSelect(routine int, tReq string,
 		return err
 	}
 
+	panBool := false
+	if pan == "P" {
+		panBool = true
+	}
+
 	elem := ElementSelect{
 		ElementBase:         this.newElementBase(this, routine),
 		tPre:                tReqInt,
@@ -105,6 +113,7 @@ func (this *Trace) AddTraceElementSelect(routine int, tReq string,
 		ci:                  newConcInfo(),
 		casesWithPosPartner: make([]int, 0),
 		function:            getLastCall(routine),
+		pan:                 panBool,
 	}
 
 	cs := strings.Split(cases, "~")
@@ -537,7 +546,13 @@ func (this *ElementSelect) StringDebug() string {
 	if this.ElementBase.init {
 		routine = "   *"
 	}
-	return fmt.Sprintf("%s@%s", routine, this.String())
+	res := fmt.Sprintf("%s@%s", routine, this.String())
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
+
 }
 
 // StringGui returns the gui string representation of the element
@@ -570,6 +585,11 @@ func (this *ElementSelect) StringGui() string {
 	}
 	res += "," + strconv.Itoa(this.chosenIndex)
 	res += "\n" + this.Pos().Short()
+
+	if this.pan {
+		res += ",🗲"
+	}
+
 	return res
 }
 
@@ -579,11 +599,25 @@ func (this *ElementSelect) StringGui() string {
 //   - string: The minimal string representation of the element
 func (this *ElementSelect) StringMin() string {
 	pos := this.Pos().Short()
-	if flags.HideFile {
+	if !flags.ShowFile {
 		pos = fmt.Sprintf("%d", this.Pos().Line())
 	}
 
-	return fmt.Sprintf("%s,%d,%s", SelectOp, this.Resource().shortID, pos)
+	if this.chosenDefault {
+		return fmt.Sprintf("%s,D,%s", SelectOp, pos)
+	}
+
+	if this.chosenCase == nil {
+		return fmt.Sprintf("%s,-,%s", SelectOp, pos)
+	}
+
+	res := fmt.Sprintf("%s,%d,%s", SelectOp, this.chosenCase.Resource().shortID, pos)
+
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
 }
 
 // ========================================================

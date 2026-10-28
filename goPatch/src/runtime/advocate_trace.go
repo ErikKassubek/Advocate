@@ -148,6 +148,7 @@ type traceElem interface {
 	getOperation() Operation
 	hasCommit() bool
 	resource() []AdvocateTraceResource
+	causedPanic() traceElem
 }
 
 // Return a string representation of the trace of the current go routine

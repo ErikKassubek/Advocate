@@ -222,7 +222,7 @@ func (this *Trace) GetNotReturned(onlyNonBlocked bool) []int {
 			continue
 		}
 		last := rout.Last()
-		if last.Type(false) != End && (!onlyNonBlocked || last.Committed()) {
+		if last.Type(true) != RoutEnd && (!onlyNonBlocked || last.Committed()) {
 			res = append(res, id)
 		}
 	}
@@ -936,44 +936,50 @@ func (this *Trace) NormalizeRequestCommit() {
 // TODO: print in color
 // TODO: print select with case
 func (this *Trace) PrintAsTab() {
-	colSize := "%-30.30s"
-	if flags.HideFile {
-		colSize = "%-10.10s"
+	colSize := 34
+	if !flags.ShowFile {
+		colSize = 12
 	}
+
+	colFmt := fmt.Sprintf("%%-%d.%ds", colSize, colSize)
 
 	trIter := this.AsIterator()
 	numberRout := this.numberRoutines
 
-	printCol := func(rout int, val string) string {
-		res := "| "
+	printRow := func(i int, rout int, val string) string {
+		res := "| e" + fmt.Sprintf("%-3d", i) + " | "
 		for i := 0; i < rout-1; i++ {
-			res += fmt.Sprintf(colSize, "") + "| "
+			res += fmt.Sprintf(colFmt, "") + "| "
 		}
-		res += fmt.Sprintf(colSize, val)
+		res += fmt.Sprintf(colFmt, val)
 		for i := rout - 1; i < numberRout; i++ {
-			res += "| " + fmt.Sprintf(colSize, "")
+			res += "| " + fmt.Sprintf(colFmt, "")
 		}
 
 		return res
 	}
 
-	header := "| "
+	header := "|      |"
 
 	for i := 0; i < numberRout; i++ {
-		header += fmt.Sprintf(colSize, "G"+fmt.Sprintf("%d", i)) + "| "
+		header += fmt.Sprintf(colFmt, " G"+fmt.Sprintf("%d", i+1)) + " |"
 	}
-	header += "\n"
-	for i := 0; i < numberRout+1; i++ {
-		header += "| " + fmt.Sprintf(colSize, "")
+	header += "\n|      "
+
+	for i := 0; i < numberRout; i++ {
+		header += "| " + fmt.Sprintf(colFmt, strings.Repeat("=", colSize-1))
 	}
+	header += "|"
 	println(header)
 
+	i := 1
 	for elem := trIter.Next(); elem != nil; elem = trIter.Next() {
 		if elem.Committed() {
-			println(printCol(elem.RoutineID(), elem.StringMin()))
+			println(printRow(i, elem.RoutineID(), elem.StringMin()))
 		} else {
-			println(printCol(elem.RoutineID(), elem.StringMin()+"?"))
+			println(printRow(i, elem.RoutineID(), elem.StringMin()+"?"))
 		}
+		i++
 	}
 
 }

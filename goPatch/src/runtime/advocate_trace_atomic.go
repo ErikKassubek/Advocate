@@ -88,7 +88,7 @@ func (self AdvocateTraceAtomic) toString() string {
 		opStr = "O"
 	}
 
-	return buildTraceElemString("A", self.t, self.res.id, opStr, posToString(self.file, self.line))
+	return buildTraceElemString("A", self.t, self.res.id, opStr, posToString(self.file, self.line), "-")
 }
 
 // getOperation is a getter for the operation
@@ -114,3 +114,5 @@ func (self AdvocateTraceAtomic) hasCommit() bool {
 func (self AdvocateTraceAtomic) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{self.res}
 }
+
+func (self AdvocateTraceAtomic) causedPanic() traceElem { return self }

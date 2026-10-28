@@ -4559,7 +4559,9 @@ func goexit1() {
 	}
 
 	// ADVOCATE-START
-	AdvocatRoutineExit()
+	if !currentGoRoutineInfo().hasPanicked {
+		AdvocatRoutineExit()
+	}
 	AdvocateWriteTraceToFile()
 	// ADVOCATE-END
 

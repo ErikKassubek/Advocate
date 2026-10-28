@@ -406,6 +406,7 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr, ignored
 		// ADVOCATE-START
 		if !ignored && !c.advocateIgnore {
 			AdvocateChanPostCausedByClose(advocateIndex)
+			// ADVOCATE-END
 		}
 		// ADVOCATE-END
 
@@ -521,6 +522,9 @@ func recvDirect(t *_type, sg *sudog, dst unsafe.Pointer) {
 
 func closechan(c *hchan) {
 	if c == nil {
+		// ADVOCATE-START
+		AdvocateChanClose(c)
+		// ADVOCATE-END
 		panic(plainError("close of nil channel"))
 	}
 	if c.bubble != nil && getg().bubble != c.bubble {

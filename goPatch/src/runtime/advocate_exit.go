@@ -13,7 +13,6 @@ package runtime
 
 var advocateExitCode = 0
 var advocateExitCodePos = ""
-var hasPanicked = false
 var hasReturnedExitCode = false
 
 const (

@@ -43,5 +43,5 @@ func AddMutToQueue(mut Mutation, force bool) bool {
 //   - True if the element is of one of those types, false otherwise
 func IgnoreFuzzing(elem trace.Element, ignoreNew bool) bool {
 	t := elem.Type(false)
-	return (ignoreNew && t == trace.New) || t == trace.Replay || t == trace.End || strings.Contains(elem.File(), "goPatch/src/")
+	return (ignoreNew && t == trace.New) || t == trace.Replay || elem.Type(true) == trace.RoutEnd || strings.Contains(elem.File(), "goPatch/src/")
 }

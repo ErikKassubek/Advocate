@@ -118,8 +118,7 @@ func CreateTraceFolder(path string) error {
 // Returns:
 //   - true if relevant for replay, false if ignored in replay
 func isReplay(element trace.Element) bool {
-	t := element.Type(false)
-	return !(t == trace.New || t == trace.End)
+	return !(element.Type(false) == trace.New || element.Type(true) == trace.RoutEnd)
 }
 
 // WriteRewriteInfoFile create a file with the result message and the exit code for the rewrite

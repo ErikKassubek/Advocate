@@ -229,7 +229,7 @@ func (this *ElementFunc) StringGui() string {
 //   - string: The minimal string representation of the element
 func (this *ElementFunc) StringMin() string {
 	pos := this.Pos().Short()
-	if flags.HideFile {
+	if !flags.ShowFile {
 		pos = fmt.Sprintf("%d", this.Pos().Line())
 	}
 

@@ -33,6 +33,7 @@ var projectPath string
 //   - parkForeverReplay bool: if true, routine parks forever based on replay
 //   - wokenByTimeout bool: in replay block was woken up by timeout
 //   - hasReturned bool: true if the routine has terminated
+//   - hasPaniked bool: true if the routine has panicked
 type AdvocateRoutine struct {
 	id                   uint64
 	maxObjectId          uint64
@@ -47,6 +48,7 @@ type AdvocateRoutine struct {
 	wokenButTimeout      bool
 	wokenNoTimeout       bool
 	startedWritingToFile bool
+	hasPanicked          bool
 }
 
 // Create a new advocate routine
@@ -141,8 +143,12 @@ func (gi *AdvocateRoutine) getPosCreated() string {
 	return posToString(gi.forkFile, int(int(gi.forkLine)))
 }
 
-func (gi *AdvocateRoutine) getLastElement() traceElem {
-	return gi.Trace[len(gi.Trace)-1]
+func (gi *AdvocateRoutine) getLastElement() (int, traceElem) {
+	if len(gi.Trace) == 0 {
+		return 0, nil
+	}
+	index := len(gi.Trace) - 1
+	return index, gi.Trace[index]
 }
 
 func (gi *AdvocateRoutine) GetForkPos() string {
@@ -171,6 +177,28 @@ func (gi *AdvocateRoutine) updateElement(index int, elem traceElem) {
 	}
 
 	gi.Trace[index] = elem
+}
+
+func (gi *AdvocateRoutine) panicked() {
+	if AdvocateTracingDisabled {
+		return
+	}
+
+	if gi == nil {
+		return
+	}
+
+	if gi.Trace == nil {
+		panic("Tried to update element in nil trace")
+	}
+
+	gi.hasPanicked = true
+
+	i, lastElem := gi.getLastElement()
+	if lastElem != nil {
+		gi.updateElement(i, lastElem.causedPanic())
+	}
+
 }
 
 // Get the current routine

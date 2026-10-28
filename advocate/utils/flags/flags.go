@@ -75,7 +75,7 @@ var (
 
 	Scenarios string
 
-	HideFile bool
+	ShowFile bool
 
 	Experiment string
 )

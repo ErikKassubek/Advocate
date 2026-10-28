@@ -189,9 +189,9 @@ func (this *ElementFork) Line() int {
 //   - ObjectType: the object type
 func (this *ElementFork) Type(operation bool) OperationType {
 	if !operation {
-		return Fork
+		return Rout
 	}
-	return ForkOp
+	return RoutSpawn
 }
 
 // ========================================================
@@ -219,7 +219,7 @@ func (this *ElementFork) IsEqual(elem Element) bool {
 // Returns:
 //   - bool: true if at and elem are operations on the same channel
 func (this *ElementFork) IsSameElement(elem Element) bool {
-	return elem.Type(false) == Fork
+	return elem.Type(false) == Rout
 }
 
 // ========================================================
@@ -267,11 +267,11 @@ func (this *ElementFork) StringGui() string {
 //   - string: The minimal string representation of the element
 func (this *ElementFork) StringMin() string {
 	pos := this.Pos().Short()
-	if flags.HideFile {
+	if !flags.ShowFile {
 		pos = fmt.Sprintf("%d", this.Pos().Line())
 	}
 
-	return fmt.Sprintf("%s,%d,%s", ForkOp, this.objId, pos)
+	return fmt.Sprintf("%s,%d,%s", RoutSpawn, this.objId, pos)
 }
 
 // ========================================================

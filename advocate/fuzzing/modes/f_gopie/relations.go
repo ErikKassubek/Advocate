@@ -186,6 +186,10 @@ func isGoPieElem(elem trace.Element) bool {
 	}
 
 	invalidTypes := []trace.OperationType{trace.New,
-		trace.Replay, trace.End}
-	return !types.Contains(invalidTypes, elemTypeShort)
+		trace.Replay}
+	if types.Contains(invalidTypes, elemTypeShort) {
+		return false
+	}
+
+	return elem.Type(true) != trace.RoutEnd
 }

@@ -209,11 +209,9 @@ const (
 	CondSignal    OperationType = "DS"
 	CondBroadcast OperationType = "DB"
 
-	Fork   OperationType = "G"
-	ForkOp OperationType = "GG"
-
-	End        OperationType = "E"
-	EndRoutine OperationType = "EG"
+	Rout      OperationType = "G"
+	RoutSpawn OperationType = "GG"
+	RoutEnd   OperationType = "GE"
 
 	Mutex         OperationType = "M"
 	MutexLock     OperationType = "ML"
@@ -273,10 +271,8 @@ func GetElemTypeFromObjectType(ob OperationType) OperationType {
 		return Channel
 	case Cond, CondWait, CondSignal, CondBroadcast:
 		return Cond
-	case Fork, ForkOp:
-		return Fork
-	case End, EndRoutine:
-		return End
+	case Rout, RoutSpawn, RoutEnd:
+		return Rout
 	case Mutex, MutexLock, MutexRLock, MutexTryLock, MutexUnlock, MutexRUnlock:
 		return Mutex
 	case Once, OnceSuc, OnceFail:

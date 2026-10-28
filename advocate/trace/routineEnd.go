@@ -176,9 +176,9 @@ func (this *ElementRoutineEnd) Line() int {
 //   - string: the object type
 func (this *ElementRoutineEnd) Type(operation bool) OperationType {
 	if !operation {
-		return End
+		return Rout
 	}
-	return EndRoutine
+	return RoutEnd
 }
 
 // ========================================================
@@ -241,7 +241,7 @@ func (this *ElementRoutineEnd) StringDebug() string {
 // Returns:
 //   - string: The gui string representation of the element
 func (this *ElementRoutineEnd) StringGui() string {
-	return string(EndRoutine)
+	return string(RoutEnd)
 }
 
 // StringGui returns the gui string representation of the element
@@ -249,7 +249,7 @@ func (this *ElementRoutineEnd) StringGui() string {
 // Returns:
 //   - string: The minimal string representation of the element
 func (this *ElementRoutineEnd) StringMin() string {
-	return fmt.Sprintf("%s,-,-", EndRoutine)
+	return fmt.Sprintf("%s,-,-", RoutEnd)
 }
 
 // ========================================================

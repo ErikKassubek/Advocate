@@ -214,7 +214,7 @@ func (rw *RWMutex) RUnlock() {
 func (rw *RWMutex) rUnlockSlow(r int32) {
 	if r+1 == 0 || r+1 == -rwmutexMaxReaders {
 		race.Enable()
-		fatal("sync: RUnlock of unlocked RWMutex")
+		panic("sync: RUnlock of unlocked RWMutex")
 	}
 	// A writer is pending.
 	if rw.readerWait.Add(-1) == 0 {

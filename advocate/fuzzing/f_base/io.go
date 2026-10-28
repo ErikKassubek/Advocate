@@ -256,6 +256,7 @@ func WriteConstraint(tracePath string, tr *trace.Trace, constr, closure *f_roc.C
 	if closure != nil {
 		closure.Len()
 		fullConstr = f_roc.MergeClosureConstraint(closure, constr)
+
 	}
 
 	err := os.MkdirAll(tracePath, 0755)

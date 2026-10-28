@@ -68,7 +68,7 @@ func CommandLine() bool {
 	flag.BoolVar(&flags.AlwaysPanic, "panic", false, "Panic if the analysis panics")
 	flag.BoolVar(&flags.NoMemorySupervisor, "noMemorySupervisor", false, "Disable the memory supervisor")
 
-	flag.BoolVar(&flags.HideFile, "hideFile", false, "Do not show the file name. Only used for 'show' mode")
+	flag.BoolVar(&flags.ShowFile, "showFile", false, "Show the file name. Only used for 'show' mode. Otherwise only the line number is used.")
 
 	flag.StringVar(&flags.Experiment, "experiment", "", "Name of the experiment, only in experiment mode.")
 

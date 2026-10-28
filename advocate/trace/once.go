@@ -353,7 +353,7 @@ func (this *ElementOnce) StringMin() string {
 		op = OnceFail
 	}
 	pos := this.Pos().Short()
-	if flags.HideFile {
+	if !flags.ShowFile {
 		pos = fmt.Sprintf("%d", this.Pos().Line())
 	}
 

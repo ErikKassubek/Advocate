@@ -37,6 +37,7 @@ type OpWait int
 //   - delta int: The delta of the wait group
 //   - val int: The value of the wait group
 //   - function *ElementFunc: the function the operation is in
+//   - pan bool: caused a panic
 type ElementWait struct {
 	ElementBase
 
@@ -49,6 +50,7 @@ type ElementWait struct {
 	delta    int
 	val      int
 	function *ElementFunc
+	pan      bool
 }
 
 // ========================================================
@@ -66,8 +68,9 @@ type ElementWait struct {
 //   - delta string: The delta of the wait group
 //   - val string: The value of the wait group
 //   - pos string: The position of the wait group in the code
+//   - pan string: Caused a panic
 func (this *Trace) AddTraceElementWait(routine int, tPre,
-	tPost, id, opW, delta, val, pos string) error {
+	tPost, id, opW, delta, val, pos, pan string) error {
 	tPreInt, err := strconv.Atoi(tPre)
 	if err != nil {
 		return errors.New("tPre is not an integer")
@@ -107,6 +110,11 @@ func (this *Trace) AddTraceElementWait(routine int, tPre,
 		return err
 	}
 
+	panBool := false
+	if pan == "P" {
+		panBool = true
+	}
+
 	elem := ElementWait{
 		ElementBase: this.newElementBase(this, routine),
 		tPre:        tPreInt,
@@ -118,6 +126,7 @@ func (this *Trace) AddTraceElementWait(routine int, tPre,
 		pos:         NewPosition(file, line),
 		ci:          newConcInfo(),
 		function:    getLastCall(routine),
+		pan:         panBool,
 	}
 
 	this.AddElement(&elem)
@@ -371,7 +380,12 @@ func (this *ElementWait) StringDebug() string {
 	if this.ElementBase.init {
 		routine = "   *"
 	}
-	return fmt.Sprintf("%s@%s", routine, this.String())
+	res := fmt.Sprintf("%s@%s", routine, this.String())
+
+	if this.pan {
+		res += ",🗲"
+	}
+	return res
 }
 
 // StringGui returns the simple string representation of the element
@@ -390,6 +404,12 @@ func (this *ElementWait) StringGui() string {
 
 	res += strconv.Itoa(this.delta) + "," + strconv.Itoa(this.val)
 	res += "\n" + this.Pos().Short()
+
+	if this.pan {
+		res += ",🗲"
+	}
+	return res
+
 	return res
 }
 
@@ -399,11 +419,17 @@ func (this *ElementWait) StringGui() string {
 //   - string: The minimal string representation of the element
 func (this *ElementWait) StringMin() string {
 	pos := this.Pos().Short()
-	if flags.HideFile {
+	if !flags.ShowFile {
 		pos = fmt.Sprintf("%d", this.Pos().Line())
 	}
 
-	return fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, pos)
+	res := fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, pos)
+
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
 }
 
 // String returns the simple string representation of the element with leading routine

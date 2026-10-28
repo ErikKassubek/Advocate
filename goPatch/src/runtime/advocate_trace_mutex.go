@@ -23,6 +23,7 @@ import "unsafe"
 //   - suc bool: false if a trymutex did not manage to lock the mutex, true otherwise
 //   - file string: file where the operation occurred
 //   - line int: line where the operation occurred
+//   - pan bool: true if caused panic
 type AdvocateTraceMutex struct {
 	tReq int64
 	tCom int64
@@ -31,6 +32,7 @@ type AdvocateTraceMutex struct {
 	suc  bool
 	file string
 	line int
+	pan  bool
 }
 
 var lastRWOp = make(map[uint64]int64) // routine -> tCom
@@ -135,7 +137,12 @@ func (self AdvocateTraceMutex) isRw() bool {
 func (self AdvocateTraceMutex) toString() string {
 	opStr, rw := self.opRwToString()
 
-	return buildTraceElemString("M", self.tReq, self.tCom, self.res.id, rw, opStr, self.suc, posToString(self.file, self.line))
+	panStr := "-"
+	if self.pan {
+		panStr = "P"
+	}
+
+	return buildTraceElemString("M", self.tReq, self.tCom, self.res.id, rw, opStr, self.suc, posToString(self.file, self.line), panStr)
 }
 
 // Get the string representations for the operation and rw fields
@@ -198,4 +205,9 @@ func (self AdvocateTraceMutex) hasCommit() bool {
 //   - []AdvocateTraceResource: recources
 func (self AdvocateTraceMutex) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{self.res}
+}
+
+func (self AdvocateTraceMutex) causedPanic() traceElem {
+	self.pan = true
+	return self
 }
