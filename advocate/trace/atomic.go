@@ -287,7 +287,7 @@ func (this *ElementAtomic) StringGui() string {
 //   - string: The minimal string representation of the element
 func (this *ElementAtomic) StringMin() string {
 	pos := this.Pos().Short()
-	if flags.ShowFile {
+	if !flags.ShowFile {
 		pos = fmt.Sprintf("%d", this.Pos().Line())
 	}
 	return fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, pos)

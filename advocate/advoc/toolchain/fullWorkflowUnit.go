@@ -127,7 +127,7 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 				time.Sleep(6 * time.Second)
 			}
 
-			a_base.Clear()
+			a_base.Clear(true)
 			// f_base.Clear()
 
 			if !isFuzzing {
@@ -482,6 +482,8 @@ func unitTestFullWorkflow(
 
 	numberReplay := 0
 	if runReplay {
+		a_base.Clear(false)
+
 		numberReplay, err = unitTestReplay(paths.Prog, pkg, file, testName, paths.NameOutput, runAnalysis, origStdout, origStderr)
 		if err != nil {
 			return 0, false, err

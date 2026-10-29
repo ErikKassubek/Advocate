@@ -947,7 +947,7 @@ func (this *Trace) PrintAsTab() {
 	numberRout := this.numberRoutines
 
 	printRow := func(i int, rout int, val string) string {
-		res := "| e" + fmt.Sprintf("%-3d", i) + " | "
+		res := "e" + fmt.Sprintf("%-3d", i) + " | "
 		for i := 0; i < rout-1; i++ {
 			res += fmt.Sprintf(colFmt, "") + "| "
 		}
@@ -960,12 +960,12 @@ func (this *Trace) PrintAsTab() {
 		return res
 	}
 
-	header := "|      |"
+	header := "     |"
 
 	for i := 0; i < numberRout; i++ {
 		header += fmt.Sprintf(colFmt, " G"+fmt.Sprintf("%d", i+1)) + " |"
 	}
-	header += "\n|      "
+	header += "\n     "
 
 	for i := 0; i < numberRout; i++ {
 		header += "| " + fmt.Sprintf(colFmt, strings.Repeat("=", colSize-1))

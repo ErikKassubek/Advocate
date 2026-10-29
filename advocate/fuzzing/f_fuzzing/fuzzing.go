@@ -121,7 +121,7 @@ func Fuzzing() error {
 				time.Sleep(6 * time.Second)
 			}
 
-			a_base.Clear()
+			a_base.Clear(true)
 			ResetFuzzing()
 			timer.ResetTest()
 

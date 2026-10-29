@@ -40,7 +40,7 @@ func Run(pathToTest string,
 	runRecord, runAnalysis, runReplay bool, fuzzing int, fuzzingTrace string,
 	firstRun bool, fileNumber, testNumber int) (int, int, error) {
 
-	a_base.Clear()
+	a_base.Clear(true)
 
 	switch flags.ModeMain {
 	case true:

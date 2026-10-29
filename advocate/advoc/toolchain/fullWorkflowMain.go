@@ -11,6 +11,7 @@
 package toolchain
 
 import (
+	"advocate/analysis/a_base"
 	"advocate/experiments"
 	"advocate/utils/command"
 	"advocate/utils/consts"
@@ -153,6 +154,8 @@ func runWorkflowMain(
 	total := fuzzing != -1
 	if runReplay {
 		log.Info("Run replay")
+		a_base.Clear(false)
+
 		// Find rewrittenTrace directories
 		if runAnalysis {
 			rewrittenTraces, err = filepath.Glob(filepath.Join(paths.ProgDir, consts.RewrittenConsts+"*"))

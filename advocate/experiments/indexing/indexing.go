@@ -185,7 +185,7 @@ func CheckForEq() {
 
 			if i1 == i2 {
 				if printPairs {
-					log.Debugf2("Same Index for different Objects:\n%s -> %s\n%s -> %s", e1.StringDebug(), i1, e2.StringDebug(), i2)
+					log.Important("Same Index for different Objects:\n%s -> %s\n%s -> %s", e1.StringDebug(), i1, e2.StringDebug(), i2)
 				}
 				pairCount += 1
 			}
@@ -197,24 +197,24 @@ func CheckForEq() {
 	totalEqual += pairCount
 
 	if pairCount != 0 {
-		log.Debugf2("Found Index Violation Pairs: %d (%d)", pairCount, allPairs)
+		log.Important("Found Index Violation Pairs: %d (%d)", pairCount, allPairs)
 	} else {
-		log.Debugf2("Found No Violation Pairs (%d)", allPairs)
+		log.Important("Found No Violation Pairs (%d)", allPairs)
 	}
 
 	var perc float64 = 0
 	if totalPair != 0 {
 		perc = float64(totalEqual) / float64(totalPair) * 100
-		log.Debugf2("Total: %d / %d (%f %%)", totalEqual, totalPair, perc)
+		log.Important("Total: %d / %d (%f %%)", totalEqual, totalPair, perc)
 	} else {
-		log.Debugf2("Total: 0")
+		log.Important("Total: 0")
 	}
 
 }
 
 func PrintIndexes() {
-	log.Debug("INDICES")
+	log.Important("INDICES")
 	for elem, index := range indices {
-		log.Debug(elem.StringDebug(), " -> ", index)
+		log.Important(elem.StringDebug(), " -> ", index)
 	}
 }

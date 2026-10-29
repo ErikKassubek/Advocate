@@ -61,7 +61,6 @@ type AdvocateRoutine struct {
 // Return:
 //   - the new advocate routine
 func newAdvocateRoutine(g *g, replayRoutine int, file string, line int32) *AdvocateRoutine {
-	println("NEW: ", replayRoutine)
 	// ignore the internal routines that are run before the main/test function starts
 	if AdvocateTracingDisabled {
 		return &AdvocateRoutine{
