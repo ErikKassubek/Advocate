@@ -7,7 +7,7 @@
 //
 // License: BSD-3-Clause
 
-package f_roc
+package f_constraints
 
 import (
 	"advocate/analysis/a_hb"

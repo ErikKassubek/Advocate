@@ -10,7 +10,7 @@
 package f_gopie
 
 import (
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/trace"
 	"advocate/utils/settings"
 	"advocate/utils/types"
@@ -26,8 +26,8 @@ var (
 	// number of different starting points for chains in GoPie (in the original: cfg.MaxWorker)
 	maxSCStart = settings.GoPieSCStart
 
-	SchedulingChains []f_roc.Constraint
-	CurrentChain     f_roc.Constraint
+	SchedulingChains []f_constraints.Constraint
+	CurrentChain     f_constraints.Constraint
 	LastRoutine      = -1
 
 	// GoPie relations

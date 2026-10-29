@@ -10,7 +10,7 @@
 package f_active
 
 import (
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/trace"
 	"advocate/utils/results/bugs"
 	"errors"
@@ -25,9 +25,9 @@ import (
 //   - bug bugs.Bug: the bug that should be triggered by the rewrite
 //
 // Returns:
-//   - *f_roc.Constraint: the constraint containing the bug
+//   - *f_constraints.Constraint: the constraint containing the bug
 //   - error
-func rewriteCyclicDeadlock(bug bugs.Bug) (*f_roc.Constraint, error) {
+func rewriteCyclicDeadlock(bug bugs.Bug) (*f_constraints.Constraint, error) {
 	if len(bug.TraceElement2) == 0 {
 		return nil, errors.New("no trace elements in bug")
 	}
@@ -36,7 +36,7 @@ func rewriteCyclicDeadlock(bug bugs.Bug) (*f_roc.Constraint, error) {
 		return nil, errors.New("at least 2 trace elements are needed for a deadlock")
 	}
 
-	constr := f_roc.NewConstraint()
+	constr := f_constraints.NewConstraint()
 
 	for _, elem := range bug.TraceElement2 { // acquired
 		constr.Add(elem)

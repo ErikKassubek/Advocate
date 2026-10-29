@@ -13,7 +13,7 @@ import (
 	"advocate/analysis/a_base"
 	"advocate/analysis/hb/a_concurrent"
 	"advocate/fuzzing/f_base"
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/utils/settings"
 	"math/rand"
 )
@@ -26,8 +26,8 @@ import (
 //
 // Returns:
 //   - the chain, or an empty chain if no pair exists
-func startChains(num int) []f_roc.Constraint {
-	res := make([]f_roc.Constraint, 0)
+func startChains(num int) []f_constraints.Constraint {
+	res := make([]f_constraints.Constraint, 0)
 
 	if f_base.UseHBInfoFuzzing {
 		routines := a_base.MainTrace.Routines()
@@ -36,7 +36,7 @@ func startChains(num int) []f_roc.Constraint {
 			return res
 		}
 
-		top := []f_roc.ElemWithQual{}
+		top := []f_constraints.ElemWithQual{}
 
 		for i := 0; i < 1000; i++ {
 			key := rand.Intn(len(routines)) + 1
@@ -59,7 +59,7 @@ func startChains(num int) []f_roc.Constraint {
 
 			q := f_base.Quality(elem)
 
-			e := f_roc.ElemWithQual{Elem: elem, Quality: q}
+			e := f_constraints.ElemWithQual{Elem: elem, Quality: q}
 
 			// find the num with the best quality
 			inserted := false
@@ -98,7 +98,7 @@ func startChains(num int) []f_roc.Constraint {
 					}
 
 					partner := posPartner[rand.Intn(len(posPartner))]
-					c := f_roc.NewConstraint()
+					c := f_constraints.NewConstraint()
 					c.Add(e.Elem, partner)
 					res = append(res, c)
 				}
@@ -123,7 +123,7 @@ func startChains(num int) []f_roc.Constraint {
 		i := 0
 		for elem1, rel := range rel2 {
 			for elem2 := range rel {
-				c := f_roc.NewConstraint()
+				c := f_constraints.NewConstraint()
 				c.Add(elem1, elem2)
 				res = append(res, c)
 				i++

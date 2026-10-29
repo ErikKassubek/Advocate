@@ -11,7 +11,7 @@
 package f_active
 
 import (
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/utils/helper"
 	"advocate/utils/results/bugs"
 	"errors"
@@ -28,7 +28,7 @@ import (
 //   - bool: true if rewrite was needed, false otherwise (e.g. actual bug, warning)
 //   - code: expected exit code
 //   - error: An error if the trace could not be created
-func RewriteTrace(bug bugs.Bug, rewrittenBugs map[helper.ResultType][]string) (constr *f_roc.Constraint, code int, err error) {
+func RewriteTrace(bug bugs.Bug, rewrittenBugs map[helper.ResultType][]string) (constr *f_constraints.Constraint, code int, err error) {
 	code = helper.ExitCodeNone
 
 	constr = nil
@@ -57,18 +57,14 @@ func RewriteTrace(bug bugs.Bug, rewrittenBugs map[helper.ResultType][]string) (c
 		constr, err = rewriteClosedChannel(bug)
 	case helper.PNegWG:
 		code = helper.ExitCodeNegativeWG
-		// err = rewriteGraph(bug, code) // TODO: rewrite
-		err = errors.New("Rewriting trace for negative WG counter not implemented yet")
+		constr, err = rewriteGraph(bug)
 	case helper.PUnlockBeforeLock:
 		code = helper.ExitCodeUnlockBeforeLock
-		// err = rewriteGraph(tr, bug, code)  // TODO: rewrite
-		err = errors.New("Rewriting trace for unlock before lock not implemented yet")
+		constr, err = rewriteGraph(bug)
 	case helper.PCyclicDeadlock:
 		constr, err = rewriteCyclicDeadlock(bug)
 	case helper.PMixedDeadlock:
-		code = helper.ExitCodeMixedDeadlock
-		// err = rewriteMixedDeadlock(tr, bug, code)  // TODO: rewrite
-		err = errors.New("Rewriting trace for mixed deadlock not implemented yet")
+		constr, err = rewriteMixedDeadlock(bug)
 
 	// LEAKS
 	case helper.LUnknown, helper.LChan, helper.LSelect, helper.LNilChan, helper.LMutex, helper.LWaitGroup, helper.LCond:

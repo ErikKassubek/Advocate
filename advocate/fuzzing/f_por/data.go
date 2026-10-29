@@ -9,10 +9,10 @@
 
 package f_por
 
-import "advocate/fuzzing/f_roc"
+import "advocate/fuzzing/f_constraints"
 
-var alreadyRunROC = make([]f_roc.Constraint, 0)
+var alreadyRunROC = make([]f_constraints.Constraint, 0)
 
 func Reset() {
-	alreadyRunROC = make([]f_roc.Constraint, 0)
+	alreadyRunROC = make([]f_constraints.Constraint, 0)
 }

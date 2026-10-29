@@ -10,7 +10,7 @@
 package f_active
 
 import (
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/utils/log"
 	"advocate/utils/results/bugs"
 	"errors"
@@ -25,12 +25,12 @@ import (
 //   - exitCode int: The exit code to use for the stop marker
 //
 // Returns:
-//   - f_roc.Constraint: the constraint
+//   - f_constraints.Constraint: the constraint
 //   - error: An error if the trace could not be created
-func rewriteClosedChannel(bug bugs.Bug) (*f_roc.Constraint, error) {
+func rewriteClosedChannel(bug bugs.Bug) (*f_constraints.Constraint, error) {
 	log.Info("Start rewrite for send on closed channel...")
 
-	constr := f_roc.NewConstraint()
+	constr := f_constraints.NewConstraint()
 
 	if len(bug.TraceElement1) == 0 || bug.TraceElement1[0] == nil { // send
 		return &constr, errors.New("Send is nil") // send/recv

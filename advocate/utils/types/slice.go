@@ -174,3 +174,12 @@ func Fill[T any](s []T, v T) {
 		s[i] = v
 	}
 }
+
+// SliceAsMap returns a map with the elements of the lists as the key and true as values
+func SliceAsMap[T comparable](s []T) map[T]bool {
+	res := make(map[T]bool)
+	for _, elem := range s {
+		res[elem] = true
+	}
+	return res
+}

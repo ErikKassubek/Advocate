@@ -13,7 +13,7 @@ import (
 	"advocate/analysis/a_base"
 	"advocate/analysis/hb/a_concurrent"
 	"advocate/fuzzing/f_base"
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/trace"
 	"advocate/utils/flags"
 	"advocate/utils/log"
@@ -29,8 +29,8 @@ const sameElem = true
 //   - mutNumber int: number of the mutation file
 //   - error
 func CreateMutations(mutNumber int) error {
-	mutations := make(map[string]f_roc.Constraint)
-	specMutations := make(map[string]f_roc.Constraint) // special mutations that should be run first
+	mutations := make(map[string]f_constraints.Constraint)
+	specMutations := make(map[string]f_constraints.Constraint) // special mutations that should be run first
 
 	// check for special chains, that could indicate a bug
 	if flags.FuzzingMode != f_base.GoPie && f_base.UseHBInfoFuzzing {
@@ -61,10 +61,10 @@ func CreateMutations(mutNumber int) error {
 	// If no SC is given, it creates a new one consisting of two random
 	// operations that are in rel2 relation. Otherwise it always mutates the
 	// original SC, not newly recorded once
-	SchedulingChains = []f_roc.Constraint{}
+	SchedulingChains = []f_constraints.Constraint{}
 	if flags.FuzzingMode == f_base.GoPie {
 		if c, ok := f_base.ChainFiles[mutNumber]; ok {
-			SchedulingChains = []f_roc.Constraint{c}
+			SchedulingChains = []f_constraints.Constraint{c}
 		}
 	}
 
@@ -188,8 +188,8 @@ func getEnergy() int {
 //
 // Returns:
 //   - map[string]Chain: map with the special chains
-func getSpecialMuts() map[string]f_roc.Constraint {
-	res := make(map[string]f_roc.Constraint)
+func getSpecialMuts() map[string]f_constraints.Constraint {
+	res := make(map[string]f_constraints.Constraint)
 
 	// send on closed
 	for _, c := range a_base.CloseData {
@@ -199,14 +199,14 @@ func getSpecialMuts() map[string]f_roc.Constraint {
 			case *trace.ElementSelect:
 				for _, cc := range t.GetCases() {
 					if cc.Type(true) == trace.ChannelSend {
-						chain := f_roc.NewConstraint()
+						chain := f_constraints.NewConstraint()
 						chain.Add(c, s)
 						res[chain.String()] = chain
 					}
 				}
 			default:
 				if s.Type(true) == trace.ChannelSend {
-					chain := f_roc.NewConstraint()
+					chain := f_constraints.NewConstraint()
 					chain.Add(c, s)
 					res[chain.String()] = chain
 				}
@@ -223,7 +223,7 @@ func getSpecialMuts() map[string]f_roc.Constraint {
 				}
 
 				if a_concurrent.IsConcurrent(done, add) {
-					chain := f_roc.NewConstraint()
+					chain := f_constraints.NewConstraint()
 					chain.Add(done, add)
 					res[chain.String()] = chain
 				}

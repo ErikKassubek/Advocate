@@ -975,7 +975,7 @@ func (this *Trace) PrintAsTab() {
 
 	i := 1
 	for elem := trIter.Next(); elem != nil; elem = trIter.Next() {
-		if elem.Committed() {
+		if elem.Committed() || elem.Pan() {
 			println(printRow(i, elem.RoutineID(), elem.StringMin()))
 		} else {
 			println(printRow(i, elem.RoutineID(), elem.StringMin()+"?"))

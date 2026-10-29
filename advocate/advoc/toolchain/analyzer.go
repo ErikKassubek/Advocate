@@ -15,7 +15,7 @@ import (
 	"advocate/experiments"
 	"advocate/experiments/indexing"
 	"advocate/fuzzing/f_base"
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/fuzzing/modes/f_active"
 	"advocate/utils/consts"
 	"advocate/utils/control"
@@ -216,7 +216,7 @@ func rewriteTrace(outMachine string, newTrace string, resultIndex int,
 		return constr != nil, err
 	}
 
-	closure := f_roc.CalcuateStableClosure(constr)
+	closure := f_constraints.CalcuateStableClosure(constr)
 
 	err = f_base.WriteConstraint(newTrace, &a_base.MainTrace, constr, closure)
 	if err != nil {

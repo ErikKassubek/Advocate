@@ -222,6 +222,14 @@ func (this *ElementControllFlow) Line() int {
 }
 
 // ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementControllFlow) Pan() bool {
+	return false
+}
+
+// ========================================================
 // MARK: Equal
 // ========================================================
 
@@ -322,7 +330,7 @@ func (this *ElementControllFlow) StringDebug() string {
 // Returns:
 //   - string: The minimal string representation of the element
 func (this *ElementControllFlow) StringMin() string {
-	
+
 	return fmt.Sprintf("%s,-,%s", string(this.op), this.Pos().Short())
 }
 

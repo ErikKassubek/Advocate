@@ -215,7 +215,7 @@ func reportLeak(l []int) {
 
 		leakType := helper.LUnknown
 
-		if last != nil && last.Committed() {
+		if last.Committed() {
 			switch last.(type) {
 			case *trace.ElementChannel:
 				if last.ResourceID() == 0 {

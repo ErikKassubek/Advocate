@@ -12,7 +12,7 @@ package f_base
 import (
 	"advocate/analysis/a_base"
 	"advocate/analysis/hb/a_concurrent"
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/trace"
 	"advocate/utils/flags"
 	"advocate/utils/settings"
@@ -31,7 +31,7 @@ import (
 //
 // Returns:
 //   - map[string]chain: Set of mutations
-func Mutate(c f_roc.Constraint, energy int, rel1, rel2 map[trace.Element]map[trace.Element]struct{}) map[string]f_roc.Constraint {
+func Mutate(c f_constraints.Constraint, energy int, rel1, rel2 map[trace.Element]map[trace.Element]struct{}) map[string]f_constraints.Constraint {
 	if energy > 100 {
 		energy = 100
 	}
@@ -48,7 +48,7 @@ func Mutate(c f_roc.Constraint, energy int, rel1, rel2 map[trace.Element]map[tra
 		bound = 3
 	}
 
-	res := make(map[string]f_roc.Constraint)
+	res := make(map[string]f_constraints.Constraint)
 
 	if energy == 0 {
 		return res
@@ -68,7 +68,7 @@ func Mutate(c f_roc.Constraint, energy int, rel1, rel2 map[trace.Element]map[tra
 	for {
 		noNew := false
 		for _, ch := range res {
-			tSet := make(map[string]f_roc.Constraint, 0)
+			tSet := make(map[string]f_constraints.Constraint, 0)
 
 			// Rule 1 -> abridge
 			if flags.FuzzingMode != Guided && ch.Len() >= 2 && rand.Int()%2 == 1 {
@@ -156,7 +156,7 @@ func Mutate(c f_roc.Constraint, energy int, rel1, rel2 map[trace.Element]map[tra
 // Returns:
 //   - chain: a copy of the chain with the first element removed
 //   - chain: a copy of the chain with the last element removed
-func abridge(c f_roc.Constraint) (f_roc.Constraint, f_roc.Constraint) {
+func abridge(c f_constraints.Constraint) (f_constraints.Constraint, f_constraints.Constraint) {
 	ncHead := c.Copy()
 	ncHead.RemoveHead()
 	ncTail := c.Copy()
@@ -173,8 +173,8 @@ func abridge(c f_roc.Constraint) (f_roc.Constraint, f_roc.Constraint) {
 //
 // Returns:
 //   - []chain: the list of mutated chains
-func flip(c f_roc.Constraint) []f_roc.Constraint {
-	res := make([]f_roc.Constraint, 0)
+func flip(c f_constraints.Constraint) []f_constraints.Constraint {
+	res := make([]f_constraints.Constraint, 0)
 
 	// switch each element with the next element
 	// for each flip create a new chain
@@ -198,8 +198,8 @@ func flip(c f_roc.Constraint) []f_roc.Constraint {
 //
 // Returns:
 //   - []chain: the list of mutated chains
-func substitute(c f_roc.Constraint, rel1 map[trace.Element]map[trace.Element]struct{}) []f_roc.Constraint {
-	res := make([]f_roc.Constraint, 0)
+func substitute(c f_constraints.Constraint, rel1 map[trace.Element]map[trace.Element]struct{}) []f_constraints.Constraint {
+	res := make([]f_constraints.Constraint, 0)
 
 	for i, elem := range c.Elems {
 		for rel := range rel1[elem] {
@@ -224,8 +224,8 @@ func substitute(c f_roc.Constraint, rel1 map[trace.Element]map[trace.Element]str
 //
 // Returns:
 //   - []chain: the list of mutated chains
-func augment(c f_roc.Constraint, rel2 map[trace.Element]map[trace.Element]struct{}) []f_roc.Constraint {
-	res := make([]f_roc.Constraint, 0)
+func augment(c f_constraints.Constraint, rel2 map[trace.Element]map[trace.Element]struct{}) []f_constraints.Constraint {
+	res := make([]f_constraints.Constraint, 0)
 
 	if UseHBInfoFuzzing {
 		concurrent := a_concurrent.GetConcurrent(c.LastElem(), true, false, settings.SameElementTypeInSC, true)
@@ -253,7 +253,7 @@ func augment(c f_roc.Constraint, rel2 map[trace.Element]map[trace.Element]struct
 	return res
 }
 
-func shuffle(c *[]f_roc.Constraint, n int) {
+func shuffle(c *[]f_constraints.Constraint, n int) {
 	if len(*c) <= n {
 		return
 	}
@@ -265,8 +265,8 @@ func shuffle(c *[]f_roc.Constraint, n int) {
 	*c = (*c)[:n]
 }
 
-func MutSelect(cs *f_roc.Constraint) map[string]f_roc.Constraint {
-	res := make(map[string]f_roc.Constraint)
+func MutSelect(cs *f_constraints.Constraint) map[string]f_constraints.Constraint {
+	res := make(map[string]f_constraints.Constraint)
 
 	for i, elem := range cs.Elems {
 		if elem.Type(false) != trace.Select {

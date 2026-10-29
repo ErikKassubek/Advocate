@@ -13,7 +13,7 @@ import (
 	"advocate/advoc/toolchain"
 	"advocate/analysis/a_base"
 	"advocate/fuzzing/f_base"
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/fuzzing/modes/f_gfuzz"
 	"advocate/fuzzing/modes/f_gopie"
 	f_guided "advocate/fuzzing/modes/g_guided"
@@ -310,7 +310,7 @@ func ResetFuzzing() {
 	f_base.MutationQueue = types.NewQueue[f_base.Mutation]()
 	// count how often a specific mutation has been in the queue
 	f_base.AllMutations = make(map[string]int)
-	f_base.ChainFiles = make(map[int]f_roc.Constraint)
+	f_base.ChainFiles = make(map[int]f_constraints.Constraint)
 
 }
 

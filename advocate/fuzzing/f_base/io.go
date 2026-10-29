@@ -10,7 +10,7 @@
 package f_base
 
 import (
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/trace"
 	"advocate/utils/flags"
 	"advocate/utils/io"
@@ -33,7 +33,7 @@ import (
 // Returns:
 //   - bool: true if max fuzzing number is reached
 //   - error
-func WriteMutConstraint(tr *trace.Trace, mut *f_roc.Constraint, first bool) (bool, error) {
+func WriteMutConstraint(tr *trace.Trace, mut *f_constraints.Constraint, first bool) (bool, error) {
 	if MaxNumberRuns != -1 && NumberWrittenMutations > MaxNumberRuns {
 		return true, nil
 	}
@@ -51,7 +51,7 @@ func WriteMutConstraint(tr *trace.Trace, mut *f_roc.Constraint, first bool) (boo
 		return false, err
 	}
 
-	closure := f_roc.CalcuateStableClosure(mut)
+	closure := f_constraints.CalcuateStableClosure(mut)
 
 	// write the active map to a "replay_constratins.log"
 	if flags.FuzzingMode == GoPie || settings.WithoutReplay {
@@ -166,7 +166,7 @@ func GetPath(path string) string {
 //   - mut *chain: chain to write
 //   - mutLen int: number of elements in mutation (without closure)
 //   - closureLen int: number of elements in closure
-func writeConstraintOrder(fuzzingTracePath string, tr *trace.Trace, mut *f_roc.Constraint, mutLen, closureLen int) error {
+func writeConstraintOrder(fuzzingTracePath string, tr *trace.Trace, mut *f_constraints.Constraint, mutLen, closureLen int) error {
 	constraintPath := filepath.Join(fuzzingTracePath, paths.NameReplayConstraints)
 
 	f, err := os.Create(constraintPath)
@@ -248,14 +248,14 @@ func writeForkMap(fuzzingTracePath string, tr *trace.Trace) error {
 	return nil
 }
 
-func WriteConstraint(tracePath string, tr *trace.Trace, constr, closure *f_roc.Constraint) error {
+func WriteConstraint(tracePath string, tr *trace.Trace, constr, closure *f_constraints.Constraint) error {
 	mutLen := constr.Len()
 	closureLen := 0
-	var fullConstr *f_roc.Constraint
+	var fullConstr *f_constraints.Constraint
 
 	if closure != nil {
 		closure.Len()
-		fullConstr = f_roc.MergeClosureConstraint(closure, constr)
+		fullConstr = f_constraints.MergeClosureConstraint(closure, constr)
 
 	}
 

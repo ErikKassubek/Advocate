@@ -13,7 +13,7 @@ package toolchain
 import (
 	"advocate/analysis/a_base"
 	"advocate/fuzzing/f_base"
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/utils/consts"
 	"advocate/utils/flags"
 	"advocate/utils/io"
@@ -113,7 +113,7 @@ func buildArgsMain(fileName string, replay bool, replayNumber string,
 		}
 
 		if flags.Mode == consts.ModeReplay {
-			trConst := f_roc.TraceToConstraint(&a_base.MainTrace)
+			trConst := f_constraints.TraceToConstraint(&a_base.MainTrace)
 			f_base.WriteConstraint(replayPath, &a_base.MainTrace, trConst, nil)
 		}
 	}
@@ -203,7 +203,7 @@ func buildArgsUnit(fileName, testName string, replay bool, fuzzing int, replayIn
 
 		if flags.Mode == consts.ModeReplay {
 			tr, _, _, _ := io.CreateTraceFromFiles(replayPath, false)
-			trConst := f_roc.TraceToConstraint(tr)
+			trConst := f_constraints.TraceToConstraint(tr)
 			f_base.WriteConstraint(replayPath, tr, nil, trConst)
 		}
 	}

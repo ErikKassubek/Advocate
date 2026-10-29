@@ -13,7 +13,7 @@ import (
 	"advocate/analysis/a_base"
 	"advocate/analysis/hb/a_concurrent"
 	"advocate/fuzzing/f_base"
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
 	"advocate/fuzzing/modes/f_gfuzz"
 	"advocate/trace"
 	"advocate/utils/log"
@@ -66,7 +66,7 @@ func CreateMutations() {
 				// 	continue
 				// }
 
-				if f_roc.IsEquivalent(cr) {
+				if f_constraints.IsEquivalent(cr) {
 					f_base.Equiv++
 					if rand.Float64() < propToSkipEquiv {
 						continue
@@ -94,8 +94,8 @@ func CreateMutations() {
 //
 // Returns:
 //   - []baseF.Constraint: a set of new constraint consisting of consecutive elements from the constraint
-func startConstraint(num, length int) []f_roc.Constraint {
-	res := make([]f_roc.Constraint, 0)
+func startConstraint(num, length int) []f_constraints.Constraint {
+	res := make([]f_constraints.Constraint, 0)
 
 	routines := a_base.MainTrace.Routines()
 
@@ -103,7 +103,7 @@ func startConstraint(num, length int) []f_roc.Constraint {
 		return res
 	}
 
-	top := []f_roc.ElemWithQual{}
+	top := []f_constraints.ElemWithQual{}
 
 	alreadyAdded := make(map[int]struct{})
 
@@ -133,7 +133,7 @@ func startConstraint(num, length int) []f_roc.Constraint {
 
 		q := f_base.Quality(elem)
 
-		e := f_roc.ElemWithQual{Elem: elem, Quality: q}
+		e := f_constraints.ElemWithQual{Elem: elem, Quality: q}
 
 		// find the num with the best quality
 		inserted := false
@@ -159,7 +159,7 @@ func startConstraint(num, length int) []f_roc.Constraint {
 	}
 
 	for _, e := range top {
-		c := f_roc.NewConstraint()
+		c := f_constraints.NewConstraint()
 		c.Add(e.Elem)
 
 		for i := 0; i < length; i++ {

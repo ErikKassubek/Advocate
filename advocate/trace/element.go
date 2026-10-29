@@ -47,6 +47,8 @@ type Element interface {
 	IsEqual(elem Element) bool
 	IsSameElement(elem Element) bool
 
+	Pan() bool
+
 	Trace() *Trace
 	setTrace(trace *Trace)
 
