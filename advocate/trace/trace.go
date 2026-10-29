@@ -952,9 +952,10 @@ func (this *Trace) PrintAsTab() {
 			res += fmt.Sprintf(colFmt, "") + "| "
 		}
 		res += fmt.Sprintf(colFmt, val)
-		for i := rout - 1; i < numberRout; i++ {
+		for i := rout - 1; i < numberRout-1; i++ {
 			res += "| " + fmt.Sprintf(colFmt, "")
 		}
+		res += "|"
 
 		return res
 	}

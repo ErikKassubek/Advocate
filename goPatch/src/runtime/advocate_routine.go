@@ -61,6 +61,7 @@ type AdvocateRoutine struct {
 // Return:
 //   - the new advocate routine
 func newAdvocateRoutine(g *g, replayRoutine int, file string, line int32) *AdvocateRoutine {
+	println("NEW: ", replayRoutine)
 	// ignore the internal routines that are run before the main/test function starts
 	if AdvocateTracingDisabled {
 		return &AdvocateRoutine{
@@ -74,8 +75,15 @@ func newAdvocateRoutine(g *g, replayRoutine int, file string, line int32) *Advoc
 		}
 	}
 
+	var id uint64 = 0
+	if replayRoutine != -1 {
+		id = uint64(replayRoutine)
+	} else {
+		id = GetNewAdvocateRoutineID()
+	}
+
 	advocateRoutineInfo := &AdvocateRoutine{
-		id:          GetNewAdvocateRoutineID(),
+		id:          id,
 		maxObjectId: 0,
 		G:           g,
 		Trace:       make([]traceElem, 0),
