@@ -1,7 +1,7 @@
 // Copyright (c) 2024 Erik Kassubek
 //
 // File: waitGroup.go
-// Brief: Rewrite for negative wait group counter
+// Brief: Rewrite for negative wait group counter and unlock before lock using a dinic graph
 //
 // Author: Erik Kassubek
 //
