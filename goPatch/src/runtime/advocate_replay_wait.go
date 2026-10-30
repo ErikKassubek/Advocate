@@ -11,28 +11,42 @@
 
 package runtime
 
+import (
+	"internal/runtime/atomic"
+)
+
 const releaseSleep = 0.01
+const timeoutSec = 4
+const maxTimeout = 5
+
+var lastReleseTime atomic.Int64
+var timeoutRun = false
+var timeoutMaxReached = false
+
+type waitingOp struct {
+	ch chan int
+	t  int64
+}
 
 type waitingOps struct {
-	waiting map[string]chan int // key -> waiting chan
+	waiting map[string]waitingOp // key -> waiting chan
 	mu      mutex
 }
 
 func newWaitingOps() waitingOps {
 	return waitingOps{
-		waiting: make(map[string]chan int),
+		waiting: make(map[string]waitingOp),
 		mu:      mutex{},
 	}
 }
 
-// TODO: locks
 func (this *waitingOps) add(key string, cWait chan int) {
 	lock(&this.mu)
-	this.waiting[key] = cWait
+	this.waiting[key] = waitingOp{cWait, currentTime()}
 	unlock(&this.mu)
 }
 
-func (this *waitingOps) contains(elem *ConstraintElem) chan int {
+func (this *waitingOps) contains(elem *ConstraintElem) waitingOp {
 	key := elem.key
 	lock(&this.mu)
 	if c, ok := this.waiting[key]; ok {
@@ -40,7 +54,7 @@ func (this *waitingOps) contains(elem *ConstraintElem) chan int {
 		return c
 	}
 	unlock(&this.mu)
-	return nil
+	return waitingOp{nil, -1}
 }
 
 func (this *waitingOps) remove(elem *ConstraintElem) {
@@ -119,6 +133,13 @@ func WaitForReplayPath(op Operation, file string, line int) (string, chan int) {
 		return "", nil
 	}
 
+	if constraintMain.alreadyExecuted(key, true) {
+		if printDebug {
+			println("ReleaseS: ", key)
+		}
+		return "", nil
+	}
+
 	chWait := make(chan int, 1)
 
 	// is next, can be release directly
@@ -127,7 +148,7 @@ func WaitForReplayPath(op Operation, file string, line int) (string, chan int) {
 			println("ReleaseD: ", key)
 		}
 
-		chWait <- info
+		release(chWait, info)
 		return key, chWait
 	}
 
@@ -141,11 +162,50 @@ func WaitForReplayPath(op Operation, file string, line int) (string, chan int) {
 	return key, chWait
 }
 
+func release(chWait chan int, info int) {
+	chWait <- info
+	lastReleseTime.Store(currentTime())
+}
+
 func AckReplay(key string) {
 	if printDebug {
 		println("ACK: ", key)
 	}
 	constraintMain.update(key)
+}
+
+// Call as background routine
+func Timeout() {
+	lastReleseTime.Store(currentTime())
+	timeoutNs := sToNs(timeoutSec)
+	timeoutCounter := 0
+
+	for {
+		sleep(timeoutSec)
+
+		last := lastReleseTime.Load()
+
+		if last-currentTime() > timeoutNs {
+			if printDebug {
+				println("TIMEOUT")
+			}
+			timeoutRun = true
+			timeoutCounter++
+
+			if timeoutCounter > maxTimeout {
+				timeoutMaxReached = true
+				DisableReplay()
+				sleep(0.01)
+				ReleaseAllBlocked()
+				return
+			}
+		}
+		constraintMain.releaseOldest()
+	}
+}
+
+func GetReplayInfo() (bool, bool, bool) {
+	return timeoutRun, timeoutMaxReached, false // TODO: maybe add ack timeout
 }
 
 // AdvocateIgnoreReplay decides if an operation should be ignored for replay.
@@ -234,4 +294,19 @@ func WaitForReplayFinish() bool {
 	}
 
 	return allEventExec
+}
+
+func ReleaseAllBlocked() {
+	constraintMain.releaseAllBlocked()
+}
+
+func GetWaiting() []string {
+	res := make([]string, len(waiting.waiting))
+
+	i := 0
+	for key := range waiting.waiting {
+		res[i] = key
+	}
+
+	return res
 }

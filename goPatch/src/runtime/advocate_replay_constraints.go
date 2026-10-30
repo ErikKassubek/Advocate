@@ -55,10 +55,11 @@ func AddConstraintInfo(info string) {
 }
 
 type Constraint struct {
-	order       []ConstraintElem
-	elems       map[string]map[int]bool // key -> index
-	elemIndex   map[string]int          // key -> currentIndex
-	replayIndex int
+	order           []ConstraintElem
+	elems           map[string]map[int]bool // key -> index
+	elemIndex       map[string]int          // key -> currentIndex
+	replayIndex     int
+	releasedTimeout map[string]bool
 
 	mu mutex
 }
@@ -148,6 +149,20 @@ func (this *Constraint) isInConstraint(key string) bool {
 	return false
 }
 
+func (this *Constraint) alreadyExecuted(key string, remove bool) bool {
+	lock(&this.mu)
+
+	_, ok := this.releasedTimeout[key]
+
+	if remove {
+		delete(this.releasedTimeout, key)
+	}
+
+	unlock(&this.mu)
+
+	return ok
+}
+
 func (this *Constraint) update(key string) {
 	lock(&this.mu)
 	this.elemIndex[key]++
@@ -164,12 +179,12 @@ func (this *Constraint) releaseBlocked() {
 		return
 	}
 
-	if c := waiting.contains(next); c != nil {
+	if c := waiting.contains(next); c.ch != nil {
 		if printDebug {
 			println("ReleaseW: ", next.key)
 		}
 
-		c <- next.info
+		release(c.ch, next.info)
 		waiting.remove(next)
 	}
 }
@@ -178,24 +193,32 @@ func (this *Constraint) releaseAllBlocked() {
 	lock(&this.mu)
 
 	for _, ch := range waiting.waiting {
-		ch <- -1
+		release(ch.ch, -1)
 	}
-	waiting.waiting = make(map[string]chan int)
+	waiting.waiting = make(map[string]waitingOp)
 
 	unlock(&this.mu)
 }
 
-func ReleaseAllBlocked() {
-	constraintMain.releaseAllBlocked()
-}
+func (this *Constraint) releaseOldest() {
+	lock(&this.mu)
 
-func GetWaiting() []string {
-	res := make([]string, len(waiting.waiting))
+	oldestKey := ""
+	var oldestTime int64 = -1
 
-	i := 0
-	for key := range waiting.waiting {
-		res[i] = key
+	for key, ch := range waiting.waiting {
+		if oldestTime == -1 || ch.t < oldestTime {
+			oldestKey = key
+			oldestTime = ch.t
+		}
 	}
 
-	return res
+	if oldestTime != -1 {
+		this.releasedTimeout[oldestKey] = true
+		if printDebug {
+			println("ReleaseT: ", oldestKey)
+		}
+		release(waiting.waiting[oldestKey].ch, -1)
+	}
+	unlock(&this.mu)
 }

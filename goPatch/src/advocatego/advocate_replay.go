@@ -74,38 +74,6 @@ func startReplay(timeout int) {
 	readReplayConstraint(tracePathRewritten)
 	readSpawnTree(tracePathRewritten)
 
-	// if numberActive == 0, add later
-	// if constr != nil && numberConstraints != 0 {
-	// 	runtime.AddConstratins(constr, numberConstraints)
-	// }
-
-	// traverse all files in the trace folder
-	// files, err := os.ReadDir(tracePathRewritten)
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// foundTraceFiles := false
-	// replayData, spawns, selects := runtime.GetReplayTrace()
-	// for _, file := range files {
-	// 	// if the file is a directory, ignore it
-	// 	if file.IsDir() {
-	// 		continue
-	// 	}
-
-	// 	if file.Name() == "times.log" || file.Name() == "trace_info.log" {
-	// 		continue
-	// 	}
-
-	// 	// if the file is a trace file, read the trace
-	// 	if strings.HasSuffix(file.Name(), ".log") &&
-	// 		file.Name() != "rewrite_info.log" &&
-	// 		file.Name() != activeFile {
-	// 		readTraceFile(tracePathRewritten+"/"+file.Name(), replayData, spawns, selects)
-	// 		foundTraceFiles = true
-	// 	}
-	// }
-
 	if timeout > 0 {
 		// start time timeout
 		go func() {
@@ -114,6 +82,8 @@ func startReplay(timeout int) {
 			os.Exit(10)
 		}()
 	}
+
+	go runtime.Timeout()
 
 	// DetectBlockingGC(0)
 

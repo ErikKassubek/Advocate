@@ -17,8 +17,8 @@ const (
 var (
 	advocateFuzzingEnabled       = false
 	advocateFuzzingReplayEnabled = false
-	// fuzzingSelectData            = make(map[string][]int)
-	// fuzzingSelectDataIndex       = make(map[string]int)
+	fuzzingSelectData            = make(map[string][]int)
+	fuzzingSelectDataIndex       = make(map[string]int)
 
 	finishFuzzingFunc func()
 )
@@ -55,6 +55,8 @@ func IsAdvocateFuzzingEnabled() bool {
 	return advocateFuzzingEnabled
 }
 
+// TODO: fix for gfuzz
+
 // Get the preferred case for the specified select
 //
 // Parameter:
@@ -64,26 +66,26 @@ func IsAdvocateFuzzingEnabled() bool {
 //   - bool: true if a preferred case exists, false otherwise
 //   - int: preferred case, -1 for default
 func AdvocateFuzzingGetPreferredCase(skip int) (bool, int) {
-	// if !advocateFuzzingEnabled {
-	// 	return false, 0
-	// }
+	if !advocateFuzzingEnabled {
+		return false, 0
+	}
 
-	// routine := GetReplayRoutineID()
+	routine := GetReplayRoutineID()
 
-	// _, file, line, _ := Caller(skip)
-	// if AdvocateIgnore(file) {
-	// 	return false, 0
-	// }
-	// key := BuildReplayKey(routine, file, line)
+	_, file, line, _ := Caller(skip)
+	if AdvocateIgnore(file) {
+		return false, 0
+	}
+	key := intToString(routine) + ":" + file + "#" + intToString(line)
 
-	// if val, ok := fuzzingSelectData[key]; ok {
-	// 	index := fuzzingSelectDataIndex[key]
-	// 	if index >= len(val) {
-	// 		return false, 0
-	// 	}
-	// 	fuzzingSelectDataIndex[key]++
-	// 	return true, val[index]
-	// }
+	if val, ok := fuzzingSelectData[key]; ok {
+		index := fuzzingSelectDataIndex[key]
+		if index >= len(val) {
+			return false, 0
+		}
+		fuzzingSelectDataIndex[key]++
+		return true, val[index]
+	}
 
 	return false, 0
 }

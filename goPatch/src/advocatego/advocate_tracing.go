@@ -210,7 +210,7 @@ func writeToTraceFileInfo(numberRoutines int) {
 	}
 
 	exitCode, exitPos := runtime.GetExitCode()
-	replayOldest, replayDisabled, replayAck := false, false, false // TODO: fix
+	replayOldest, replayDisabled, replayAck := runtime.GetReplayInfo()
 
 	// exitCode, exitPos := 0, ""
 	// replayOldest, replayDisabled, replayAck := 0, 0, 0
