@@ -42,6 +42,10 @@ func newWaitingOps() waitingOps {
 
 func (this *waitingOps) add(key string, cWait chan int) {
 	lock(&this.mu)
+
+	currentWaitingSize++
+	maxWaitingSize = max(maxWaitingSize, currentWaitingSize)
+
 	this.waiting[key] = waitingOp{cWait, currentTime()}
 	unlock(&this.mu)
 }
@@ -60,6 +64,7 @@ func (this *waitingOps) contains(elem *ConstraintElem) waitingOp {
 func (this *waitingOps) remove(elem *ConstraintElem) {
 	key := elem.key
 	lock(&this.mu)
+	currentWaitingSize--
 	delete(this.waiting, key)
 	unlock(&this.mu)
 }
@@ -176,6 +181,10 @@ func AckReplay(key string) {
 
 // Call as background routine
 func Timeout() {
+	if !withTimeout {
+		return
+	}
+
 	lastReleseTime.Store(currentTime())
 	timeoutNs := sToNs(timeoutSec)
 	timeoutCounter := 0
@@ -204,8 +213,8 @@ func Timeout() {
 	}
 }
 
-func GetReplayInfo() (bool, bool, bool) {
-	return timeoutRun, timeoutMaxReached, false // TODO: maybe add ack timeout
+func GetReplayInfo() (bool, bool, bool, int) {
+	return timeoutRun, timeoutMaxReached, false, maxWaitingSize // TODO: maybe add ack timeout
 }
 
 // AdvocateIgnoreReplay decides if an operation should be ignored for replay.

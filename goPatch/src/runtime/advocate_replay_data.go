@@ -35,7 +35,14 @@ var (
 	mgcRoutine uint64 = 0
 )
 
+var (
+	maxWaitingSize     = 0
+	currentWaitingSize = 0
+)
+
 const printDebug = false
+const experiments = true
+const withTimeout = true
 
 func SetSpawns(sp map[int][]int) {
 	if printDebug {
