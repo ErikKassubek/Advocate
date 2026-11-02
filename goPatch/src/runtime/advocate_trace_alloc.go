@@ -105,13 +105,23 @@ func (self AdvocateTraceAlloc) toString() string {
 }
 
 // Get the string representation for the primitive type
-// For now always return "NC"
 //
 // Returns:
 //   - string representation of the primitive type
-func (self AdvocateTraceAlloc) getOpStr() string {
-	return "NC"
-}
+// func (self AdvocateTraceAlloc) getOpStr() string {
+// 	switch self.op {
+// 	case OperationAllocChan:
+// 		return "NC"
+// 	case OperationAllocMutex:
+// 		return "NM"
+// 	case OperationAllocCond:
+// 		return "ND"
+// 	case OperationAllocWg:
+// 		return "NW"
+// 	}
+
+// 	return "NX"
+// }
 
 // getOperation is a getter for the operation
 //

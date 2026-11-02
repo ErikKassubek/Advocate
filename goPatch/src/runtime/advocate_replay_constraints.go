@@ -41,7 +41,6 @@ func AddConstraintElemFromString(info string) {
 	}
 
 	constraintMain.Add(newConst)
-
 }
 
 func AddConstraintInfo(info string) {

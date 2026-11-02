@@ -79,7 +79,10 @@ func RunGoModTidy() {
 	if err == nil {
 		defer os.Unsetenv("GOROOT")
 	}
-	RunCommand(nil, nil, NoTimeout, "go", "mod", "tidy")
+	err = RunCommand(nil, nil, NoTimeout, paths.Go, "mod", "tidy")
+	if err != nil {
+		log.Error("Failed to run go mod tidy: ", err.Error())
+	}
 }
 
 // func runCommandWithOutput(name, outputFile string, args ...string) (string, error) {

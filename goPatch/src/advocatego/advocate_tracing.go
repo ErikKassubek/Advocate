@@ -217,9 +217,9 @@ func writeToTraceFileInfo(numberRoutines int) {
 
 	file.WriteString(fmt.Sprintf("ExitCode!%d\n", exitCode))
 	file.WriteString(fmt.Sprintf("ExitPosition!%s\n", exitPos))
-	file.WriteString(fmt.Sprintf("ReplayTimeout!%d\n", replayOldest))
-	file.WriteString(fmt.Sprintf("ReplayDisabled!%d\n", replayDisabled))
-	file.WriteString(fmt.Sprintf("ReplayAck!%d\n", replayAck))
+	file.WriteString(fmt.Sprintf("ReplayTimeout!%d\n", boolToInt(replayOldest)))
+	file.WriteString(fmt.Sprintf("ReplayDisabled!%d\n", boolToInt(replayDisabled)))
+	file.WriteString(fmt.Sprintf("ReplayAck!%d\n", boolToInt(replayAck)))
 	file.WriteString(fmt.Sprintf("ReplayMaxWaiting!%d\n", maxWaitingSize))
 	file.WriteString(fmt.Sprintf("NumberRoutines!%d\n", numberRoutines))
 	file.WriteString(fmt.Sprintf("ActiveReached!%d\n", reachedActive))
@@ -258,3 +258,16 @@ func writeToTraceFileInfo(numberRoutines int) {
 // 	}
 
 // }
+
+
+func boolToInt(b bool) int {
+    // The compiler currently only optimizes this form.
+    // See issue 6011.
+    var i int
+    if b {
+        i = 1
+    } else {
+        i = 0
+    }
+    return i
+}

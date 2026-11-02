@@ -361,7 +361,7 @@ func (this *ElementAlloc) StringDebug() string {
 // Returns:
 //   - string: The gui string representation of the element
 func (this *ElementAlloc) StringGui() string {
-	return fmt.Sprintf("N,%d,%s,%d\n%s", this.objId, string(this.elemType), this.num, this.Pos().Short())
+	return fmt.Sprintf("N,%d,%s,%d\n%s", this.objId, string(string(this.elemType)[1]), this.num, this.Pos().Short())
 }
 
 // StringGui returns the gui string representation of the element
