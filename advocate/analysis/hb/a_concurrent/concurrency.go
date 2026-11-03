@@ -105,7 +105,7 @@ func IsConcurrent(elem1, elem2 trace.Element) bool {
 		return false
 	}
 
-	return a_clock.IsConcurrent(elem1.GetVC(a_clock.Strong), elem2.GetVC(a_clock.Strong))
+	return a_clock.IsConcurrent(elem1.VC(a_clock.Strong), elem2.VC(a_clock.Strong))
 }
 
 // IsConcurrent returns if two elements are concurrent.
@@ -123,5 +123,5 @@ func IsConcurrentWeak(elem1, elem2 trace.Element) bool {
 		return false
 	}
 
-	return a_clock.IsConcurrent(elem1.GetVC(a_clock.Weak), elem2.GetVC(a_clock.Weak))
+	return a_clock.IsConcurrent(elem1.VC(a_clock.Weak), elem2.VC(a_clock.Weak))
 }

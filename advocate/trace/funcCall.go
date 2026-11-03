@@ -248,10 +248,10 @@ func (this *ElementFunc) StringMin() string {
 // MARK: VC
 // ========================================================
 
-func (this *ElementFunc) Vc(_ a_clock.VcType, _ *a_clock.VectorClock) {
+func (this *ElementFunc) SetVc(_ a_clock.VcType, _ *a_clock.VectorClock) {
 }
 
-func (this *ElementFunc) GetVC(a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementFunc) VC(a_clock.VcType) *a_clock.VectorClock {
 	return &a_clock.VectorClock{}
 }
 

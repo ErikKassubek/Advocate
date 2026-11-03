@@ -64,8 +64,8 @@ type Element interface {
 
 	Function() *ElementFunc
 
-	Vc(weak a_clock.VcType, vc *a_clock.VectorClock)
-	GetVC(weak a_clock.VcType) *a_clock.VectorClock
+	SetVc(weak a_clock.VcType, vc *a_clock.VectorClock)
+	VC(weak a_clock.VcType) *a_clock.VectorClock
 
 	NumberConcurrent(weak, sameElem bool) int
 	SetNumberConcurrent(c int, weak, sameElem bool)
@@ -342,10 +342,10 @@ func (this *concInfo) getVC(weak a_clock.VcType) *a_clock.VectorClock {
 
 func (this *concInfo) setVC(weak a_clock.VcType, vc *a_clock.VectorClock) {
 	if weak == a_clock.Weak {
-		this.wVc = vc
+		this.wVc = vc.Copy()
 		return
 	}
-	this.vc = vc
+	this.vc = vc.Copy()
 }
 
 func (this *concInfo) GetNumberConcurrent(weak, sameElem bool) int {

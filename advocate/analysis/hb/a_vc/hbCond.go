@@ -21,8 +21,8 @@ import (
 //   - co *trace.TraceElementCond: the conditional trace operation
 func UpdateHBCond(co *trace.ElementCond) {
 	routine := co.RoutineID()
-	co.Vc(a_clock.Strong, CurrentVC[routine])
-	co.Vc(a_clock.Weak, CurrentWVC[routine])
+	co.SetVc(a_clock.Strong, CurrentVC[routine])
+	co.SetVc(a_clock.Weak, CurrentWVC[routine])
 
 	switch co.Type(true) {
 	case trace.CondWait:

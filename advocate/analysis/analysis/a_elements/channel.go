@@ -446,7 +446,7 @@ func setChannelAsLastSend(c trace.Element) {
 	}
 	a_base.MostRecentSend[routine][id] = a_base.ElemWithVcVal{
 		Elem: c,
-		Vc:   c.GetVC(a_clock.Strong),
+		Vc:   c.VC(a_clock.Strong),
 		Val:  id,
 	}
 	a_base.HasSend[routine] = true
@@ -469,7 +469,7 @@ func setChannelAsLastReceive(c trace.Element) {
 	}
 	a_base.MostRecentReceive[routine][id] = a_base.ElemWithVcVal{
 		Elem: c,
-		Vc:   c.GetVC(a_clock.Strong),
+		Vc:   c.VC(a_clock.Strong),
 		Val:  id,
 	}
 	a_base.HasReceived[id] = true

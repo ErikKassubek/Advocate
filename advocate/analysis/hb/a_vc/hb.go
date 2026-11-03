@@ -27,7 +27,7 @@ import (
 //   - happensBefore: The happens before relation between the elements
 func GetHappensBefore(t1, t2 trace.Element, weak bool) a_hb.HappensBefore {
 	if weak {
-		return a_clock.GetHappensBefore(t1.GetVC(a_clock.Weak), t2.GetVC(a_clock.Weak))
+		return a_clock.GetHappensBefore(t1.VC(a_clock.Weak), t2.VC(a_clock.Weak))
 	}
-	return a_clock.GetHappensBefore(t1.GetVC(a_clock.Strong), t2.GetVC(a_clock.Strong))
+	return a_clock.GetHappensBefore(t1.VC(a_clock.Strong), t2.VC(a_clock.Strong))
 }

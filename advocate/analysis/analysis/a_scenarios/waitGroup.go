@@ -114,7 +114,7 @@ func CheckForDoneBeforeAdd() {
 			for i := 0; i < len(addsNegWg); {
 				removed := false
 				for j := 0; j < len(donesNegWg); {
-					if a_clock.GetHappensBefore(addsNegWg[i].GetVC(a_clock.Strong), donesNegWg[j].GetVC(a_clock.Strong)) == a_hb.Concurrent {
+					if a_clock.GetHappensBefore(addsNegWg[i].VC(a_clock.Strong), donesNegWg[j].VC(a_clock.Strong)) == a_hb.Concurrent {
 						addsNegWgSorted = append(addsNegWgSorted, addsNegWg[i])
 						donesNEgWgSorted = append(donesNEgWgSorted, donesNegWg[j])
 						// remove the element from the list

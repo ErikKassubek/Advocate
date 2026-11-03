@@ -85,7 +85,7 @@ func UpdateHBSelect(graph *PoGraph, se *trace.ElementSelect, recorded bool) {
 
 	if !noChannel {
 		chosenCase := se.GetChosenCase()
-		chosenCase.Vc(a_clock.Strong, se.GetVC(a_clock.Strong))
+		chosenCase.SetVc(a_clock.Strong, se.VC(a_clock.Strong))
 
 		UpdateHBChannel(graph, chosenCase, recorded)
 	}

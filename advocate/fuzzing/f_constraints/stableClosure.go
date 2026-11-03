@@ -149,10 +149,10 @@ func stableClosureHB(s *Constraint) *Constraint {
 				continue
 			}
 
-			vc := elem.GetVC(a_clock.Weak)
+			vc := elem.VC(a_clock.Weak)
 
 			for _, elemConstr := range cl.Elems {
-				if a_clock.GetHappensBefore(vc, elemConstr.GetVC(a_clock.Weak)) == a_hb.Before {
+				if a_clock.GetHappensBefore(vc, elemConstr.VC(a_clock.Weak)) == a_hb.Before {
 					cl.Add(elem)
 					elems[elem.ID()] = true
 					newElemAdded = true

@@ -248,7 +248,7 @@ func checkAndFilterConcurrentRequests(cycle *a_base.Cycle) bool {
 		requestsWithPrev := []trace.Element{}
 		for _, req := range (*cycle)[i].Requests {
 			for _, prevReq := range (*cycle)[(len(*cycle)+i-1)%len(*cycle)].Requests {
-				if a_clock.GetHappensBefore(req.GetVC(a_clock.Weak), prevReq.GetVC(a_clock.Weak)) == a_hb.Concurrent {
+				if a_clock.GetHappensBefore(req.VC(a_clock.Weak), prevReq.VC(a_clock.Weak)) == a_hb.Concurrent {
 					requestsWithPrev = append(requestsWithPrev, req)
 					break
 				}
@@ -258,7 +258,7 @@ func checkAndFilterConcurrentRequests(cycle *a_base.Cycle) bool {
 		requestsWithBoth := []trace.Element{}
 		for _, req := range requestsWithPrev {
 			for _, nextReq := range (*cycle)[(i+1)%len(*cycle)].Requests {
-				if a_clock.GetHappensBefore(req.GetVC(a_clock.Weak), nextReq.GetVC(a_clock.Weak)) == a_hb.Concurrent {
+				if a_clock.GetHappensBefore(req.VC(a_clock.Weak), nextReq.VC(a_clock.Weak)) == a_hb.Concurrent {
 					requestsWithBoth = append(requestsWithBoth, req)
 					break
 				}
@@ -341,7 +341,7 @@ func CheckForResourceDeadlock() {
 		// debugLog("Found cycle with the following entries:", cycle)
 		for _, cycle := range cycles {
 			for _, r := range cycle.Requests {
-				if a_clock.GetHappensBefore(request.GetVC(a_clock.Weak), r.GetVC(a_clock.Weak)) == a_hb.Concurrent {
+				if a_clock.GetHappensBefore(request.VC(a_clock.Weak), r.VC(a_clock.Weak)) == a_hb.Concurrent {
 					request = r
 					break
 				}

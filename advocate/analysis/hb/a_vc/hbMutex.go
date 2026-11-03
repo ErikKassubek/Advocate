@@ -23,8 +23,8 @@ import (
 //   - alt bool: if Ignore critical sections is set
 func UpdateHBMutex(mu *trace.ElementMutex, alt bool) {
 	routine := mu.RoutineID()
-	mu.Vc(a_clock.Strong, CurrentVC[routine])
-	mu.Vc(a_clock.Weak, CurrentWVC[routine])
+	mu.SetVc(a_clock.Strong, CurrentVC[routine])
+	mu.SetVc(a_clock.Weak, CurrentWVC[routine])
 
 	if !alt {
 		switch mu.Type(true) {
@@ -63,7 +63,7 @@ func UpdateHBMutex(mu *trace.ElementMutex, alt bool) {
 //   - mu *trace.TraceElementMutex: the mutex trace element
 func UpdateHBMutexAlt(mu *trace.ElementMutex) {
 	routine := mu.RoutineID()
-	mu.Vc(a_clock.Strong, CurrentVC[routine])
+	mu.SetVc(a_clock.Strong, CurrentVC[routine])
 }
 
 // Lock updates and calculates the vector clocks given a lock operation

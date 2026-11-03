@@ -23,8 +23,8 @@ import (
 func UpdateHBChannel(ch *trace.ElementChannel) {
 	routine := ch.RoutineID()
 
-	ch.Vc(a_clock.Strong, CurrentVC[routine])
-	ch.Vc(a_clock.Weak, CurrentWVC[routine])
+	ch.SetVc(a_clock.Strong, CurrentVC[routine])
+	ch.SetVc(a_clock.Weak, CurrentWVC[routine])
 
 	if !ch.Committed() {
 		return
@@ -55,10 +55,10 @@ func UpdateHBChannel(ch *trace.ElementChannel) {
 			partner := ch.GetPartner()
 			if partner != nil {
 				partnerRout := partner.RoutineID()
-				partner.Vc(a_clock.Strong, CurrentVC[partnerRout])
+				partner.SetVc(a_clock.Strong, CurrentVC[partnerRout])
 				sel := partner.GetSelect()
 				if sel != nil {
-					sel.Vc(a_clock.Strong, CurrentVC[partnerRout])
+					sel.SetVc(a_clock.Strong, CurrentVC[partnerRout])
 				}
 				Unbuffered(ch, partner)
 				// increase index for recv is done in analysis/elements/channel.go
@@ -72,7 +72,7 @@ func UpdateHBChannel(ch *trace.ElementChannel) {
 			partner := ch.GetPartner()
 			if partner != nil {
 				partnerRout := partner.RoutineID()
-				partner.Vc(a_clock.Strong, CurrentVC[partnerRout])
+				partner.SetVc(a_clock.Strong, CurrentVC[partnerRout])
 				Unbuffered(partner, ch)
 				// increase index for recv is done in analysis/elements/channel.go
 			} else {
@@ -100,15 +100,15 @@ func UpdateHBSelect(se *trace.ElementSelect) {
 
 	routine := se.RoutineID()
 
-	se.Vc(a_clock.Strong, CurrentVC[routine])
-	se.Vc(a_clock.Weak, CurrentVC[routine])
+	se.SetVc(a_clock.Strong, CurrentVC[routine])
+	se.SetVc(a_clock.Weak, CurrentVC[routine])
 
 	if noChannel {
 		CurrentVC[routine].Inc(routine)
 		CurrentWVC[routine].Inc(routine)
 	} else {
 		chosenCase := se.GetChosenCase()
-		chosenCase.Vc(a_clock.Strong, se.GetVC(a_clock.Strong))
+		chosenCase.SetVc(a_clock.Strong, se.VC(a_clock.Strong))
 
 		UpdateHBChannel(chosenCase)
 	}
@@ -116,7 +116,7 @@ func UpdateHBSelect(se *trace.ElementSelect) {
 	cases := se.GetCases()
 
 	for _, c := range cases {
-		c.Vc(a_clock.Strong, se.GetVC(a_clock.Strong))
+		c.SetVc(a_clock.Strong, se.VC(a_clock.Strong))
 	}
 }
 
@@ -189,7 +189,7 @@ func Send(ch *trace.ElementChannel) {
 
 	s := chanBuffer[id][count].Send
 	if s != nil {
-		v := s.GetVC(a_clock.Strong)
+		v := s.VC(a_clock.Strong)
 		CurrentVC[routine].Sync(v)
 	}
 
@@ -223,7 +223,7 @@ func Recv(ch *trace.ElementChannel, vc, wVc map[int]*a_clock.VectorClock) {
 	s := chanBuffer[id][0].Send
 
 	if s != nil {
-		vc[routine] = vc[routine].Sync(s.GetVC(a_clock.Strong))
+		vc[routine] = vc[routine].Sync(s.VC(a_clock.Strong))
 	}
 
 	r := a_base.MostRecentReceive[routine][id]
@@ -279,7 +279,7 @@ func RecvC(ch *trace.ElementChannel, buffered bool) {
 
 	if _, ok := a_base.CloseData[id]; ok {
 		c := a_base.CloseData[id]
-		CurrentVC[routine].Sync(c.GetVC(a_clock.Strong))
+		CurrentVC[routine].Sync(c.VC(a_clock.Strong))
 	}
 
 	CurrentVC[routine].Inc(routine)

@@ -210,7 +210,7 @@ func rewriteGraph(bug bugs.Bug) (*f_constraints.Constraint, error) {
 
 	for i := 0; i < n; i++ {
 		for j := i + 1; j < n; j++ {
-			switch a_clock.GetHappensBefore(elements[i].GetVC(a_clock.Strong), elements[j].GetVC(a_clock.Strong)) {
+			switch a_clock.GetHappensBefore(elements[i].VC(a_clock.Strong), elements[j].VC(a_clock.Strong)) {
 			case a_hb.Before:
 				addPrecedence(i, j)
 			case a_hb.After:

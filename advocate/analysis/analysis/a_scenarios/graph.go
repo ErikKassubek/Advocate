@@ -56,7 +56,7 @@ func buildResidualGraph(increases []trace.Element, decreases []trace.Element) ma
 	// add edge from done to add if the add happens before the done
 	for _, elemDecrease := range decreases {
 		for _, elemIncrease := range increases {
-			if a_clock.GetHappensBefore(elemIncrease.GetVC(a_clock.Strong), elemDecrease.GetVC(a_clock.Strong)) == a_hb.Before {
+			if a_clock.GetHappensBefore(elemIncrease.VC(a_clock.Strong), elemDecrease.VC(a_clock.Strong)) == a_hb.Before {
 				graph[elemDecrease] = append(graph[elemDecrease], elemIncrease)
 			}
 		}

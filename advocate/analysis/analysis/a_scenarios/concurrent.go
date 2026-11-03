@@ -167,7 +167,7 @@ func GetConcurrentMutexForFuzzing(mu *trace.ElementMutex) {
 
 	elem := a_base.CurrentlyHoldLock[id]
 
-	if a_clock.GetHappensBefore(mu.GetVC(a_clock.Strong), elem.GetVC(a_clock.Strong)) == a_hb.Concurrent {
+	if a_clock.GetHappensBefore(mu.VC(a_clock.Strong), elem.VC(a_clock.Strong)) == a_hb.Concurrent {
 		a_base.FuzzingFlowMutex = append(a_base.FuzzingFlowMutex, a_base.ConcurrentEntry{Elem: elem, Counter: getFuzzingCounter(elem), Type: a_base.CEMutex})
 	}
 
@@ -184,7 +184,7 @@ func GetConcurrentOnceForFuzzing(on *trace.ElementOnce) {
 	timer.Stop(timer.FuzzingAna)
 
 	id := on.ResourceID()
-	vc := on.GetVC(a_clock.Strong)
+	vc := on.VC(a_clock.Strong)
 
 	IncFuzzingCounter(on)
 
@@ -194,7 +194,7 @@ func GetConcurrentOnceForFuzzing(on *trace.ElementOnce) {
 	}
 
 	if exec, ok := a_base.ExecutedOnce[id]; ok {
-		if a_clock.GetHappensBefore(exec.Elem.GetVC(a_clock.Strong), vc) == a_hb.Concurrent {
+		if a_clock.GetHappensBefore(exec.Elem.VC(a_clock.Strong), vc) == a_hb.Concurrent {
 			a_base.FuzzingFlowOnce = append(a_base.FuzzingFlowOnce, *exec)
 		}
 	}

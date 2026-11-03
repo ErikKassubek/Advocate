@@ -272,23 +272,23 @@ func (this *ElementRoutineEnd) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-// Vc sets the vector clock
+// SetVc sets the vector clock
 //
 // Parameter:
 //   - weak bool
 //   - vc *clock.VectorClock: the vector clock
-func (this *ElementRoutineEnd) Vc(weak a_clock.VcType, vc *a_clock.VectorClock) {
+func (this *ElementRoutineEnd) SetVc(weak a_clock.VcType, vc *a_clock.VectorClock) {
 	this.ci.setVC(weak, vc)
 }
 
-// GetVC returns the vector clock of the element
+// VC returns the vector clock of the element
 //
 // Parameter:
 //   - weak bool
 //
 // Returns:
 //   - VectorClock: The vector clock of the element
-func (this *ElementRoutineEnd) GetVC(weak a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementRoutineEnd) VC(weak a_clock.VcType) *a_clock.VectorClock {
 	return this.ci.getVC(weak)
 }
 
