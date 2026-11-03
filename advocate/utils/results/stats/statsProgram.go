@@ -12,9 +12,9 @@ package stats
 import (
 	"advocate/utils/consts"
 	"advocate/utils/flags"
-	"advocate/utils/helper"
 	"advocate/utils/log"
 	"advocate/utils/paths"
+	"advocate/utils/results/buginfo"
 	"bufio"
 	"fmt"
 	"os"
@@ -108,7 +108,7 @@ func CreateStatsTotal(pathFolder string) error {
 	headers := "NrFiles,NrLines,NrNonEmptyLines,NrTests,NrRuns"
 
 	for _, mode := range []statsType{detected, replayWritten, replaySuccessful, unexpectedPanic} {
-		for _, code := range helper.ResultTypes {
+		for _, code := range buginfo.ResultTypes {
 			headers += fmt.Sprintf(",Nr%s%s", string(mode), string(code))
 		}
 	}
@@ -125,7 +125,7 @@ func CreateStatsTotal(pathFolder string) error {
 	res += fmt.Sprintf("%d,%d", noTests, noRuns)
 
 	for _, mode := range []statsType{detected, replayWritten, replaySuccessful, unexpectedPanic} {
-		for _, code := range helper.ResultTypes {
+		for _, code := range buginfo.ResultTypes {
 			res += fmt.Sprintf(",%d", data[mode][code])
 		}
 	}

@@ -12,8 +12,8 @@ package bugs
 import (
 	"advocate/analysis/a_base"
 	"advocate/trace"
-	"advocate/utils/helper"
 	"advocate/utils/log"
+	"advocate/utils/results/buginfo"
 	"errors"
 	"sort"
 	"strconv"
@@ -65,7 +65,7 @@ func GetBugElementSelectCase(arg string) (BugElementSelectCase, error) {
 //     normally the elements indirectly involved or elements to solve the bug (possible partner),
 //     e.g. for send on close the close
 type Bug struct {
-	Type          helper.ResultType
+	Type          buginfo.ResultType
 	FalsePos      bool
 	TraceElement1 []trace.Element
 	// TraceElement1Sel []BugElementSelectCase
@@ -104,51 +104,51 @@ func (this Bug) ToString() string {
 	arg1Str, arg2Str := this.Type.Args()
 
 	switch this.Type {
-	case helper.RUnknownPanic:
+	case buginfo.RUnknownPanic:
 		typeStr = "Unknown Panic:"
-	case helper.RTimeout:
+	case buginfo.RTimeout:
 		typeStr = "Timeout"
-	case helper.RReplayFail:
+	case buginfo.RReplayFail:
 		typeStr = "ReplayFail"
-	case helper.ASendOnClosed:
+	case buginfo.ASendOnClosed:
 		typeStr = "Actual Send on Closed Channel:"
-	case helper.ACloseOnClosed:
+	case buginfo.ACloseOnClosed:
 		typeStr = "Actual Close on Closed Channel:"
-	case helper.ACloseOnNilChannel:
+	case buginfo.ACloseOnNilChannel:
 		typeStr = "Actual close on nil channel:"
-	case helper.AConcurrentRecv:
+	case buginfo.AConcurrentRecv:
 		typeStr = "Concurrent Receive:"
-	case helper.ABlocking:
+	case buginfo.ABlocking:
 		typeStr = "Blocking routine:"
-	case helper.ADeadlock:
+	case buginfo.ADeadlock:
 		typeStr = "Deadlock:"
-	case helper.ANegWG:
+	case buginfo.ANegWG:
 		typeStr = "Actual negative Wait Group:"
-	case helper.AUnlockOfNotLockedMutex:
+	case buginfo.AUnlockOfNotLockedMutex:
 		typeStr = "Actual unlock of not locked mutex:"
-	case helper.PSendOnClosed:
+	case buginfo.PSendOnClosed:
 		typeStr = "Possible send on closed channel:"
-	case helper.PNegWG:
+	case buginfo.PNegWG:
 		typeStr = "Possible negative waitgroup counter:"
-	case helper.PUnlockBeforeLock:
+	case buginfo.PUnlockBeforeLock:
 		typeStr = "Possible unlock of a not locked mutex:"
-	case helper.PCyclicDeadlock:
+	case buginfo.PCyclicDeadlock:
 		typeStr = "Possible cyclic deadlock:"
-	case helper.PMixedDeadlock:
+	case buginfo.PMixedDeadlock:
 		typeStr = "Possible Mixed Deadlock:"
-	case helper.LUnknown:
+	case buginfo.LUnknown:
 		typeStr = "Leak on routine"
-	case helper.LChan:
+	case buginfo.LChan:
 		typeStr = "Leak on a channel:"
-	case helper.LNilChan:
+	case buginfo.LNilChan:
 		typeStr = "Leak on nil channel:"
-	case helper.LSelect:
+	case buginfo.LSelect:
 		typeStr = "Leak on select:"
-	case helper.LMutex:
+	case buginfo.LMutex:
 		typeStr = "Leak on mutex:"
-	case helper.LWaitGroup:
+	case buginfo.LWaitGroup:
 		typeStr = "Leak on wait group:"
-	case helper.LCond:
+	case buginfo.LCond:
 		typeStr = "Leak on conditional variable:"
 	default:
 		log.Error("Unknown bug type in toString: " + string(this.Type))
@@ -211,69 +211,69 @@ func ProcessBug(bugStr string) (bool, Bug, error) {
 
 	switch bugType {
 	case "R01":
-		bug.Type = helper.RUnknownPanic
+		bug.Type = buginfo.RUnknownPanic
 		actual = true
 	case "R02":
-		bug.Type = helper.RTimeout
+		bug.Type = buginfo.RTimeout
 		actual = true
 	case "R03":
-		bug.Type = helper.RReplayFail
+		bug.Type = buginfo.RReplayFail
 		actual = true
 	case "A01":
-		bug.Type = helper.ASendOnClosed
+		bug.Type = buginfo.ASendOnClosed
 		actual = true
 	case "A02":
-		bug.Type = helper.ACloseOnClosed
+		bug.Type = buginfo.ACloseOnClosed
 		actual = true
 	case "A03":
-		bug.Type = helper.ACloseOnNilChannel
+		bug.Type = buginfo.ACloseOnNilChannel
 		actual = true
 	case "A04":
-		bug.Type = helper.ANegWG
+		bug.Type = buginfo.ANegWG
 		actual = true
 	case "A05":
-		bug.Type = helper.AUnlockOfNotLockedMutex
+		bug.Type = buginfo.AUnlockOfNotLockedMutex
 		actual = true
 	case "A06":
-		bug.Type = helper.ABlocking
+		bug.Type = buginfo.ABlocking
 		actual = true
 	case "A07":
-		bug.Type = helper.ADeadlock
+		bug.Type = buginfo.ADeadlock
 		actual = true
 	case "A08":
-		bug.Type = helper.AConcurrentRecv
+		bug.Type = buginfo.AConcurrentRecv
 		actual = true
 	case "A09":
-		bug.Type = helper.AMixedDeadlock
+		bug.Type = buginfo.AMixedDeadlock
 	case "P01":
-		bug.Type = helper.PSendOnClosed
+		bug.Type = buginfo.PSendOnClosed
 	case "P02":
-		bug.Type = helper.PNegWG
+		bug.Type = buginfo.PNegWG
 	case "P03":
-		bug.Type = helper.PUnlockBeforeLock
+		bug.Type = buginfo.PUnlockBeforeLock
 	case "P04":
-		bug.Type = helper.PCyclicDeadlock
+		bug.Type = buginfo.PCyclicDeadlock
 		containsArg2 = true
 	case "P05":
-		bug.Type = helper.PMixedDeadlock
+		bug.Type = buginfo.PMixedDeadlock
 	case "L00":
 		containsArg1 = false
-		bug.Type = helper.LUnknown
+		bug.Type = buginfo.LUnknown
 	case "L01":
-		bug.Type = helper.LChan
+		bug.Type = buginfo.LChan
 	case "L02":
-		bug.Type = helper.LNilChan
+		bug.Type = buginfo.LNilChan
 		containsArg2 = false
 	case "L03":
-		bug.Type = helper.LSelect
+		bug.Type = buginfo.LSelect
 	case "L04":
-		bug.Type = helper.LMutex
+		bug.Type = buginfo.LMutex
 		containsArg2 = false
 	case "L05":
-		bug.Type = helper.LWaitGroup
+		bug.Type = buginfo.LWaitGroup
 		containsArg2 = false
 	case "L06":
-		bug.Type = helper.LChan
+		bug.Type = buginfo.LChan
 	// case "S00":
 	// 	bug.Type = SNotExecutedWithPartner
 	// 	containsArg2 = true

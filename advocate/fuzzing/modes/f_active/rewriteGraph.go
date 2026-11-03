@@ -14,8 +14,8 @@ import (
 	"advocate/analysis/hb/a_clock"
 	"advocate/fuzzing/f_constraints"
 	"advocate/trace"
-	"advocate/utils/helper"
 	"advocate/utils/log"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/bugs"
 	"advocate/utils/types"
 	"fmt"
@@ -164,9 +164,9 @@ func (d *Dinic) Reachable(s int) []bool {
 //   - bug Bug: The bug to create a trace for
 func rewriteGraph(bug bugs.Bug) (*f_constraints.Constraint, error) {
 	switch bug.Type {
-	case helper.PNegWG:
+	case buginfo.PNegWG:
 		log.Info("Start rewrite for negative wait group counter...")
-	case helper.PUnlockBeforeLock:
+	case buginfo.PUnlockBeforeLock:
 		log.Info("Start rewrite for unlock before lock...")
 	}
 

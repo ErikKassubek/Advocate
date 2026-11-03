@@ -10,7 +10,7 @@
 package explanation
 
 import (
-	"advocate/utils/helper"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/types"
 )
 
@@ -40,59 +40,59 @@ type ResultTypeInfo struct {
 	Explanation string
 }
 
-var bugInfo = map[helper.ResultType]ResultTypeInfo{
-	helper.RUnknownPanic: ResultTypeInfo{Bug, Runtime, "Unknown Panic", "During the execution of the program, a unknown panic occurred"},
-	helper.RTimeout:      ResultTypeInfo{Diagnostic, Runtime, "Timeout", "The execution of the program timed out"},
-	helper.RReplayFail:   ResultTypeInfo{Diagnostic, Runtime, "Replay Failed", "The replay was not able to execute the full constraint.\nAt the end of the execution, the replay mechanism was still holding back elements."},
+var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
+	buginfo.RUnknownPanic: ResultTypeInfo{Bug, Runtime, "Unknown Panic", "During the execution of the program, a unknown panic occurred"},
+	buginfo.RTimeout:      ResultTypeInfo{Diagnostic, Runtime, "Timeout", "The execution of the program timed out"},
+	buginfo.RReplayFail:   ResultTypeInfo{Diagnostic, Runtime, "Replay Failed", "The replay was not able to execute the full constraint.\nAt the end of the execution, the replay mechanism was still holding back elements."},
 
-	helper.ASendOnClosed: ResultTypeInfo{
+	buginfo.ASendOnClosed: ResultTypeInfo{
 		Bug, Actual,
 		"Actual Send on Closed Channel",
 		"During the execution of the program, a send on a closed channel occurred.\n" +
 			"The occurrence of a send on closed leads to a panic."},
-	helper.ACloseOnClosed: ResultTypeInfo{
+	buginfo.ACloseOnClosed: ResultTypeInfo{
 		Bug, Actual,
 		"Actual Close on Closed Channel",
 		"During the execution of the program, a close on a close channel occurred.\n" +
 			"The occurrence of a close on a closed channel lead to a panic."},
-	helper.ACloseOnNilChannel: ResultTypeInfo{
+	buginfo.ACloseOnNilChannel: ResultTypeInfo{
 		Bug, Actual,
 		"Actual Close on Nil Channel",
 		"During the execution of the program, a close on a nil channel occurred.\n" +
 			"The occurrence of a close on a nil channel lead to a panic."},
-	helper.ANegWG: ResultTypeInfo{
+	buginfo.ANegWG: ResultTypeInfo{
 		Bug, Actual,
 		"Actual Negative Wait Group",
 		"During the execution, a negative wait group counter occurred.\n" +
 			"The occurrence of a negative wait group counter lead to a panic."},
-	helper.AUnlockOfNotLockedMutex: ResultTypeInfo{
+	buginfo.AUnlockOfNotLockedMutex: ResultTypeInfo{
 		Bug, Actual,
 		"Actual Unlock of Not Locked Mutex",
 		"During the execution, a not locked mutex was unlocked.\n" +
 			"The occurrence of this lead to a panic."},
-	helper.ABlocking: ResultTypeInfo{
+	buginfo.ABlocking: ResultTypeInfo{
 		Bug, Actual,
 		"Actual Non-Cyclic Blocking Bug",
 		"During the execution, a blocking bug was detected.\n" +
 			"This means, there is a routine that is blocked, and there is not possibility of it being unblocked in the future"},
-	helper.ADeadlock: ResultTypeInfo{
+	buginfo.ADeadlock: ResultTypeInfo{
 		Bug, Actual,
 		"Actual Cyclic Deadlock",
 		"During the execution, a resource deadlock was detected.\n" +
 			"This means, there is are routine that are cyclical blocked on mutexes, and there is not possibility of it being unblocked in the future"},
-	helper.AConcurrentRecv: ResultTypeInfo{
+	buginfo.AConcurrentRecv: ResultTypeInfo{
 		Diagnostic, Actual,
 		"Actual Concurrent Receive",
 		"During the execution of the program, a channel waited to receive at multiple positions at the same time.\n" +
 			"In this case, the actual receiver of a send message is chosen randomly.\n" +
 			"This can lead to nondeterministic behavior."},
-	helper.AMixedDeadlock: ResultTypeInfo{
+	buginfo.AMixedDeadlock: ResultTypeInfo{
 		Bug, Actual,
 		"Actual Mixed Deadlock",
 		"During the execution, a mixed deadlock was detected.\n" +
 			"This means, there is are routine that are cyclical blocked on a combination of channels and mutexes, and there is not possibility of it being unblocked in the future"},
 
-	helper.PSendOnClosed: ResultTypeInfo{
+	buginfo.PSendOnClosed: ResultTypeInfo{
 		Bug, Potential,
 		"Possible Send on Closed Channel",
 		"The analyzer detected a possible send on a closed channel.\n" +
@@ -100,7 +100,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 			"it is possible that it will occur, based on the happens before relation.\n" +
 			"Such a send on a closed channel leads to a panic.",
 	},
-	helper.PNegWG: ResultTypeInfo{
+	buginfo.PNegWG: ResultTypeInfo{
 		Bug, Potential,
 		"Possible Negative WaitGroup Counter",
 		"The analyzer detected a possible negative WaitGroup counter.\n" +
@@ -108,7 +108,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 			"it is possible that it will occur, based on the happens before relation.\n" +
 			"A negative counter will lead to a panic.",
 	},
-	helper.PUnlockBeforeLock: ResultTypeInfo{
+	buginfo.PUnlockBeforeLock: ResultTypeInfo{
 		Bug, Potential,
 		"Possible Unlock of Not Locked Mutex",
 		"The analyzer detected a possible unlock on a not locked mutex.\n" +
@@ -116,7 +116,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 			"it is possible that it will occur, based on the happens before relation.\n" +
 			"A unlock of a not locked mutex will result in a panic.",
 	},
-	helper.PCyclicDeadlock: ResultTypeInfo{
+	buginfo.PCyclicDeadlock: ResultTypeInfo{
 		Bug, Potential,
 		"Possible Cyclic Deadlock",
 		"The analysis detected a possible cyclic deadlock.\n" +
@@ -124,7 +124,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 			"result in the program getting stuck. Otherwise it can lead to an unnecessary use of " +
 			"resources.",
 	},
-	helper.PMixedDeadlock: ResultTypeInfo{
+	buginfo.PMixedDeadlock: ResultTypeInfo{
 		Bug, Potential,
 		"Possible Mixed Deadlock",
 		"The analysis detected a Possible Mixed Deadlock.\n" +
@@ -135,7 +135,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 			"Otherwise it can lead to an unnecessary use of resources.",
 	},
 
-	helper.LUnknown: ResultTypeInfo{
+	buginfo.LUnknown: ResultTypeInfo{
 		Leak, Actual,
 		"Leak on unknown object",
 		"The analyzer detected a leak.\n" +
@@ -144,7 +144,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 			"A Leak could potentially resolve itself, if the program would run longer.\n" +
 			"This can be a desired behavior, but it can also be a signal for a not otherwise detected block.",
 	},
-	helper.LChan: ResultTypeInfo{
+	buginfo.LChan: ResultTypeInfo{
 		Leak, Actual,
 		"Leak on Channel",
 		"The analyzer detected a Leak on a channel.\n" +
@@ -152,7 +152,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 			"still blocking at the end of the program.\n" +
 			"A Leak could potentially resolve itself, if the program would run longer.\n",
 	},
-	helper.LNilChan: ResultTypeInfo{
+	buginfo.LNilChan: ResultTypeInfo{
 		Leak, Actual,
 		"Leak on Nil Channel",
 		"The analyzer detected a leak on a nil channel.\n" +
@@ -160,7 +160,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 			"A nil channel is a channel, which was never initialized or set to nil." +
 			"An operation on a nil channel will block indefinitely.",
 	},
-	helper.LSelect: ResultTypeInfo{
+	buginfo.LSelect: ResultTypeInfo{
 		Leak, Actual,
 		"Leak on Select",
 		"The analyzer detected a Leak on a select with a possible partner.\n" +
@@ -169,7 +169,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 			"The partner is a corresponding send or receive operation, which communicated with another operation, " +
 			"but could communicated with the stuck operation instead, resolving the leak.",
 	},
-	helper.LMutex: ResultTypeInfo{
+	buginfo.LMutex: ResultTypeInfo{
 		Leak, Actual,
 		"Leak on Sync.Mutex",
 		"The analyzer detected a leak on a sync.Mutex.\n" +
@@ -177,7 +177,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 			"A Leak could potentially resolve itself, if the program would run longer.\n" +
 			"A sync.Mutex lock operation is a operation, which is blocking, because the lock is already acquired.",
 	},
-	helper.LWaitGroup: ResultTypeInfo{
+	buginfo.LWaitGroup: ResultTypeInfo{
 		Leak, Actual,
 		"Leak on Sync.WaitGroup",
 		"The analyzer detected a leak on a sync.WaitGroup.\n" +
@@ -185,7 +185,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 			"A Leak could potentially resolve itself, if the program would run longer.\n" +
 			"A sync.WaitGroup wait is blocking, because the counter is not zero.",
 	},
-	helper.LCond: ResultTypeInfo{
+	buginfo.LCond: ResultTypeInfo{
 		Leak, Actual,
 		"Leak on Sync.Cond",
 		"The analyzer detected a leak on a sync.Cond.\n" +
@@ -195,7 +195,7 @@ var bugInfo = map[helper.ResultType]ResultTypeInfo{
 	},
 }
 
-var bugCodes = make(map[string]helper.ResultType) // inverse of bugNames, initialized in init
+var bugCodes = make(map[string]buginfo.ResultType) // inverse of bugNames, initialized in init
 
 var exitCodeExplanation = map[string]string{
 	"panic": "The replay was started but was terminated unexpectedly.\nThe main reason could be, that the runtime exceeded the timeout of the test",
@@ -297,8 +297,8 @@ var objectTypes = map[string]string{
 //   - description string: bug description
 //
 // Returns:
-//   - helper.ResultType: code if exists, otherwise empty string
-func GetCodeFromDescription(description string) helper.ResultType {
+//   - buginfo.ResultType: code if exists, otherwise empty string
+func GetCodeFromDescription(description string) buginfo.ResultType {
 	if value, ok := bugCodes[description]; ok {
 		return value
 	}
@@ -312,7 +312,7 @@ func GetCodeFromDescription(description string) helper.ResultType {
 //
 // Returns:
 //   - map[bugKeys]string: bug type descriptions
-func getBugTypeDescription(bt helper.ResultType) map[bugKeys]string {
+func getBugTypeDescription(bt buginfo.ResultType) map[bugKeys]string {
 	args1, args2 := bt.Args()
 	info := bugInfo[bt]
 	return map[bugKeys]string{

@@ -15,7 +15,7 @@ import (
 	"advocate/analysis/hb/a_clock"
 	"advocate/trace"
 	"advocate/utils/flags"
-	"advocate/utils/helper"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/timer"
 )
@@ -59,7 +59,7 @@ func CheckForCommunicationOnClosedChannel(ch *trace.ElementChannel) {
 					Line:       ch.Line(),
 				}
 
-				results.Result(results.CRITICAL, helper.PSendOnClosed, []results.ResultElem{arg1}, []results.ResultElem{arg2})
+				results.Result(results.CRITICAL, buginfo.PSendOnClosed, []results.ResultElem{arg1}, []results.ResultElem{arg2})
 			}
 		}
 	}
@@ -108,10 +108,10 @@ func FoundSendOnClosedChannel(elem trace.Element, actual bool) {
 	}
 
 	if actual {
-		results.Result(results.CRITICAL, helper.ASendOnClosed,
+		results.Result(results.CRITICAL, buginfo.ASendOnClosed,
 			[]results.ResultElem{arg1}, []results.ResultElem{arg2})
 	} else {
-		results.Result(results.CRITICAL, helper.PSendOnClosed,
+		results.Result(results.CRITICAL, buginfo.PSendOnClosed,
 			[]results.ResultElem{arg1}, []results.ResultElem{arg2})
 	}
 
@@ -151,7 +151,7 @@ func CheckForClosedOnClosed(ch *trace.ElementChannel) {
 			Line:       ch.Line(),
 		}
 
-		results.Result(results.CRITICAL, helper.ACloseOnClosed,
+		results.Result(results.CRITICAL, buginfo.ACloseOnClosed,
 			[]results.ResultElem{arg1}, []results.ResultElem{arg2})
 	}
 }

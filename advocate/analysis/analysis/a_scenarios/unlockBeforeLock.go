@@ -14,8 +14,8 @@ import (
 	"advocate/analysis/a_hb"
 	"advocate/analysis/hb/a_clock"
 	"advocate/trace"
-	"advocate/utils/helper"
 	"advocate/utils/log"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/timer"
 	"advocate/utils/types"
@@ -147,7 +147,7 @@ func CheckForUnlockBeforeLock() {
 				})
 			}
 
-			results.Result(results.CRITICAL, helper.PUnlockBeforeLock, args1, args2)
+			results.Result(results.CRITICAL, buginfo.PUnlockBeforeLock, args1, args2)
 		}
 	}
 }

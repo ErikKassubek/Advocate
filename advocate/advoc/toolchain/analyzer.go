@@ -20,9 +20,9 @@ import (
 	"advocate/utils/consts"
 	"advocate/utils/control"
 	"advocate/utils/flags"
-	"advocate/utils/helper"
 	"advocate/utils/io"
 	"advocate/utils/log"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/timer"
 	"fmt"
@@ -126,7 +126,7 @@ func runAnalyzer(pathTrace string,
 		return nil
 	}
 
-	rewrittenBugs := make(map[helper.ResultType][]string) // bug type -> paths string
+	rewrittenBugs := make(map[buginfo.ResultType][]string) // bug type -> paths string
 
 	file := filepath.Base(pathTrace)
 	rewriteNr := "0"
@@ -184,13 +184,13 @@ func runAnalyzer(pathTrace string,
 //   - outMachine string: The path to the analysis result file
 //   - newTrace string: The path where the new traces folder will be created
 //   - resultIndex int: The index of the result to use for the reordered trace file
-//   - rewrittenTrace *map[helper.ResultType][]string: set of bugs that have been already rewritten
+//   - rewrittenTrace *map[buginfo.ResultType][]string: set of bugs that have been already rewritten
 //
 // Returns:
 //   - bool: true, if a rewrite was necessary, false if not (e.g. actual bug, warning)
 //   - error: An error if the trace file could not be created
 func rewriteTrace(outMachine string, newTrace string, resultIndex int,
-	rewrittenTrace *map[helper.ResultType][]string) (bool, error) {
+	rewrittenTrace *map[buginfo.ResultType][]string) (bool, error) {
 	timer.Start(timer.Rewrite)
 	defer timer.Stop(timer.Rewrite)
 

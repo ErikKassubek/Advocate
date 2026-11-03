@@ -12,7 +12,7 @@ package f_active
 
 import (
 	"advocate/fuzzing/f_constraints"
-	"advocate/utils/helper"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/bugs"
 	"errors"
 )
@@ -22,58 +22,58 @@ import (
 // Parameter:
 //   - tr *trace.Trace: Pointer to the trace to rewrite
 //   - bug Bug: The bug to create a trace for
-//   - rewrittenBugs *map[bugs.ResultType][]string: map of already rewritten bugs
+//   - rewrittenBugs *map[buginfo.ResultType][]string: map of already rewritten bugs
 //
 // Returns:
 //   - bool: true if rewrite was needed, false otherwise (e.g. actual bug, warning)
 //   - code: expected exit code
 //   - error: An error if the trace could not be created
-func RewriteTrace(bug bugs.Bug, rewrittenBugs map[helper.ResultType][]string) (constr *f_constraints.Constraint, code int, err error) {
-	code = helper.ExitCodeNone
+func RewriteTrace(bug bugs.Bug, rewrittenBugs map[buginfo.ResultType][]string) (constr *f_constraints.Constraint, code int, err error) {
+	code = buginfo.ExitCodeNone
 
 	constr = nil
 
 	switch bug.Type {
 
 	// ACTUAL BUGS
-	case helper.ASendOnClosed:
+	case buginfo.ASendOnClosed:
 		err = errors.New("Actual send on closed. Therefore no rewrite is needed")
-	case helper.ACloseOnClosed:
+	case buginfo.ACloseOnClosed:
 		err = errors.New("Actual close on close detected. Therefore no rewrite is needed")
-	case helper.ACloseOnNilChannel:
+	case buginfo.ACloseOnNilChannel:
 		err = errors.New("Actual close on nil detected. Therefore no rewrite is needed")
-	case helper.ANegWG:
+	case buginfo.ANegWG:
 		err = errors.New("Actual negative Wait Group. Therefore no rewrite is needed")
-	case helper.AUnlockOfNotLockedMutex:
+	case buginfo.AUnlockOfNotLockedMutex:
 		err = errors.New("Actual unlock of not locked mutex. Therefore no rewrite is needed")
-	case helper.ABlocking:
+	case buginfo.ABlocking:
 		err = errors.New("Actual blocking routine. Therefore no rewrite is needed")
-	case helper.ADeadlock:
+	case buginfo.ADeadlock:
 		err = errors.New("Actual deadlock. Therefore no rewrite is needed")
-	case helper.AConcurrentRecv:
+	case buginfo.AConcurrentRecv:
 		err = errors.New("Rewriting trace for concurrent receive is not possible")
-	case helper.PSendOnClosed:
-		code = helper.ExitCodeSendClose
+	case buginfo.PSendOnClosed:
+		code = buginfo.ExitCodeSendClose
 		constr, err = rewriteClosedChannel(bug)
-	case helper.PNegWG:
-		code = helper.ExitCodeNegativeWG
+	case buginfo.PNegWG:
+		code = buginfo.ExitCodeNegativeWG
 		constr, err = rewriteGraph(bug)
-	case helper.PUnlockBeforeLock:
-		code = helper.ExitCodeUnlockBeforeLock
+	case buginfo.PUnlockBeforeLock:
+		code = buginfo.ExitCodeUnlockBeforeLock
 		constr, err = rewriteGraph(bug)
-	case helper.PCyclicDeadlock:
+	case buginfo.PCyclicDeadlock:
 		constr, err = rewriteCyclicDeadlock(bug)
-	case helper.PMixedDeadlock:
+	case buginfo.PMixedDeadlock:
 		constr, err = rewriteMixedDeadlock(bug)
 
 	// LEAKS
-	case helper.LUnknown, helper.LChan, helper.LSelect, helper.LNilChan, helper.LMutex, helper.LWaitGroup, helper.LCond:
+	case buginfo.LUnknown, buginfo.LChan, buginfo.LSelect, buginfo.LNilChan, buginfo.LMutex, buginfo.LWaitGroup, buginfo.LCond:
 		err = errors.New("Leak. No rewrite")
-	case helper.RUnknownPanic:
+	case buginfo.RUnknownPanic:
 		err = errors.New("Unknown panic. No rewrite possible")
-	case helper.RTimeout:
+	case buginfo.RTimeout:
 		err = errors.New("Timeout. No rewrite possible")
-	case helper.RReplayFail:
+	case buginfo.RReplayFail:
 		err = errors.New("RReplayFail. No rewrite possible")
 	default:
 		err = errors.New("For the given bug type no trace rewriting is implemented")

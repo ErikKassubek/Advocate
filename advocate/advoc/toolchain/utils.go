@@ -12,8 +12,8 @@ package toolchain
 
 import (
 	"advocate/utils/consts"
-	"advocate/utils/helper"
 	"advocate/utils/paths"
+	"advocate/utils/results/buginfo"
 	"bufio"
 	"io"
 	"os"
@@ -117,7 +117,7 @@ func wasReplaySuc(output string) bool {
 				return false
 			}
 
-			return exitCode >= helper.MinExitCodeSuc
+			return exitCode >= buginfo.MinExitCodeSuc
 		}
 	}
 

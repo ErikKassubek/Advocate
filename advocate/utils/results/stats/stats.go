@@ -11,9 +11,9 @@ package stats
 
 import (
 	"advocate/utils/flags"
-	"advocate/utils/helper"
 	"advocate/utils/log"
 	"advocate/utils/paths"
+	"advocate/utils/results/buginfo"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -31,7 +31,7 @@ type testData struct {
 	name       string
 	numberRuns int
 	fuzzData   map[string]int
-	results    map[statsType]map[helper.ResultType]int
+	results    map[statsType]map[buginfo.ResultType]int
 }
 
 // toString returns the string representation of the statistics of a test
@@ -42,7 +42,7 @@ func (this *testData) toString() string {
 	res := fmt.Sprintf("%s,%d,%d,%d,%d", this.name, this.numberRuns, this.fuzzData["nrMut"], this.fuzzData["nrMutInvalid"], this.fuzzData["nrMutDouble"])
 
 	for _, mode := range []statsType{detected, replayWritten, replaySuccessful, unexpectedPanic} {
-		for _, code := range helper.ResultTypes {
+		for _, code := range buginfo.ResultTypes {
 			res += fmt.Sprintf(",%d", this.results[mode][code])
 		}
 	}
@@ -109,7 +109,7 @@ func CreateStats(testName string, traceID, fuzzing int) error {
 // Returns:
 //   - error
 func writeStatsToFile(testName string, statsTraces map[statsType]int, statsFuzz map[statsType]int,
-	statsAnalyzerTotal, statsAnalyzerUnique map[statsType]map[helper.ResultType]int) error {
+	statsAnalyzerTotal, statsAnalyzerUnique map[statsType]map[buginfo.ResultType]int) error {
 
 	fileFuzzPath := filepath.Join(paths.ResultStats, "statsFuzz_"+flags.ProgName+".csv")
 	fileTracingPath := filepath.Join(paths.ResultStats, "statsTrace_"+flags.ProgName+".csv")
@@ -130,7 +130,7 @@ func writeStatsToFile(testName string, statsTraces map[statsType]int, statsFuzz 
 
 	numberOfActualBugsTotal := 0
 	numberOfActualBugsUnique := 0
-	for _, code := range helper.ResultTypesActual {
+	for _, code := range buginfo.ResultTypesActual {
 		numberOfActualBugsTotal += statsAnalyzerTotal[detected][code]
 		numberOfActualBugsUnique += statsAnalyzerUnique[detected][code]
 	}
@@ -140,55 +140,55 @@ func writeStatsToFile(testName string, statsTraces map[statsType]int, statsFuzz 
 	numberOfLeaksTotalFalsePos := 0
 	numberOfLeaksUniqueFalsePos := 0
 
-	for _, code := range helper.ResultTypesLeak {
+	for _, code := range buginfo.ResultTypesLeak {
 		numberOfLeaksTotal += statsAnalyzerTotal[detected][code]
 		numberOfLeaksUnique += statsAnalyzerUnique[detected][code]
 	}
 	numberOfLeaksTotalTruePos := numberOfLeaksTotal - numberOfLeaksTotalFalsePos
 	numberOfLeaksUniqueTruePos := numberOfLeaksUnique - numberOfLeaksUniqueFalsePos
 
-	for _, code := range helper.ResultTypesLeak {
+	for _, code := range buginfo.ResultTypesLeak {
 		numberOfLeaksTotalFalsePos += statsAnalyzerTotal[falsePositive][code]
 		numberOfLeaksUniqueFalsePos += statsAnalyzerUnique[falsePositive][code]
 	}
 
 	numberOfLeaksWithRewriteTotal := 0
 	numberOfLeaksWithRewriteUnique := 0
-	for _, code := range helper.ResultTypesLeak {
+	for _, code := range buginfo.ResultTypesLeak {
 		numberOfLeaksWithRewriteTotal += statsAnalyzerTotal[replayWritten][code]
 		numberOfLeaksWithRewriteUnique += statsAnalyzerUnique[replayWritten][code]
 	}
 
 	numberOfLeaksResolvedViaReplayTotal := 0
 	numberOfLeaksResolvedViaReplayUnique := 0
-	for _, code := range helper.ResultTypesLeak {
+	for _, code := range buginfo.ResultTypesLeak {
 		numberOfLeaksResolvedViaReplayTotal += statsAnalyzerTotal[replaySuccessful][code]
 		numberOfLeaksResolvedViaReplayUnique += statsAnalyzerUnique[replaySuccessful][code]
 	}
 
 	numberOfPanicsTotal := 0
 	numberOfPanicsUnique := 0
-	for _, code := range helper.ResultTypesPotential {
+	for _, code := range buginfo.ResultTypesPotential {
 		numberOfPanicsTotal += statsAnalyzerTotal[detected][code]
 		numberOfPanicsUnique += statsAnalyzerUnique[detected][code]
 	}
 
 	numberOfPanicsVerifiedViaReplayTotal := 0
 	numberOfPanicsVerifiedViaReplayUnique := 0
-	for _, code := range helper.ResultTypesPotential {
+	for _, code := range buginfo.ResultTypesPotential {
 		numberOfPanicsVerifiedViaReplayTotal += statsAnalyzerTotal[replaySuccessful][code]
 		numberOfPanicsVerifiedViaReplayUnique += statsAnalyzerUnique[replaySuccessful][code]
 	}
 
 	numberUnexpectedPanicsInReplayTotal := 0
 	numberUnexpectedPanicsInReplayUnique := 0
-	for _, code := range helper.ResultTypesPotential {
+	for _, code := range buginfo.ResultTypesPotential {
 		numberUnexpectedPanicsInReplayTotal += statsAnalyzerTotal[unexpectedPanic][code]
 		numberUnexpectedPanicsInReplayUnique += statsAnalyzerUnique[unexpectedPanic][code]
 	}
 
 	numberProbInRecord := 0
-	for _, code := range helper.ResultTypesRecording {
+	for _, code := range buginfo.ResultTypesRecording {
 		numberProbInRecord += statsAnalyzerTotal[detected][code]
 	}
 
@@ -224,7 +224,7 @@ func writeStatsToFile(testName string, statsTraces map[statsType]int, statsFuzz 
 	data := make([]string, 0)
 	for _, mode := range []statsType{detected, replayWritten, replaySuccessful, unexpectedPanic} {
 		for _, count := range []string{"Total", "Unique"} {
-			for _, code := range helper.ResultTypes {
+			for _, code := range buginfo.ResultTypes {
 				headers = append(headers, "Nr"+count+strings.ToUpper(string(string(mode)[0]))+string(mode)[1:]+string(code))
 				if count == "Total" {
 					data = append(data, strconv.Itoa(statsAnalyzerTotal[mode][code]))

@@ -9,7 +9,7 @@
 
 // ResultType is an ID for a type of result
 
-package helper
+package buginfo
 
 // ResultType is an enum for the type of found bug
 type ResultType string
@@ -188,6 +188,37 @@ const (
 	ExitCodeCyclic           = 41
 	ExitCodeMixedDeadlock    = 42
 )
+
+var ResultTypeMap = map[ResultType]string{
+	ASendOnClosed:           "Actual Send on Closed Channel",
+	ACloseOnClosed:          "Actual Close on Closed Channel",
+	AConcurrentRecv:         "Concurrent Receive",
+	ACloseOnNilChannel:      "Actual close on nil channel",
+	ABlocking:               "Actual Non-Cyclic Blocking Bug",
+	ADeadlock:               "Actual Cyclic Deadlock",
+	ANegWG:                  "Actual negative Wait Group",
+	AUnlockOfNotLockedMutex: "Actual unlock of not locked mutex",
+
+	PSendOnClosed:     "Possible send on closed channel",
+	PNegWG:            "Possible negative waitgroup counter",
+	PUnlockBeforeLock: "Possible unlock of a not locked mutex",
+	PCyclicDeadlock:   "Possible cyclic deadlock",
+	PMixedDeadlock:    "Possible Mixed Deadlock",
+
+	LUnknown:   "Leak on routine or unknown element",
+	LChan:      "Leak on channel",
+	LNilChan:   "Leak on nil channel",
+	LSelect:    "Leak on select w",
+	LMutex:     "Leak on mutex",
+	LWaitGroup: "Leak on wait group",
+	LCond:      "Leak on conditional variable",
+
+	RUnknownPanic: "Unknown Panic",
+	RTimeout:      "Timeout",
+	RReplayFail:   "ReplayFailed",
+
+	// SNotExecutedWithPartner: "Not executed select with potential partner",
+}
 
 // MinExitCodeSuc is the minimum exit code for successful replay
 const MinExitCodeSuc = ExitCodeLeakUnbuf

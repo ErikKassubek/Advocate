@@ -11,9 +11,9 @@ package explanation
 
 import (
 	"advocate/utils/consts"
-	"advocate/utils/helper"
 	"advocate/utils/log"
 	"advocate/utils/paths"
+	"advocate/utils/results/buginfo"
 	"errors"
 	"fmt"
 	"os"
@@ -25,7 +25,7 @@ import (
 )
 
 type bug struct {
-	bugType helper.ResultType
+	bugType buginfo.ResultType
 	pos     string
 }
 
@@ -50,7 +50,7 @@ const (
 
 var printedExplanations = make(map[bug]struct{})
 
-func writeBug(bugType helper.ResultType, positions map[int][]string) bool {
+func writeBug(bugType buginfo.ResultType, positions map[int][]string) bool {
 	posSet := make(map[string]struct{})
 	for _, p := range positions {
 		for _, l := range p {
@@ -152,13 +152,13 @@ func CreateOverview(ignoreDouble bool, traceID, fuzzing int) (int, error) {
 				continue
 			}
 
-			if bugType == helper.Empty {
+			if bugType == buginfo.Empty {
 				break
 			}
 
 			// get the bug type description
 			if bugType.IsLeak() && blockedByReplay {
-				bugType = helper.RReplayFail
+				bugType = buginfo.RReplayFail
 			}
 			bugTypeDescription := getBugTypeDescription(bugType)
 
@@ -197,12 +197,12 @@ func CreateOverview(ignoreDouble bool, traceID, fuzzing int) (int, error) {
 //   - headerLine int: line number of the first line of the header
 //
 // Returns:
-//   - helper.ResultType: bug type
+//   - buginfo.ResultType: bug type
 //   - map[int][]string: bug element positions
 //   - map[int]string: bug element types
 //   - bool: true if false positive
 //   - error
-func readAnalysisResults(path string, index int, fileWithHeader string) (helper.ResultType, map[int][]string, map[int]string, bool, error) {
+func readAnalysisResults(path string, index int, fileWithHeader string) (buginfo.ResultType, map[int][]string, map[int]string, bool, error) {
 	file, err := os.ReadFile(path)
 	if err != nil {
 		return "", nil, nil, false, err
@@ -218,7 +218,7 @@ func readAnalysisResults(path string, index int, fileWithHeader string) (helper.
 
 	bugStr := string(lines[index])
 	bugFields := strings.Split(bugStr, ",")
-	bugType := helper.ResultTypeFromString(bugFields[0])
+	bugType := buginfo.ResultTypeFromString(bugFields[0])
 	falsePositive := (bugFields[1] == "fp")
 
 	bugPos := make(map[int][]string)

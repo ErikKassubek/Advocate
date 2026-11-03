@@ -11,9 +11,9 @@ package stats
 
 import (
 	consts "advocate/utils/consts"
-	"advocate/utils/helper"
 	"advocate/utils/log"
 	"advocate/utils/paths"
+	"advocate/utils/results/buginfo"
 	"bufio"
 	"fmt"
 	"os"
@@ -26,11 +26,11 @@ import (
 // It has the form bugTypeID -> counter
 //
 // Returns:
-//   - map[helper.ResultType]int: The new map
-func getNewDataMap() map[helper.ResultType]int {
-	keys := helper.ResultTypes
+//   - map[buginfo.ResultType]int: The new map
+func getNewDataMap() map[buginfo.ResultType]int {
+	keys := buginfo.ResultTypes
 
-	m := make(map[helper.ResultType]int)
+	m := make(map[buginfo.ResultType]int)
 	for _, key := range keys {
 		m[key] = 0
 	}
@@ -43,9 +43,9 @@ func getNewDataMap() map[helper.ResultType]int {
 // Each field contains a data map as created by getNewDataMap()
 //
 // Returns:
-//   - map[string]map[helper.ResultType]int: The map
-func getNewDataMapMap() map[statsType]map[helper.ResultType]int {
-	return map[statsType]map[helper.ResultType]int{
+//   - map[string]map[buginfo.ResultType]int: The map
+func getNewDataMapMap() map[statsType]map[buginfo.ResultType]int {
+	return map[statsType]map[buginfo.ResultType]int{
 		detected:         getNewDataMap(),
 		replayWritten:    getNewDataMap(),
 		replaySuccessful: getNewDataMap(),
@@ -59,10 +59,10 @@ func getNewDataMapMap() map[statsType]map[helper.ResultType]int {
 //   - fuzzing int: number of fuzzing run, -1 for not fuzzing
 //
 // Returns:
-//   - map[statsType]map[helper.ResultType]int: map with total information
-//   - map[statsType]map[helper.ResultType]int: map with unique information
+//   - map[statsType]map[buginfo.ResultType]int: map with total information
+//   - map[statsType]map[buginfo.ResultType]int: map with unique information
 //   - error
-func statsAnalyzer(fuzzing int) (map[statsType]map[helper.ResultType]int, map[statsType]map[helper.ResultType]int, error) {
+func statsAnalyzer(fuzzing int) (map[statsType]map[buginfo.ResultType]int, map[statsType]map[buginfo.ResultType]int, error) {
 	// reset foundBugs
 	foundBugs := make(map[string]processedBug)
 
@@ -132,7 +132,7 @@ func statsAnalyzer(fuzzing int) (map[statsType]map[helper.ResultType]int, map[st
 //   - falsePos bool: true if the bug is likely a false positive
 type processedBug struct {
 	paths         []string
-	bugType       helper.ResultType
+	bugType       buginfo.ResultType
 	replayWritten bool
 	replaySuc     bool
 	falsePos      bool
@@ -160,14 +160,14 @@ func (this *processedBug) getKey() string {
 // Returns:
 //   - error
 func processBugFile(filePath string, foundBugs map[string]processedBug,
-	resTotal map[statsType]map[helper.ResultType]int, resUnique map[statsType]map[helper.ResultType]int) error {
+	resTotal map[statsType]map[buginfo.ResultType]int, resUnique map[statsType]map[buginfo.ResultType]int) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	var bugType helper.ResultType
+	var bugType buginfo.ResultType
 
 	bug := processedBug{}
 	bug.paths = make([]string, 0)
@@ -186,7 +186,7 @@ func processBugFile(filePath string, foundBugs map[string]processedBug,
 
 			textSplit2 := strings.Split(textSplit[1], " - ")
 
-			bugType = helper.ResultType(textSplit2[0])
+			bugType = buginfo.ResultType(textSplit2[0])
 			line = textSplit2[1]
 			bug.bugType = bugType
 		} else if strings.HasPrefix(line, "-> ") { // get paths

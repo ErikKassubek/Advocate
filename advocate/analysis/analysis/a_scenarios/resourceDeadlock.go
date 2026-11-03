@@ -16,7 +16,7 @@ import (
 	"advocate/analysis/a_hb"
 	"advocate/analysis/hb/a_clock"
 	"advocate/trace"
-	"advocate/utils/helper"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/timer"
 )
@@ -378,7 +378,7 @@ func CheckForResourceDeadlock() {
 			return
 		}
 
-		results.Result(results.CRITICAL, helper.PCyclicDeadlock, stuckElements, acquiredElements)
+		results.Result(results.CRITICAL, buginfo.PCyclicDeadlock, stuckElements, acquiredElements)
 	}
 }
 

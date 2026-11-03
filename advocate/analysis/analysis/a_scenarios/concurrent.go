@@ -18,8 +18,8 @@ import (
 	"advocate/analysis/hb/a_vc"
 	"advocate/trace"
 	"advocate/utils/flags"
-	"advocate/utils/helper"
 	"advocate/utils/log"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/timer"
 )
@@ -126,7 +126,7 @@ func CheckForConcurrentRecv(ch *trace.ElementChannel, vc map[int]*a_clock.Vector
 					Line:       elem2.Line(),
 				}
 
-				results.Result(results.WARNING, helper.AConcurrentRecv,
+				results.Result(results.WARNING, buginfo.AConcurrentRecv,
 					[]results.ResultElem{arg1}, []results.ResultElem{arg2})
 			}
 		}

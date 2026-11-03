@@ -12,7 +12,7 @@ package a_scenarios
 import (
 	"advocate/analysis/a_base"
 	"advocate/trace"
-	"advocate/utils/helper"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/types"
 	"strings"
@@ -67,8 +67,8 @@ func Blocked() error {
 		delete(b, rout)
 	}
 
-	reportBlocking(cyclic, helper.ADeadlock)
-	reportBlocking(b, helper.ABlocking)
+	reportBlocking(cyclic, buginfo.ADeadlock)
+	reportBlocking(b, buginfo.ABlocking)
 	reportLeak(l)
 
 	return nil
@@ -160,7 +160,7 @@ func checkCyclic(b map[int]struct{}, res map[int][]trace.Resource) map[int]struc
 	return result
 }
 
-func reportBlocking(routs map[int]struct{}, rt helper.ResultType) {
+func reportBlocking(routs map[int]struct{}, rt buginfo.ResultType) {
 	obj := make([]results.ResultElem, 0)
 	tr := &a_base.MainTrace
 
@@ -213,24 +213,24 @@ func reportLeak(l []int) {
 			Line:       last.Line(),
 		}
 
-		leakType := helper.LUnknown
+		leakType := buginfo.LUnknown
 
 		if last.Committed() {
 			switch last.(type) {
 			case *trace.ElementChannel:
 				if last.ResourceID() == 0 {
-					leakType = helper.LNilChan
+					leakType = buginfo.LNilChan
 				} else {
-					leakType = helper.LChan
+					leakType = buginfo.LChan
 				}
 			case *trace.ElementSelect:
-				leakType = helper.LSelect
+				leakType = buginfo.LSelect
 			case *trace.ElementMutex:
-				leakType = helper.LMutex
+				leakType = buginfo.LMutex
 			case *trace.ElementWait:
-				leakType = helper.LWaitGroup
+				leakType = buginfo.LWaitGroup
 			case *trace.ElementCond:
-				leakType = helper.LCond
+				leakType = buginfo.LCond
 			}
 		}
 
