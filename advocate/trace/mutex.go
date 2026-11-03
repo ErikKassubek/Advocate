@@ -36,6 +36,7 @@ import (
 //   - suc bool: Whether the operation was successful (only for trylock else always true)
 //   - function *ElementFunc: the function the operation is in
 //   - pan bool: caused panic
+//   - partner *ElementMutex: for lock the unlock that unlocks it, for unlock the lock it unlocks. Can be nil
 type ElementMutex struct {
 	ElementBase
 
@@ -47,6 +48,7 @@ type ElementMutex struct {
 	rw       bool
 	op       OperationType
 	suc      bool
+	partner  *ElementMutex
 	function *ElementFunc
 	pan      bool
 }
@@ -90,20 +92,20 @@ func (this *Trace) AddTraceElementMutex(routine int, tReq string,
 		rwBool = true
 	}
 
-	var opMInt OperationType
+	var opMVal OperationType
 	switch opM {
 	case "L":
-		opMInt = MutexLock
+		opMVal = MutexLock
 	case "R":
-		opMInt = MutexRLock
+		opMVal = MutexRLock
 	case "T":
-		opMInt = MutexTryLock
+		opMVal = MutexTryLock
 	case "Y":
-		opMInt = MutexTryRLock
+		opMVal = MutexTryRLock
 	case "U":
-		opMInt = MutexUnlock
+		opMVal = MutexUnlock
 	case "N":
-		opMInt = MutexRUnlock
+		opMVal = MutexRUnlock
 	default:
 		return errors.New("opM is not a valid operation")
 	}
@@ -129,12 +131,28 @@ func (this *Trace) AddTraceElementMutex(routine int, tReq string,
 		tCom:        tComInt,
 		objId:       idInt,
 		rw:          rwBool,
-		op:          opMInt,
+		op:          opMVal,
 		suc:         sucBool,
 		pos:         NewPosition(file, line),
 		ci:          newConcInfo(),
 		function:    getLastCall(routine),
 		pan:         panBool,
+	}
+
+	// Partner
+	switch opMVal {
+	case MutexLock, MutexRLock:
+		this.lastMutexAcq[idInt] = &elem
+	case MutexTryLock, MutexTryRLock:
+		if sucBool {
+			this.lastMutexAcq[idInt] = &elem
+		}
+	case MutexUnlock, MutexRUnlock:
+		partner := this.lastMutexAcq[idInt]
+		if partner != nil {
+			elem.partner = partner
+			partner.partner = &elem
+		}
 	}
 
 	this.AddElement(&elem)
@@ -276,6 +294,14 @@ func (this *ElementMutex) Type(operation bool) OperationType {
 	}
 
 	return this.op
+}
+
+func (this *ElementMutex) IsAcq() bool {
+	return this.op == MutexLock || this.op == MutexRLock || this.op == MutexTryLock || this.op == MutexTryRLock
+}
+
+func (this *ElementMutex) IsRel() bool {
+	return this.op == MutexUnlock || this.op == MutexRUnlock
 }
 
 // ========================================================
@@ -533,8 +559,13 @@ func (this *ElementMutex) Replayable() bool {
 // Returns:
 //   - TraceElement: The copy of the element
 func (this *ElementMutex) Copy(trace *Trace, mapping map[int]Element, keep bool) Element {
+	id := this.ID()
+	if existing, ok := mapping[id]; ok {
+		return existing
+	}
+
 	if !keep {
-		return &ElementMutex{
+		newMut := ElementMutex{
 			ElementBase: this.ElementBase.Copy(trace),
 			tReq:        0,
 			tCom:        0,
@@ -545,10 +576,22 @@ func (this *ElementMutex) Copy(trace *Trace, mapping map[int]Element, keep bool)
 			pos:         this.pos.copy(),
 			ci:          newConcInfo(),
 			function:    this.function.CopyFunc(trace, mapping, keep),
+			pan:         this.pan,
 		}
+
+		mapping[id] = &newMut
+
+		var newPartner *ElementMutex
+		if this.partner != nil {
+			newPartner = this.partner.Copy(trace, mapping, keep).(*ElementMutex)
+		}
+
+		newMut.partner = newPartner
+
+		return &newMut
 	}
 
-	return &ElementMutex{
+	newMut := ElementMutex{
 		ElementBase: this.ElementBase.Copy(trace),
 		tReq:        this.tReq,
 		tCom:        this.tCom,
@@ -559,7 +602,19 @@ func (this *ElementMutex) Copy(trace *Trace, mapping map[int]Element, keep bool)
 		pos:         this.pos.copy(),
 		ci:          this.ci.copy(),
 		function:    this.function.CopyFunc(trace, mapping, keep),
+		pan:         this.pan,
 	}
+
+	mapping[id] = &newMut
+
+	var newPartner *ElementMutex
+	if this.partner != nil {
+		newPartner = this.partner.Copy(trace, mapping, keep).(*ElementMutex)
+	}
+
+	newMut.partner = newPartner
+
+	return &newMut
 }
 
 // ========================================================
@@ -596,4 +651,12 @@ func (this *ElementMutex) IsSuc() bool {
 //   - s bool: For trylock wether it was successful, otherwise always true
 func (this *ElementMutex) SetSuc(s bool) {
 	this.suc = s
+}
+
+// IsSuc returns the partner of the operation
+//
+// Returns:
+//   - *ElementMutex: for lock the unlock that unlocks it, for unlock the lock that unlocks it
+func (this *ElementMutex) Partner() *ElementMutex {
+	return this.partner
 }

@@ -12,6 +12,7 @@ package a_cssts
 import (
 	"advocate/analysis/a_base"
 	"advocate/analysis/a_hb"
+	"advocate/analysis/hb/a_clock"
 	"advocate/analysis/hb/a_helper"
 	"advocate/trace"
 	"advocate/utils/types"
@@ -23,11 +24,11 @@ import (
 //   - all bool: if true, return all concurrent events, otherwise return one
 //   - sameElem bool: if true, only return concurrent operations on the same element,
 //     otherwise return all concurrent elements
-//   - weak bool: get based on weak happens before
+//   - vcType a_clock.VcType: weak or strong
 //
 // Returns:
 //   - []trace.TraceElement: the concurrent element(s)
-func GetConcurrentAllPairs(elem trace.Element, all, sameElem, weak bool) []trace.Element {
+func GetConcurrentAllPairs(elem trace.Element, all, sameElem bool, vcType a_clock.VcType) []trace.Element {
 	res := make([]trace.Element, 0)
 	id := elem.ResourceID()
 	routId := elem.RoutineID()
@@ -48,7 +49,7 @@ func GetConcurrentAllPairs(elem trace.Element, all, sameElem, weak bool) []trace
 				continue
 			}
 
-			if isConcurrent(elem, e, weak) {
+			if isConcurrent(elem, e, vcType) {
 				res = append(res, e)
 				if !all {
 					return res
@@ -65,12 +66,12 @@ func GetConcurrentAllPairs(elem trace.Element, all, sameElem, weak bool) []trace
 // Parameter:
 //   - elem1 trace.Element: the first elem
 //   - elem2 trace.Element: the second elem
-//   - weak bool: get based on weak happens before
+//   - vcType a_clock.VcType: weak or strong
 //
 // Returns:
 //   - bool: true if the elements are concurrent, false otherwise
-func isConcurrent(elem1, elem2 trace.Element, weak bool) bool {
-	hbInfo := GetHappensBefore(elem1, elem2, weak)
+func isConcurrent(elem1, elem2 trace.Element, vcType a_clock.VcType) bool {
+	hbInfo := GetHappensBefore(elem1, elem2, vcType)
 	return hbInfo == a_hb.Concurrent
 }
 
@@ -131,15 +132,15 @@ func GetConcurrent(elem trace.Element, all, sameElem, weak bool) []trace.Element
 // Parameter:
 //   - t1 trace.Element: the trace element
 //   - t2 trace.Element: the second element
-//   - weak bool: get based on weak happens before
+//   - vcType a_clock.VcType: weak or strong
 //
 // Returns:
 //   - happensBefore: The happens before relation between the elements
-func GetHappensBefore(t1, t2 trace.Element, weak bool) a_hb.HappensBefore {
+func GetHappensBefore(t1, t2 trace.Element, vcType a_clock.VcType) a_hb.HappensBefore {
 	t1Ind := getIndicesFromTraceElem(t1)
 	t2Ind := getIndicesFromTraceElem(t2)
 
-	if weak {
+	if vcType == a_clock.Weak {
 		if CsstWeak.reachable(t1Ind, t2Ind) {
 			return a_hb.Before
 		}

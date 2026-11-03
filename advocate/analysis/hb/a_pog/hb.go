@@ -12,6 +12,7 @@ package a_pog
 import (
 	"advocate/analysis/a_base"
 	"advocate/analysis/a_hb"
+	"advocate/analysis/hb/a_clock"
 	"advocate/analysis/hb/a_helper"
 	"advocate/trace"
 	"reflect"
@@ -24,16 +25,16 @@ import (
 //   - all bool: if true, return all elements that are concurrent, if false, only return one
 //   - sameElem bool: if true, only return concurrent operations on the same element,
 //     otherwise return all concurrent elements
-//   - weak bool: if true, use weak hb, otherwise strong hb
+//   - vcType a_clock.VcType: weak or strong
 //
 // Returns
 //   - []trace.TraceElement: element(s) that are concurrent to elem
-func GetConcurrent(elem trace.Element, all bool, sameElem bool, weak bool) []trace.Element {
+func GetConcurrent(elem trace.Element, all bool, sameElem bool, vcType a_clock.VcType) []trace.Element {
 	reachableFromN := make(map[int]bool)
 	reachableToN := make(map[int]bool)
 
-	dfsPartialOrderGraph(elem, nil, reachableFromN, false, weak)
-	dfsPartialOrderGraph(elem, nil, reachableToN, true, weak)
+	dfsPartialOrderGraph(elem, nil, reachableFromN, false, vcType)
+	dfsPartialOrderGraph(elem, nil, reachableToN, true, vcType)
 
 	res := make([]trace.Element, 0)
 
@@ -68,15 +69,15 @@ func GetConcurrent(elem trace.Element, all bool, sameElem bool, weak bool) []tra
 // Parameter:
 //   - t1 trace.Element: the trace element
 //   - t2 trace.Element: the second element
-//   - weak bool: get based on weak happens before
+//   - vcType a_clock.VcType: weak or strong
 //
 // Returns:
 //   - happensBefore: The happens before relation between the elements
-func GetHappensBefore(t1, t2 trace.Element, weak bool) a_hb.HappensBefore {
-	if dfsPartialOrderGraph(t1, t2, nil, false, weak) {
+func GetHappensBefore(t1, t2 trace.Element, vcType a_clock.VcType) a_hb.HappensBefore {
+	if dfsPartialOrderGraph(t1, t2, nil, false, vcType) {
 		return a_hb.Before
 	}
-	if dfsPartialOrderGraph(t2, t1, nil, false, weak) {
+	if dfsPartialOrderGraph(t2, t1, nil, false, vcType) {
 		return a_hb.After
 	}
 
@@ -92,12 +93,12 @@ func GetHappensBefore(t1, t2 trace.Element, weak bool) a_hb.HappensBefore {
 //   - visited map[int]bool: traceID of all visited nodes
 //   - inverted bool: If false, find all nodes that can be reached from start,
 //     if true, find all nodes from which start can be reached
-//   - weak bool: if true, use weak partial order
+//   - vcType a_clock.VcType: weak or strong
 //
 // Returns:
 //   - bool: if end is nil, return if end has been reached, otherwise return true
 func dfsPartialOrderGraph(start, end trace.Element, reachable map[int]bool,
-	inverted, weak bool) bool {
+	inverted bool, vcType a_clock.VcType) bool {
 	if end != nil && start.ID() == end.ID() {
 		return true
 	}
@@ -109,7 +110,7 @@ func dfsPartialOrderGraph(start, end trace.Element, reachable map[int]bool,
 	stack := []trace.Element{start}
 
 	var g *PoGraph
-	if weak {
+	if vcType == a_clock.Weak {
 		if inverted {
 			g = &poWeakInverted
 		} else {

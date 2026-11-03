@@ -21,13 +21,10 @@ import (
 // Parameter:
 //   - t1 trace.Element: the trace element
 //   - t2 trace.Element: the second element
-//   - weak bool: get based on weak happens before
+//   - vcType a_clock.VcType: weak or strong
 //
 // Returns:
 //   - happensBefore: The happens before relation between the elements
-func GetHappensBefore(t1, t2 trace.Element, weak bool) a_hb.HappensBefore {
-	if weak {
-		return a_clock.GetHappensBefore(t1.VC(a_clock.Weak), t2.VC(a_clock.Weak))
-	}
-	return a_clock.GetHappensBefore(t1.VC(a_clock.Strong), t2.VC(a_clock.Strong))
+func GetHappensBefore(t1, t2 trace.Element, vcType a_clock.VcType) a_hb.HappensBefore {
+	return a_clock.GetHappensBefore(t1.VC(vcType), t2.VC(vcType))
 }

@@ -635,6 +635,7 @@ func (this *ElementChannel) Copy(trace *Trace, mapping map[int]Element, keep boo
 			selIndex:    this.selIndex,
 			ci:          newConcInfo(),
 			function:    this.function.CopyFunc(trace, mapping, keep),
+			pan:         this.pan,
 		}
 
 		mapping[id] = &newCh
@@ -669,6 +670,7 @@ func (this *ElementChannel) Copy(trace *Trace, mapping map[int]Element, keep boo
 		selIndex:    this.selIndex,
 		ci:          this.ci.copy(),
 		function:    this.function.CopyFunc(trace, mapping, keep),
+		pan:         this.pan,
 	}
 
 	mapping[id] = &newCh

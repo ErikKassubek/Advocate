@@ -16,7 +16,16 @@ import (
 	"advocate/trace"
 )
 
-const useHBClosure = true
+type closureType int
+
+const (
+	order closureType = iota
+	hbc
+	scpc
+)
+
+const useHBClosure = scpc
+const mustHB = a_clock.Strong
 
 // The stable closure is calculated based on the following three rules.z
 // Assume there is a constraint s and trace T.
@@ -35,14 +44,20 @@ const useHBClosure = true
 // In general we get, that Cl_T(S) ⊆ Cl_T^{HB}(S)
 //
 // THe Stable closure CL is then CL_T(S) \ S
-func CalcuateStableClosure(s *Constraint) *Constraint {
-	if useHBClosure {
-		return stableClosureHB(s)
+func CalcuateClosure(s *Constraint) *Constraint {
+	switch useHBClosure {
+	case order:
+		return calculateClosureOrder(s)
+	case hbc:
+		return calculateClosureHB(s, mustHB)
+	case scpc:
+		return calculateClosureSCPC(s, mustHB)
 	}
-	return stableClosureOrder(s)
+
+	return nil
 }
 
-func stableClosureOrder(s *Constraint) *Constraint {
+func calculateClosureOrder(s *Constraint) *Constraint {
 	t := a_base.MainTrace
 	tIter := t.AsIterator()
 
@@ -120,7 +135,39 @@ func stableClosureOrder(s *Constraint) *Constraint {
 	return &cl
 }
 
-func stableClosureHB(s *Constraint) *Constraint {
+// Implement the stable closure based on the HB order
+//
+// HBC(t1,...,tn) is the smallest set with the following properties:
+//  1. Each ti is an element in SCPC(t1,...,tn).
+//  2. If e in SCPC(t1,...,tn) and f <(M)HB e then f in SCPC(t1,...,tn).
+//
+// Parameter:
+//   - s *Constraint: the constraint
+//   - vcType vcType a_clock.VcType: weak or string
+//
+// Return:
+//   - *Constraint: The closue constraint
+func calculateClosureHB(s *Constraint, vcType a_clock.VcType) *Constraint {
+	res := calculateClosureHB2(s, vcType)
+
+	res.sort()
+
+	return res
+}
+
+// Implement the stable closure based on the HB order
+//
+// HBC(t1,...,tn) is the smallest set with the following properties:
+//  1. Each ti is an element in SCPC(t1,...,tn).
+//  2. If e in SCPC(t1,...,tn) and f <(M)HB e then f in SCPC(t1,...,tn).
+//
+// Parameter:
+//   - s *Constraint: the constraint
+//   - vcType vcType a_clock.VcType: weak or string
+//
+// Return:
+//   - *Constraint: The closue constraint
+func calculateClosureHB2(s *Constraint, vcType a_clock.VcType) *Constraint {
 	t := a_base.MainTrace
 	tIter := t.AsIterator()
 
@@ -149,10 +196,10 @@ func stableClosureHB(s *Constraint) *Constraint {
 				continue
 			}
 
-			vc := elem.VC(a_clock.Weak)
+			vc := elem.VC(vcType)
 
 			for _, elemConstr := range cl.Elems {
-				if a_clock.GetHappensBefore(vc, elemConstr.VC(a_clock.Weak)) == a_hb.Before {
+				if a_clock.GetHappensBefore(vc, elemConstr.VC(vcType)) == a_hb.Before {
 					cl.Add(elem)
 					elems[elem.ID()] = true
 					newElemAdded = true
@@ -162,7 +209,63 @@ func stableClosureHB(s *Constraint) *Constraint {
 		}
 	}
 
-	cl.sort()
-
 	return &cl
+}
+
+// Implement the stable closure based on the Sync-preserving closure
+//
+// SCPC(t1,...,tn) is the smallest set with the following properties:
+//  1. Each ti is an element in SCPC(t1,...,tn).
+//  2. If e in SCPC(t1,...,tn) and f <(M)HB e then f in SCPC(t1,...,tn).
+//  3. If a1, a2 in SCPC(t1,...,tn) where a1=(_,_,_,acq(m)) and a2=(_,_,_,acq(m)) and a1 <T a2 then match(a1) SCPC(t1,...,tn)
+//     where match(a1) refers to the matching release of r1.
+//
+// Parameter:
+//   - s *Constraint: the constraint
+//   - vcType vcType a_clock.VcType: weak or string
+//
+// Return:
+//   - *Constraint: The closue constraint
+func calculateClosureSCPC(s *Constraint, vcType a_clock.VcType) *Constraint {
+	res := calculateClosureHB2(s, vcType)
+
+	for i, a1 := range s.Elems {
+		added := false
+
+		a1M, ok := a1.(*trace.ElementMutex)
+		if !ok {
+			continue
+		}
+		if !a1M.IsAcq() {
+			continue
+		}
+
+		for j := i + 1; j < s.Len(); j++ {
+			a2 := s.At(j)
+			if a1.ResourceID() != a2.ResourceID() {
+				continue
+			}
+
+			a2M, ok := a2.(*trace.ElementMutex)
+			if !ok {
+				continue
+			}
+
+			if !a2M.IsAcq() {
+				continue
+			}
+
+			rel := a1M.Partner()
+			res.Add(rel)
+			added = true
+			break
+		}
+		if added {
+			continue
+		}
+	}
+
+	res.sort()
+
+	return res
 }

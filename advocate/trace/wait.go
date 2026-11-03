@@ -539,6 +539,7 @@ func (this *ElementWait) Copy(trace *Trace, mapping map[int]Element, keep bool) 
 			pos:         this.pos.copy(),
 			ci:          newConcInfo(),
 			function:    this.function.CopyFunc(trace, mapping, keep),
+			pan:         this.pan,
 		}
 	}
 
@@ -553,6 +554,7 @@ func (this *ElementWait) Copy(trace *Trace, mapping map[int]Element, keep bool) 
 		pos:         this.pos.copy(),
 		ci:          this.ci.copy(),
 		function:    this.function.CopyFunc(trace, mapping, keep),
+		pan:         this.pan,
 	}
 }
 

@@ -11,6 +11,7 @@ package f_constraints
 
 import (
 	"advocate/analysis/a_hb"
+	"advocate/analysis/hb/a_clock"
 	"advocate/analysis/hb/a_vc"
 )
 
@@ -27,7 +28,7 @@ func IsEquivalent(cr Constraint) bool {
 	for i, elem1 := range cr.Elems {
 		for j := i + 1; j < len(cr.Elems); j++ {
 			elem2 := cr.Elems[j]
-			if a_vc.GetHappensBefore(elem2, elem1, false) == a_hb.Before {
+			if a_vc.GetHappensBefore(elem2, elem1, a_clock.Strong) == a_hb.Before {
 				return false
 			}
 		}

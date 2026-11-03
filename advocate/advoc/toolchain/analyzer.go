@@ -216,7 +216,7 @@ func rewriteTrace(outMachine string, newTrace string, resultIndex int,
 		return constr != nil, err
 	}
 
-	closure := f_constraints.CalcuateStableClosure(constr)
+	closure := f_constraints.CalcuateClosure(constr)
 
 	err = f_base.WriteConstraint(newTrace, &a_base.MainTrace, constr, closure)
 	if err != nil {

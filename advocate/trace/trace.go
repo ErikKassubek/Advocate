@@ -34,6 +34,7 @@ import (
 //   - hbWasCalc bool: set to true if the vector clock has been calculated for all elements
 //   - hasPassedMain bool: true if main func has been passed. Used to determine init
 //   - channelWithoutPartner  map[int]map[int]*TraceElementChannel: channel for witch no partner has been found yet, id -> opId -> element
+//   - lastMutexAcq map[int]*ElementMutex, for each mutex the last acq. Set to nil when release
 //   - channelIDs map[int]struct{}: all channel ids in the trace
 //   - objectAware map[int][]int: for not terminated routines, the blocked objects they can access
 //   - blocked map[resource][]int: routines which are blocked and the objects that block it
@@ -49,6 +50,7 @@ type Trace struct {
 	hasPassedMain         bool
 	minTraceID            int
 	channelWithoutPartner map[int]map[int]*ElementChannel
+	lastMutexAcq          map[int]*ElementMutex
 	channelIDs            map[int]struct{}
 	blocked               map[int]Element
 	forks                 map[int]*ElementFork
@@ -70,6 +72,7 @@ func NewTrace() Trace {
 		hbWasCalc:             false,
 		minTraceID:            0,
 		channelWithoutPartner: make(map[int]map[int]*ElementChannel),
+		lastMutexAcq:          make(map[int]*ElementMutex),
 		blocked:               make(map[int]Element),
 		forks:                 make(map[int]*ElementFork),
 		forkTree:              make(map[int][]int),
@@ -86,6 +89,7 @@ func (this *Trace) Clear() {
 	this.numberRoutines = 0
 	this.minTraceID = 0
 	this.channelWithoutPartner = make(map[int]map[int]*ElementChannel)
+	this.lastMutexAcq = make(map[int]*ElementMutex)
 	this.blocked = make(map[int]Element)
 	this.forks = make(map[int]*ElementFork)
 	this.forkTree = make(map[int][]int)

@@ -51,7 +51,7 @@ func WriteMutConstraint(tr *trace.Trace, mut *f_constraints.Constraint, first bo
 		return false, err
 	}
 
-	closure := f_constraints.CalcuateStableClosure(mut)
+	closure := f_constraints.CalcuateClosure(mut)
 
 	// write the active map to a "replay_constratins.log"
 	if flags.FuzzingMode == GoPie || settings.WithoutReplay {
@@ -253,13 +253,17 @@ func WriteConstraint(tracePath string, tr *trace.Trace, constr, closure *f_const
 	closureLen := 0
 	var fullConstr *f_constraints.Constraint
 
+	var err error
 	if closure != nil {
 		closure.Len()
-		fullConstr = f_constraints.MergeClosureConstraint(closure, constr)
-
+		fullConstr, err = f_constraints.MergeClosureConstraint(closure, constr)
+		if err != nil {
+			log.Error("Failed to merge constraints: ", err.Error())
+			return err
+		}
 	}
 
-	err := os.MkdirAll(tracePath, 0755)
+	err = os.MkdirAll(tracePath, 0755)
 	if err != nil {
 		log.Error("Failed to create constraint folder: ", err.Error())
 		return err

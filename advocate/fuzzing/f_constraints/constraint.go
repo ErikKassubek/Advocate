@@ -11,6 +11,7 @@ package f_constraints
 
 import (
 	"advocate/analysis/a_hb"
+	"advocate/analysis/hb/a_clock"
 	"advocate/analysis/hb/a_hbcalc"
 	"advocate/trace"
 	"fmt"
@@ -52,6 +53,15 @@ func (this *Constraint) Add(elems ...trace.Element) {
 		}
 		this.Elems = append(this.Elems, elem)
 	}
+}
+
+// Get the element at a given index. Retrun nil if out of bounds
+func (this *Constraint) At(index int) trace.Element {
+	if index < 0 || index >= this.Len() {
+		return nil
+	}
+
+	return this.Elems[index]
 }
 
 // Replace replaces the element at a given index in a chain with another element
@@ -142,7 +152,7 @@ func (this *Constraint) LastElem() trace.Element {
 // Return:
 //   - bool: true if Swap was possible, false otherwise
 func (this *Constraint) Swap(i, j int) bool {
-	if a_hbcalc.GetHappensBefore(this.Elems[i], this.Elems[j], true) != a_hb.Concurrent {
+	if a_hbcalc.GetHappensBefore(this.Elems[i], this.Elems[j], a_clock.Weak) != a_hb.Concurrent {
 		return false
 	}
 	if i >= 0 && i < len(this.Elems) && j >= 0 && j < len(this.Elems) {
@@ -218,7 +228,7 @@ func (this *Constraint) StringDebug() string {
 func (this *Constraint) IsValid() bool {
 	for i := 0; i < len(this.Elems)-1; i++ {
 		for j := 1; j < len(this.Elems); j++ {
-			hbInfo := a_hbcalc.GetHappensBefore(this.Elems[i], this.Elems[j], true)
+			hbInfo := a_hbcalc.GetHappensBefore(this.Elems[i], this.Elems[j], a_clock.Weak)
 			if hbInfo == a_hb.After {
 				return false
 			}
@@ -248,37 +258,92 @@ func (this *Constraint) sort() {
 	})
 }
 
-// MergeClosureConstraint two constraints
-func MergeClosureConstraint(closure, constr *Constraint) *Constraint {
-	new := NewConstraint()
+func MergeClosureConstraint(closure, constr *Constraint) (*Constraint, error) {
+	n := len(closure.Elems) + len(constr.Elems)
 
-	for _, e := range closure.Elems {
-		new.Add(e)
+	elems := make([]trace.Element, n)
+	copy(elems, closure.Elems)
+	copy(elems[len(closure.Elems):], constr.Elems)
+
+	// 0 = closure, 1 = constr
+	source := make([]int, n)
+	for i := len(closure.Elems); i < n; i++ {
+		source[i] = 1
 	}
 
-	for _, e := range constr.Elems {
-		new.Add(e)
+	edges := make([]map[int]struct{}, n)
+	indegree := make([]int, n)
+
+	addEdge := func(from, to int) {
+		if edges[from] == nil {
+			edges[from] = make(map[int]struct{})
+		}
+
+		if _, exists := edges[from][to]; exists {
+			return
+		}
+
+		edges[from][to] = struct{}{}
+		indegree[to]++
 	}
 
-	// must ensure, that inter routine order is keept
-	// for now we do this by removing the additional values from closure
-	for _, elem1 := range constr.Elems {
-		rConst := elem1.Routine()
-		tConst := elem1.T(trace.Commit)
-		remove := make([]int, 0, len(closure.Elems))
-		for i, elem2 := range closure.Elems {
-			rClosure := elem2.Routine()
-			tClosure := elem2.T(trace.Commit)
+	// Preserve the original order within both constraints.
+	for i := 0; i+1 < len(closure.Elems); i++ {
+		addEdge(i, i+1)
+	}
 
-			if rConst == rClosure && tClosure > tConst {
-				remove = append(remove, i)
+	offset := len(closure.Elems)
+	for i := 0; i+1 < len(constr.Elems); i++ {
+		addEdge(offset+i, offset+i+1)
+	}
+
+	// Add happens-before dependencies.
+	for i := 0; i < n; i++ {
+		for j := 0; j < n; j++ {
+			if i == j {
+				continue
+			}
+
+			if a_hbcalc.GetHappensBefore(
+				elems[i], elems[j], a_clock.Strong,
+			) == a_hb.Before {
+				addEdge(i, j)
+			}
+		}
+	}
+
+	// Priority-based topological sort.
+	result := NewConstraint()
+	// result := make([]trace.Element, 0, n)
+	emitted := make([]bool, n)
+
+	for result.Len() < n {
+		candidate := -1
+
+		for i := 0; i < n; i++ {
+			if emitted[i] || indegree[i] != 0 {
+				continue
+			}
+
+			// Prefer closure elements.
+			if candidate == -1 || source[i] < source[candidate] {
+				candidate = i
 			}
 		}
 
-		closure.Elems = removeIndices(closure.Elems, remove)
+		if candidate == -1 {
+			return nil, fmt.Errorf("cyclic happens-before dependencies")
+		}
+
+		emitted[candidate] = true
+		result.Add(elems[candidate])
+
+		for next := range edges[candidate] {
+			indegree[next]--
+		}
 	}
 
-	return &new
+	return &result, nil
 }
 
 func removeIndices(s []trace.Element, d []int) []trace.Element {
