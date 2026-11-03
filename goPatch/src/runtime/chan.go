@@ -1109,11 +1109,9 @@ func selectnbrecv(elem unsafe.Pointer, c *hchan) (selected, received bool) {
 		fuzzingIndex = min(fuzzingIndex, selectedCase)
 	}
 
-	// ADVOCATE-START
 	if chWait != nil {
 		AckReplay(key)
 	}
-	// ADVOCATE-END
 
 	res := false
 	recv := false

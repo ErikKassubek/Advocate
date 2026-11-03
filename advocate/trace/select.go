@@ -989,3 +989,14 @@ func (this *ElementSelect) HasCommonChannel(s *ElementSelect) bool {
 
 	return false
 }
+
+// HasTimer checks if at least one of the the channels is a time channel
+func (this *ElementSelect) HasTimer() bool {
+	for _, c := range this.cases {
+		if c.IsTimer() {
+			return true
+		}
+	}
+
+	return false
+}

@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"advocate/analysis/hb/a_clock"
 	"advocate/utils/flags"
@@ -832,4 +833,17 @@ func (this *ElementChannel) findPartner(tr *Trace) *ElementChannel {
 	tr.channelWithoutPartner[id][oID] = this
 
 	return nil
+}
+
+// IsTimer checks if the channel is a time channel
+func (this *ElementChannel) IsTimer() bool {
+	resource := this.Resource()
+
+	alloc := resource.Alloc()
+	if alloc == nil {
+		return false
+	}
+
+	allocFile := alloc.File()
+	return strings.Contains(allocFile, "goPatch/src/time/sleep.go")
 }

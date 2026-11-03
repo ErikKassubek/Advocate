@@ -49,9 +49,9 @@ func AdvocateAlloc(objType string, qSize int) uint64 {
 
 	id := GetAdvocateObjectID()
 
-	if AdvocateIgnore(file) {
-		return id
-	}
+	// if AdvocateIgnore(file) {
+	// 	return id
+	// }
 
 	op := OperationNone
 	switch objType {

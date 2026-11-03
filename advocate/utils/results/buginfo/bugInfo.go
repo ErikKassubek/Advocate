@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Erik Kassubek
 //
-// File: constants.go
-// Brief: List of global constants
+// File: bugInfo.go
+// Brief: Bug info constants
 //
 // Author: Erik Kassubek
 //
@@ -10,9 +10,6 @@
 // ResultType is an ID for a type of result
 
 package buginfo
-
-// ResultType is an enum for the type of found bug
-type ResultType string
 
 // possible values for ResultType
 const (
@@ -222,80 +219,3 @@ var ResultTypeMap = map[ResultType]string{
 
 // MinExitCodeSuc is the minimum exit code for successful replay
 const MinExitCodeSuc = ExitCodeLeakUnbuf
-
-func (rt ResultType) IsLeak() bool {
-	return string(rt)[0] == 'L'
-}
-
-func (rt ResultType) IsBlocking() bool {
-	return rt == ABlocking || rt == ADeadlock
-}
-
-func (rt ResultType) IsPos() bool {
-	return string(rt)[0] == 'P'
-}
-
-func (rt ResultType) IsActual() bool {
-	return string(rt)[0] == 'A'
-}
-
-func (rt ResultType) Args() (string, string) {
-	switch rt {
-	case ASendOnClosed:
-		return "send", "close"
-	case ACloseOnClosed:
-		return "panic", "close"
-	case ACloseOnNilChannel:
-		return "close", ""
-	case ANegWG:
-		return "done", ""
-	case AUnlockOfNotLockedMutex:
-		return "unlock", ""
-	case ABlocking:
-		return "blocking", ""
-	case ADeadlock:
-		return "blocking", "" // TODO: add holding
-	case AConcurrentRecv:
-		return "recv", "recv"
-	case AMixedDeadlock:
-		return "", ""
-
-	// possible
-	case PSendOnClosed:
-		return "send", "close"
-	case PNegWG:
-		return "done", "add"
-	case PUnlockBeforeLock:
-		return "unlock", "lock"
-	case PCyclicDeadlock:
-		return "blocking", "acquired"
-	case PMixedDeadlock:
-		return "send", "recv"
-
-	// leaks
-	case LUnknown:
-		return "leak", ""
-	case LChan:
-		return "leak", ""
-	case LNilChan:
-		return "leak", ""
-	case LSelect:
-		return "leak", ""
-	case LMutex:
-		return "leak", ""
-	case LWaitGroup:
-		return "leak", ""
-	case LCond:
-		return "leak", ""
-
-	// recording
-	case RUnknownPanic:
-		return "panic", ""
-	case RTimeout:
-		return "", ""
-	case RReplayFail:
-		return "", ""
-	}
-
-	return "", ""
-}

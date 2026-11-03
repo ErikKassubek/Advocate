@@ -12,7 +12,6 @@ package bugs
 import (
 	"advocate/analysis/a_base"
 	"advocate/trace"
-	"advocate/utils/log"
 	"advocate/utils/results/buginfo"
 	"errors"
 	"sort"
@@ -100,60 +99,8 @@ func (this Bug) GetBugString() string {
 // Returns:
 //   - string: The bug as a string
 func (this Bug) ToString() string {
-	typeStr := ""
+	typeStr := this.Type.String()
 	arg1Str, arg2Str := this.Type.Args()
-
-	switch this.Type {
-	case buginfo.RUnknownPanic:
-		typeStr = "Unknown Panic:"
-	case buginfo.RTimeout:
-		typeStr = "Timeout"
-	case buginfo.RReplayFail:
-		typeStr = "ReplayFail"
-	case buginfo.ASendOnClosed:
-		typeStr = "Actual Send on Closed Channel:"
-	case buginfo.ACloseOnClosed:
-		typeStr = "Actual Close on Closed Channel:"
-	case buginfo.ACloseOnNilChannel:
-		typeStr = "Actual close on nil channel:"
-	case buginfo.AConcurrentRecv:
-		typeStr = "Concurrent Receive:"
-	case buginfo.ABlocking:
-		typeStr = "Blocking routine:"
-	case buginfo.ADeadlock:
-		typeStr = "Deadlock:"
-	case buginfo.ANegWG:
-		typeStr = "Actual negative Wait Group:"
-	case buginfo.AUnlockOfNotLockedMutex:
-		typeStr = "Actual unlock of not locked mutex:"
-	case buginfo.PSendOnClosed:
-		typeStr = "Possible send on closed channel:"
-	case buginfo.PNegWG:
-		typeStr = "Possible negative waitgroup counter:"
-	case buginfo.PUnlockBeforeLock:
-		typeStr = "Possible unlock of a not locked mutex:"
-	case buginfo.PCyclicDeadlock:
-		typeStr = "Possible cyclic deadlock:"
-	case buginfo.PMixedDeadlock:
-		typeStr = "Possible Mixed Deadlock:"
-	case buginfo.LUnknown:
-		typeStr = "Leak on routine"
-	case buginfo.LChan:
-		typeStr = "Leak on a channel:"
-	case buginfo.LNilChan:
-		typeStr = "Leak on nil channel:"
-	case buginfo.LSelect:
-		typeStr = "Leak on select:"
-	case buginfo.LMutex:
-		typeStr = "Leak on mutex:"
-	case buginfo.LWaitGroup:
-		typeStr = "Leak on wait group:"
-	case buginfo.LCond:
-		typeStr = "Leak on conditional variable:"
-	default:
-		log.Error("Unknown bug type in toString: " + string(this.Type))
-		return ""
-	}
 
 	res := typeStr + "\n\t" + arg1Str
 	for i, elem := range this.TraceElement1 {

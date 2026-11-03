@@ -30,7 +30,7 @@ func Blocked() error {
 		i++
 	}
 
-	l := a_base.MainTrace.GetNotReturned(true)
+	l := tr.GetNotReturned(true)
 
 	for {
 		r := make([]int, 0)
@@ -61,6 +61,11 @@ func Blocked() error {
 		}
 	}
 
+	del := checkSelectDefaultOrTImer(tr, b)
+	if len(del) != 0 {
+		l = types.MergeLists(l, del)
+	}
+
 	cyclic := checkCyclic(b, tr.GetResourcesRout())
 
 	for rout := range cyclic {
@@ -72,6 +77,36 @@ func Blocked() error {
 	reportLeak(l)
 
 	return nil
+}
+
+func checkSelectDefaultOrTImer(tr *trace.Trace, b map[int]struct{}) []int {
+	del := make([]int, 0)
+
+	for rout := range b {
+		last := tr.GetLastElemInRout(rout)
+		if elem, ok := last.(*trace.ElementSelect); ok {
+			if elem.GetContainsDefault() {
+				del = append(del, rout)
+				continue
+			}
+			if elem.HasTimer() {
+				del = append(del, rout)
+				continue
+			}
+		}
+		if elem, ok := last.(*trace.ElementChannel); ok {
+			if elem.IsTimer() {
+				del = append(del, rout)
+				continue
+			}
+		}
+	}
+
+	for _, d := range del {
+		delete(b, d)
+	}
+
+	return del
 }
 
 // check for cyclic dependencies
@@ -215,13 +250,17 @@ func reportLeak(l []int) {
 
 		leakType := buginfo.LUnknown
 
-		if last.Committed() {
-			switch last.(type) {
+		if !last.Committed() {
+			switch last := last.(type) {
 			case *trace.ElementChannel:
 				if last.ResourceID() == 0 {
 					leakType = buginfo.LNilChan
 				} else {
-					leakType = buginfo.LChan
+					if last.GetSelect() == nil {
+						leakType = buginfo.LChan
+					} else {
+						leakType = buginfo.LSelect
+					}
 				}
 			case *trace.ElementSelect:
 				leakType = buginfo.LSelect
