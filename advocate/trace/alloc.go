@@ -88,6 +88,10 @@ func (this *Trace) AddTraceElementAlloc(routine int, t string, id string, elemTy
 		et = NewMutex
 	case "W":
 		et = NewWait
+	case "O":
+		et = NewOnce
+	case "A":
+		et = NewAtomic
 	default:
 		return fmt.Errorf("Unknown alloc type: " + elemType)
 	}

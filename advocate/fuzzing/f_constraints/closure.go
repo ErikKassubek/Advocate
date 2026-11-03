@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Erik Kassubek
 //
 // File: stableClosure.go
-// Brief: Calculate the stable closure for a scheduling constraint
+// Brief: Calculate the closure for a scheduling constraint
 //
 // Author: Erik Kassubek
 //

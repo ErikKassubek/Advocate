@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Erik Kassubek
 //
 // File: equivalent.go
-// Brief: Check if an roc is considered equivalent to the trace it is based on
+// Brief: Check if an roc is constraint equivalent to the trace it is based on
 //
 // Author: Erik Kassubek
 //

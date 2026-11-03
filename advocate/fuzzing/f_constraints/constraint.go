@@ -1,7 +1,7 @@
-// Copyright (c) 2025 Erik Kassubek
+// Copyright (c) 2026 Erik Kassubek
 //
-// File: goPie-sc.go
-// Brief: scheduling Chains for GoPie
+// File: constraint.go
+// Brief: Constraints
 //
 // Author: Erik Kassubek
 //
