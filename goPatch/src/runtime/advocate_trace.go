@@ -34,7 +34,6 @@ const (
 	OperationRWMutexTryRLock Operation = "rwmutexTryrlock"
 
 	OperationOnceDo    Operation = "onceDo"
-	OperationAllocOnce Operation = "allocOnce"
 
 	OperationWaitgroupAddDone Operation = "wgAdddone"
 	OperationWaitgroupWait    Operation = "wgWait"
@@ -59,6 +58,9 @@ const (
 	OperationAllocMutex Operation = "allocMutex"
 	OperationAllocCond  Operation = "allocCond"
 	OperationAllocWg    Operation = "allocWg"
+	OperationAllocOnce Operation = "allocOnce"
+	OperationAllocAtomic Operation = "allocAtomic"
+
 
 	OperationFunctionCall   Operation = "funcCall"
 	OperationFunctionReturn Operation = "funcReturn"

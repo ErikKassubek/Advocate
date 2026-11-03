@@ -93,7 +93,7 @@ func (this *Trace) AddTraceElementAlloc(routine int, t string, id string, elemTy
 	case "A":
 		et = NewAtomic
 	default:
-		return fmt.Errorf("Unknown alloc type: " + elemType)
+		return fmt.Errorf("Unknown alloc type: %s", elemType)
 	}
 
 	elem := ElementAlloc{

@@ -204,7 +204,7 @@ func createTraceFromFile(tr *trace.Trace, filePath string, routine int) (int, er
 		line := scanner.Text()
 		err := processElement(tr, line, routine)
 		if err != nil {
-			log.Errorf("Error in processing trace element %s: ", line, err)
+			log.Errorf("Error in processing trace element %s: %s", line, err.Error())
 		}
 		counter++
 
