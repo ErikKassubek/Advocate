@@ -16,7 +16,7 @@ import (
 	"advocate/fuzzing/f_constraints"
 	"advocate/fuzzing/modes/f_gfuzz"
 	"advocate/fuzzing/modes/f_gopie"
-	f_guided "advocate/fuzzing/modes/g_guided"
+	"advocate/fuzzing/modes/f_guided"
 	"advocate/utils/control"
 	"advocate/utils/flags"
 	"advocate/utils/log"
@@ -32,9 +32,9 @@ import (
 
 // Fuzzing creates the fuzzing data and runs the fuzzing executions
 func Fuzzing() error {
-	modes := []string{f_base.GoPie, f_base.GoCR, f_base.GoCRHB, f_base.GFuzz, f_base.GFuzzHBFlow, f_base.GFuzzHB, f_base.Guided}
+	modes := []string{f_base.GoPie, f_base.GoCR, f_base.Full, f_base.GFuzz, f_base.GFuzzHBFlow, f_base.GFuzzHB, f_base.Guided}
 	if !types.Contains(modes, flags.FuzzingMode) {
-		return fmt.Errorf("Invalid fuzzing mode '%s'. Possible values are Guided, GoPie, GoCR, GoCRHB, GFuzz, GFuzzFlow, GFuzzHB, Flow", flags.FuzzingMode)
+		return fmt.Errorf("Invalid fuzzing mode '%s'. Possible values are Full (Default), Guided, GoPie, GoCR, GFuzz, GFuzzFlow, GFuzzHB, Flow", flags.FuzzingMode)
 	}
 
 	f_base.MaxNumberRuns = flags.MaxFuzzingRun
@@ -43,11 +43,11 @@ func Fuzzing() error {
 		f_base.MaxTimeSet = true
 	}
 
-	f_base.FuzzingModeGoPie = (flags.FuzzingMode == f_base.GoPie || flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.GoCRHB)
-	f_base.FuzzingModeGoCRHBPlus = (flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.GoCRHB)
+	f_base.FuzzingModeGoPie = (flags.FuzzingMode == f_base.GoPie || flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.Full)
+	f_base.FuzzingModeGoCRHBPlus = (flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.Full)
 	f_base.FuzzingModeGFuzz = (flags.FuzzingMode == f_base.GFuzz || flags.FuzzingMode == f_base.GFuzzHBFlow || flags.FuzzingMode == f_base.GFuzzHB)
-	f_base.FuzzingModeGuided = (flags.FuzzingMode == f_base.Guided || flags.FuzzingMode == f_base.Default)
-	f_base.UseHBInfoFuzzing = (flags.FuzzingMode == f_base.Guided || flags.FuzzingMode == f_base.GFuzzHB || flags.FuzzingMode == f_base.GFuzzHBFlow || flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.GoCRHB)
+	f_base.FuzzingModeGuided = (flags.FuzzingMode == f_base.Guided || flags.FuzzingMode == f_base.Default || flags.FuzzingMode == f_base.Full)
+	f_base.UseHBInfoFuzzing = (flags.FuzzingMode == f_base.Guided || flags.FuzzingMode == f_base.GFuzzHB || flags.FuzzingMode == f_base.GFuzzHBFlow || flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.Full)
 
 	if flags.Continue {
 		log.Info("Continue fuzzing")

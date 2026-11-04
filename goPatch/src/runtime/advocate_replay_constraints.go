@@ -65,11 +65,12 @@ type Constraint struct {
 
 func NewConstraint() {
 	constraintMain = Constraint{
-		order:       make([]ConstraintElem, 0),
-		elems:       make(map[string]map[int]bool),
-		elemIndex:   make(map[string]int),
-		replayIndex: 0,
-		mu:          mutex{},
+		order:           make([]ConstraintElem, 0),
+		elems:           make(map[string]map[int]bool),
+		elemIndex:       make(map[string]int),
+		replayIndex:     0,
+		releasedTimeout: make(map[string]bool),
+		mu:              mutex{},
 	}
 }
 

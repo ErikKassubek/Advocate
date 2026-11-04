@@ -74,16 +74,8 @@ func startReplay(timeout int) {
 	readReplayConstraint(tracePathRewritten)
 	readSpawnTree(tracePathRewritten)
 
-	if timeout > 0 {
-		// start time timeout
-		go func() {
-			time.Sleep(time.Duration(timeout) * time.Second)
-			runtime.ExitReplayTimeout()
-			os.Exit(10)
-		}()
-	}
-
-	go runtime.Timeout()
+	startTimeout(timeout)  // global max runtime
+	go runtime.Timeout()  // max block for each operation
 
 	// DetectBlockingGC(0)
 

@@ -327,7 +327,7 @@ func AdvocateIgnore(file string) bool {
 }
 
 func AdvocateIgnoreRoutine(file string) bool {
-	return containsStr(file, "goPatch/src/runtime/advocate_trace.go") || containsStr(file, "goPatch/src/runtime/advocate_replay.go")
+	return containsStr(file, "goPatch/src/runtime/advocate_trace.go") || containsStr(file, "goPatch/src/runtime/advocate_replay.go") || containsStr(file, "goPatch/src/runtime/advocatego/")
 }
 
 func RemoveActive(id uint64) {

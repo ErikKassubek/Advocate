@@ -64,13 +64,7 @@ func InitTracing(timeout int, init bool) {
 		}
 	}
 
-	if timeout > 0 {
-		// start time timeout
-		go func() {
-			time.Sleep(time.Duration(timeout) * time.Second)
-			panic("Timeout")
-		}()
-	}
+	startTimeout(timeout)
 
 	// DetectBlockingGC(1000)
 
@@ -92,6 +86,8 @@ func FinishTracing() {
 		return
 	}
 	hasFinished = true
+
+	println("FinishTracing")
 
 	if !finishFuzzingStarted {
 		time.Sleep(time.Second)

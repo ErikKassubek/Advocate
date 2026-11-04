@@ -73,7 +73,7 @@ func Run() error {
 	}
 
 	if flags.FuzzingMode == "" {
-		flags.FuzzingMode = f_base.Guided
+		flags.FuzzingMode = f_base.Full
 	}
 
 	a_base.AnalysisCasesMap, err = flags.ParseAnalysisCases()

@@ -256,6 +256,10 @@ func calculateClosureSCPC(s *Constraint, vcType a_clock.VcType) *Constraint {
 			}
 
 			rel := a1M.Partner()
+			if rel == nil {
+				continue
+			}
+
 			res.Add(rel)
 			added = true
 			break

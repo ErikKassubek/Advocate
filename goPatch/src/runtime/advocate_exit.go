@@ -173,8 +173,3 @@ func ExitReplayWithCode(code int, msg any) {
 
 	exit(int32(code))
 }
-
-func ExitReplayTimeout() {
-	advocateExitCode = ExitCodeTimeout
-	AdvocatePanic("Timeout")
-}

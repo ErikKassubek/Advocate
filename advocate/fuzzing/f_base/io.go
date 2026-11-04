@@ -12,11 +12,9 @@ package f_base
 import (
 	"advocate/fuzzing/f_constraints"
 	"advocate/trace"
-	"advocate/utils/flags"
 	"advocate/utils/io"
 	"advocate/utils/log"
 	"advocate/utils/paths"
-	"advocate/utils/settings"
 	"advocate/utils/timer"
 	"fmt"
 	"os"
@@ -53,12 +51,7 @@ func WriteMutConstraint(tr *trace.Trace, mut *f_constraints.Constraint, first bo
 
 	closure := f_constraints.CalcuateClosure(mut)
 
-	// write the active map to a "replay_constratins.log"
-	if flags.FuzzingMode == GoPie || settings.WithoutReplay {
-		WriteConstraint(fuzzingTracePath, tr, mut, closure)
-	} else {
-		WriteConstraint(fuzzingTracePath, tr, mut, closure)
-	}
+	WriteConstraint(fuzzingTracePath, tr, mut, closure)
 
 	muta := Mutation{MutType: MutPiType, MutPie: NumberWrittenMutations}
 
