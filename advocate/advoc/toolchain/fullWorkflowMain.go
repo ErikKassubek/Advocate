@@ -154,7 +154,6 @@ func runWorkflowMain(
 
 	rewrittenTraces := make([]string, 0)
 	total := fuzzing != -1
-	log.Debug2(runReplay)
 	if runReplay {
 		log.Info("Run replay")
 		a_base.Clear(false)
