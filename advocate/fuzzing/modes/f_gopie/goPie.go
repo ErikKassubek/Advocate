@@ -117,11 +117,8 @@ func CreateMutations(mutNumber int) error {
 		log.Infof("Write %d mutations to file", max(0, len(mutations)+len(specMutations)))
 	}
 
-	first := f_base.NumberFuzzingRuns <= 1
-
 	for _, mut := range specMutations {
-		done, err := f_base.WriteMutConstraint(&a_base.MainTrace, &mut, first)
-		first = false
+		done, err := f_base.WriteMutConstraint(&a_base.MainTrace, &mut)
 
 		if done { // max number mutations has been reached
 			break
@@ -133,8 +130,7 @@ func CreateMutations(mutNumber int) error {
 	}
 
 	for _, mut := range mutations {
-		done, err := f_base.WriteMutConstraint(&a_base.MainTrace, &mut, first)
-		first = false
+		done, err := f_base.WriteMutConstraint(&a_base.MainTrace, &mut)
 
 		if done { // max number mutations has been reached
 			break

@@ -54,7 +54,7 @@ func getTraceElements(resultFolderPath string) (map[string][]int, error) {
 
 			fileName := filepath.Base(path)
 
-			if info.IsDir() && fileName == consts.RewrittenConsts {
+			if info.IsDir() && fileName == paths.NameRewrittenConsts {
 				return filepath.SkipDir
 			}
 

@@ -11,7 +11,6 @@
 package toolchain
 
 import (
-	"advocate/utils/consts"
 	"advocate/utils/paths"
 	"advocate/utils/results/buginfo"
 	"bufio"
@@ -37,7 +36,7 @@ func extractTraceNumber(trace string) (string, string) {
 	bugString := ""
 
 	// read trace number
-	parts := strings.Split(trace, consts.RewrittenConsts+"_")
+	parts := strings.Split(trace, paths.NameRewrittenConsts+"_")
 	if len(parts) > 1 {
 		traceNumber = parts[1]
 	}

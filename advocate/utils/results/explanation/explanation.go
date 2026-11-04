@@ -376,7 +376,7 @@ func writeFile(path string, index string, description map[bugKeys]string,
 	// 		res += "**Replaying " + replay[replaySuc] + "**.\n\n"
 	// 		if replayPossible {
 	// 			// res += "The replayed trace can be found in: "
-	// 			// res += consts.RewrittenConsts + "_" + index + "\n\n"
+	// 			// res += paths.NameRewrittenConsts + "_" + index + "\n\n"
 	// 			if replay[replaySuc] == "panicked" {
 	// 				res += "It panicked with the following message:\n\n"
 	// 				res += replay[replaySuc] + "\n\n"

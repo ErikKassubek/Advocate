@@ -13,6 +13,7 @@ package toolchain
 import (
 	"advocate/analysis/a_base"
 	"advocate/experiments"
+	"advocate/fuzzing/f_base"
 	"advocate/utils/command"
 	"advocate/utils/consts"
 	"advocate/utils/flags"
@@ -25,6 +26,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 )
 
 // Run ADVOCATE on a program with a main function
@@ -60,9 +62,9 @@ func runWorkflowMain(
 	}
 
 	if firstRun {
-		os.RemoveAll("advocateResult")
-		if err := os.MkdirAll("advocateResult", os.ModePerm); err != nil {
-			return 0, 0, fmt.Errorf("Failed to create advocateResult directory: %v", err)
+		err := createResultFolder()
+		if err != nil {
+			return 0, 0, fmt.Errorf("Could not create Result Folder")
 		}
 
 		// Remove possibly leftover traces from unexpected aborts that could interfere with replay
@@ -114,7 +116,7 @@ func runWorkflowMain(
 		}
 
 		// Build args
-		buildFlags, err := buildArgsMain(paths.Prog, false, "1", false, fuzzing, fuzzingTrace, false)
+		buildFlags, err := buildArgsMain(paths.Prog, false, "1", false, fuzzing, false)
 		if err != nil {
 			return 0, 0, fmt.Errorf("Error in adding header: %v", err)
 		}
@@ -139,7 +141,7 @@ func runWorkflowMain(
 		analyzerOutput := filepath.Join(paths.ProgDir, paths.NameTrace)
 
 		err = runAnalyzer(analyzerOutput, paths.NameResultReadable, paths.NameResultMachine,
-			consts.RewrittenConsts, fuzzing, "", "main", false)
+			paths.NameRewrittenConsts, fuzzing, "", "main", false)
 
 		if err != nil {
 			return 0, 0, err
@@ -152,13 +154,14 @@ func runWorkflowMain(
 
 	rewrittenTraces := make([]string, 0)
 	total := fuzzing != -1
+	log.Debug2(runReplay)
 	if runReplay {
 		log.Info("Run replay")
 		a_base.Clear(false)
 
 		// Find rewrittenTrace directories
 		if runAnalysis {
-			rewrittenTraces, err = filepath.Glob(filepath.Join(paths.ProgDir, consts.RewrittenConsts+"*"))
+			rewrittenTraces, err = filepath.Glob(filepath.Join(paths.ProgDir, paths.NameRewrittenConsts+"*"))
 			if err != nil {
 				return 0, 0, fmt.Errorf("Error finding rewritten traces: %v", err)
 			}
@@ -173,7 +176,17 @@ func runWorkflowMain(
 		timer.Start(timer.Replay)
 		for _, trace := range rewrittenTraces {
 			traceNum := extractTraceNum(trace)
-			buildFlags, err := buildArgsMain(paths.Prog, true, traceNum, true, fuzzing, fuzzingTrace, false)
+
+			traceNumInt, err := strconv.Atoi(traceNum)
+			if err != nil {
+				continue
+			}
+			if traceNumInt <= f_base.MaxRewriteExec {
+				continue
+			}
+			f_base.MaxRewriteExec = traceNumInt
+
+			buildFlags, err := buildArgsMain(paths.Prog, true, traceNum, true, fuzzing, false)
 			if err != nil {
 				return 0, 0, err
 			}

@@ -141,8 +141,9 @@ func runAnalyzer(pathTrace string,
 		}
 
 		for resultIndex := 0; resultIndex < numberOfResults; resultIndex++ {
+			f_base.NumberWrittenRewrites++
 			needed, err := rewriteTrace(outMachine,
-				newTrace+"_"+strconv.Itoa(resultIndex+1)+consts.Sep, resultIndex, &rewrittenBugs)
+				newTrace+"_"+strconv.Itoa(f_base.NumberWrittenRewrites)+consts.Sep, resultIndex, &rewrittenBugs)
 
 			if !needed {
 				notNeededRewrites++

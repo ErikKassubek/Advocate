@@ -192,8 +192,8 @@ func runFuzzing(testPath string, firstRun bool, fileNumber, testNumber int) erro
 			order = popMutation()
 			if order.MutType == f_base.MutPiType {
 				fuzzingPath = filepath.Join(progPathDir,
-					filepath.Join("fuzzingTraces",
-						fmt.Sprintf("fuzzingTrace_%d", order.MutPie)))
+					filepath.Join(paths.NameFuzzingTraces,
+						fmt.Sprintf("%s_%d", paths.NameFuzzingTraces, order.MutPie)))
 			} else {
 				err := f_base.WriteMutationToFile(progPathDir, order)
 				if err != nil {
@@ -261,25 +261,26 @@ func runFuzzing(testPath string, firstRun bool, fileNumber, testNumber int) erro
 
 		// cancel if max number of mutations have been reached
 		if f_base.MaxNumberRuns != -1 && f_base.NumberFuzzingRuns >= f_base.MaxNumberRuns {
-			log.Infof("Finish fuzzing because maximum number of mutation runs (%d) have been reached", f_base.MaxNumberRuns)
-			return nil
+			log.Infof("Finished fuzzing because maximum number of mutation runs (%d) have been reached", f_base.MaxNumberRuns)
+			break
 		}
 
 		// cancel if max fuzzing time has been reached
 		if f_base.MaxTimeSet {
 			since := time.Since(startTime)
 			if since > f_base.MaxTime {
-				log.Infof("Finish fuzzing because maximum runtime for fuzzing (%d min) has been reached", int(f_base.MaxTime.Minutes()))
-				return nil
+				log.Infof("Finished fuzzing because maximum runtime for fuzzing (%d min) has been reached", int(f_base.MaxTime.Minutes()))
+				break
 			} else {
 				remaining := f_base.MaxTime - time.Since(startTime)
-				log.Infof("Remaining fuzzing time: %d:%d min", int(remaining.Minutes()), int(remaining.Seconds())%60)
+				log.Infof("Remaining fuzzing time: %d:%02d min", int(remaining.Minutes()), int(remaining.Seconds())%60)
 			}
 		}
 
 		// cancel if bug was found
 		if f_base.FinishIfBugFound && numberResults > 0 {
-			return nil
+			log.Info("Finish Fuzzing since bug was found.")
+			break
 		}
 
 		a_base.ClearTrace()
@@ -287,11 +288,9 @@ func runFuzzing(testPath string, firstRun bool, fileNumber, testNumber int) erro
 
 	}
 
-	if f_base.FuzzingModeGoPie {
-		toolchain.ClearFuzzingTrace()
-	}
+	toolchain.CollectFuzzingTrace()
 
-	log.Infof("Finish fuzzing after %d runs\n", f_base.NumberFuzzingRuns)
+	log.Infof("Finished fuzzing after %d runs\n", f_base.NumberFuzzingRuns)
 
 	return nil
 }

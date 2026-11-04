@@ -17,15 +17,17 @@ import (
 	"advocate/utils/consts"
 	"advocate/utils/flags"
 	"advocate/utils/io"
+	"advocate/utils/paths"
 	"bufio"
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
 
-func getBuildArg(fileName string, replay bool, tracePath string,
+func getBuildArg(replay bool, tracePath string,
 	replayTimeout int, record bool, fuzzing int, isMain bool) (buildArg string) {
 
 	buildArg = buildFlagsDefault + " "
@@ -68,14 +70,13 @@ func getBuildArg(fileName string, replay bool, tracePath string,
 //   - replayTimeout int: replay for timeout
 //   - record bool: if both replay and record are set, the replay is rerecorded
 //   - fuzzing int: fuzzing run, if no fuzzing: -1, for initial run: 0
-//   - fuzzingTrace string: path to the fuzzing trace path. If not used path (GFuzz or Flow), opr not fuzzing, set to empty string
 //   - static bool: set true for static dummy
 //
 // Returns:
 //   - string: build parameters
 //   - error
 func buildArgsMain(fileName string, replay bool, replayNumber string,
-	record bool, fuzzing int, fuzzingTrace string, static bool) (string, error) {
+	record bool, fuzzing int, static bool) (string, error) {
 	if fileName == "" {
 		return "", errors.New("Please provide a file  name")
 	}
@@ -103,13 +104,17 @@ func buildArgsMain(fileName string, replay bool, replayNumber string,
 	fmt.Println("TestName: Main")
 
 	replayPath := ""
-	if replay {
+	if replay || fuzzing > 0 {
 		if replayNumber != "" {
-			replayPath = consts.RewrittenConsts + "_" + replayNumber
+			if fuzzing <= 0 {
+				replayPath = paths.NameRewrittenConsts + "_" + replayNumber
+			} else {
+				replayPath = filepath.Join(paths.FuzzingTraces, fmt.Sprintf("%s_%d", paths.NameFuzzingTraces, fuzzing))
+			}
 		} else if flags.TracePath != "" {
 			replayPath = flags.TracePath
 		} else {
-			replayPath = consts.RewrittenConsts
+			replayPath = paths.NameRewrittenConsts
 		}
 
 		if flags.Mode == consts.ModeReplay {
@@ -118,7 +123,7 @@ func buildArgsMain(fileName string, replay bool, replayNumber string,
 		}
 	}
 
-	return getBuildArg(fileName, replay, replayPath, flags.Timeout, record, fuzzing, true), nil
+	return getBuildArg(replay, replayPath, flags.Timeout, record, fuzzing, true), nil
 }
 
 // Check if there is a main function in the given file
@@ -192,13 +197,17 @@ func buildArgsUnit(fileName, testName string, replay bool, fuzzing int, replayIn
 	fmt.Println("TestName: ", testName)
 
 	replayPath := ""
-	if replay {
+	if replay || fuzzing > 0 {
 		if replayInfo != "" {
-			replayPath = consts.RewrittenConsts + "_" + replayInfo
+			if fuzzing <= 0 {
+				replayPath = paths.NameRewrittenConsts + "_" + replayInfo
+			} else {
+				replayPath = filepath.Join(paths.FuzzingTraces, fmt.Sprintf("%s_%d", paths.NameFuzzingTraces, fuzzing))
+			}
 		} else if flags.TracePath != "" {
 			replayPath = flags.TracePath
 		} else {
-			replayPath = consts.RewrittenConsts
+			replayPath = paths.NameRewrittenConsts
 		}
 
 		if flags.Mode == consts.ModeReplay {
@@ -208,7 +217,7 @@ func buildArgsUnit(fileName, testName string, replay bool, fuzzing int, replayIn
 		}
 	}
 
-	return getBuildArg(fileName, replay, replayPath, flags.Timeout, record, fuzzing, false), nil
+	return getBuildArg(replay, replayPath, flags.Timeout, record, fuzzing, false), nil
 }
 
 // Check if a test exists

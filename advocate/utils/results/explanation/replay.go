@@ -103,7 +103,7 @@ func getOutputInfo() (map[string]string, bool) {
 	replayPos := make(map[string]bool)
 	replayCode := make(map[string]string)
 	bugrepPrefix := "Bugreport info: "
-	replayReadPrefix := "Reading trace from " + consts.RewrittenConsts + "_"
+	replayReadPrefix := "Reading trace from " + paths.NameRewrittenConsts + "_"
 	exitCodePrefix := "Exit Replay with code"
 	waitingPrefix := "WAITING"
 

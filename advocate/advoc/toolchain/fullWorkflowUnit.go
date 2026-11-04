@@ -12,8 +12,8 @@ package toolchain
 
 import (
 	"advocate/analysis/a_base"
+	"advocate/fuzzing/f_base"
 	"advocate/utils/command"
-	"advocate/utils/consts"
 	"advocate/utils/control"
 	"advocate/utils/flags"
 	"advocate/utils/log"
@@ -72,14 +72,9 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 	}
 
 	if firstRun && !flags.Continue {
-		if !flags.SkipExisting {
-			os.RemoveAll("advocateResult")
-		}
-
-		if info, _ := os.Stat("advocateResult"); info == nil {
-			if err := os.MkdirAll("advocateResult", os.ModePerm); err != nil {
-				return 0, 0, fmt.Errorf("Failed to create advocateResult directory: %v", err)
-			}
+		err := createResultFolder()
+		if err != nil {
+			return 0, 0, err
 		}
 
 		// Remove possibly leftover traces from unexpected aborts that could interfere with replay
@@ -223,7 +218,7 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 
 	// Check for untriggered selects
 	if flags.NotExecuted && flags.ExecName != "" {
-		err := complete.Check(filepath.Join(paths.Prog, "advocateResult"), paths.Prog)
+		err := complete.Check(filepath.Join(paths.Prog, paths.NameResult), paths.Prog)
 		if err != nil {
 			log.Error("Could not run check for untriggered select and not executed progs: ", err.Error())
 		}
@@ -303,7 +298,7 @@ func FindTestFiles(dir string, cont bool) ([]string, int, int, error) {
 func getFilesInResult(dir string) (map[string]struct{}, int, error) {
 	res := make(map[string]struct{})
 
-	path := filepath.Join(dir, "advocateResult")
+	path := filepath.Join(dir, paths.NameResult)
 
 	patternPrefix := `file\([0-9]+\)-test\([0-9]+\)-`
 	patternFileNum := `^file\((\d+)\)-test\(\d+\)-.+$`
@@ -555,7 +550,7 @@ func unitTestRecord(pkg, file, testName string,
 	// Set GOROOT
 	os.Setenv("GOROOT", paths.GoPatch)
 
-	command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "version")
+	// command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "version")
 
 	pkgPath := paths.MakePathLocal(pkg)
 	err = command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "test", buildFlags, "-v", "-count=1", "-run="+testName, pkgPath)
@@ -602,7 +597,7 @@ func unitTestAnalyzer(pkgPath, traceName string, fuzzing int, testFile, testName
 
 	outM := filepath.Join(pkgPath, paths.NameResultMachine)
 	outR := filepath.Join(pkgPath, paths.NameResultReadable)
-	outT := filepath.Join(pkgPath, consts.RewrittenConsts)
+	outT := filepath.Join(pkgPath, paths.NameRewrittenConsts)
 
 	if replay {
 		outT = ""
@@ -646,7 +641,7 @@ func unitTestReplay(dir, pkg, file,
 	rewrittenConstraints := make([]string, 0)
 
 	if fromAnalysis {
-		rewrittenConstraints, _ = filepath.Glob(filepath.Join(pathPkg, consts.RewrittenConsts+"_*"))
+		rewrittenConstraints, _ = filepath.Glob(filepath.Join(pathPkg, paths.NameRewrittenConsts+"_*"))
 	} else {
 		rewrittenConstraints = append(rewrittenConstraints, flags.TracePath)
 	}
@@ -657,6 +652,15 @@ func unitTestReplay(dir, pkg, file,
 		traceNum, bugString := extractTraceNumber(trace)
 		// record := getRerecord(trace)
 		record := true
+
+		traceNumInt, err := strconv.Atoi(traceNum)
+		if err != nil {
+			continue
+		}
+		if traceNumInt <= f_base.MaxRewriteExec {
+			continue
+		}
+		f_base.MaxRewriteExec = traceNumInt
 
 		// we do not need to replay a bug that has already been replayed by
 		// another replay
@@ -677,7 +681,7 @@ func unitTestReplay(dir, pkg, file,
 
 		os.Unsetenv("GOROOT")
 
-		err := unitTestAnalyzer(pkgPath, paths.NameTrace, -1, file, testName, true)
+		err = unitTestAnalyzer(pkgPath, paths.NameTrace, -1, file, testName, true)
 		if err != nil {
 			return len(rewrittenConstraints), err
 		}

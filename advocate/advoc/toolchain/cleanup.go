@@ -10,7 +10,6 @@
 package toolchain
 
 import (
-	"advocate/utils/consts"
 	"advocate/utils/flags"
 	"advocate/utils/log"
 	"advocate/utils/paths"
@@ -30,8 +29,8 @@ var LastMovedTraceDest = ""
 //   - packagePath string: path to the package directory
 //   - destination string: path to the destination directory
 //   - total bool: merge all already created logs into total log, for fuzzing
-//   - collectConstr bool: collect the constraint files
-func collect(progPath, packagePath, destination string, total bool, collectConstr bool) {
+//   - collectReplayFuzzing bool: collect the constraint files
+func collect(progPath, packagePath, destination string, total bool, collectReplayFuzzing bool) {
 	filesToMove := []string{
 		paths.NameTrace,
 		paths.NameResultMachine,
@@ -39,12 +38,10 @@ func collect(progPath, packagePath, destination string, total bool, collectConst
 		paths.NameOutput,
 	}
 
-	pattersToMove := []string{
-		"rewrittenTrace*",
-	}
+	pattersToMove := []string{}
 
-	if collectConstr {
-		pattersToMove = append(pattersToMove, consts.RewrittenConsts+"*")
+	if collectReplayFuzzing {
+		pattersToMove = append(pattersToMove, paths.NameRewrittenConsts+"*")
 	}
 
 	logsToCollect := []string{
@@ -128,7 +125,10 @@ func collect(progPath, packagePath, destination string, total bool, collectConst
 
 		for _, trace := range files {
 			dest := filepath.Join(pathTraces, filepath.Base(trace))
-			_ = os.Rename(trace, dest)
+			err = os.Rename(trace, dest)
+			if err != nil {
+				log.Error(err.Error())
+			}
 		}
 	}
 }
@@ -140,7 +140,6 @@ func collect(progPath, packagePath, destination string, total bool, collectConst
 func RemoveTraces(path string) {
 	pattersToMove := []string{
 		"advocateTrace_*",
-		"rewrittenTrace*",
 		paths.NameFuzzingData,
 		// "fuzzingTrace_*",
 	}
@@ -193,18 +192,12 @@ func removeLogs(path string) {
 	}
 }
 
-// ClearFuzzingTrace removes the fuzzing trace folder
-func ClearFuzzingTrace() {
-
+// CollectFuzzingTrace removes the fuzzing trace folder
+func CollectFuzzingTrace() {
 	if !flags.DeleteTraces {
-		_ = os.Rename(paths.FuzzingTraces, filepath.Join(paths.CurrentResult, paths.NameFuzzingTraces))
-		// if err != nil {
-		// 	log.Errorf("failed to move folder %s to %s: %s", fuzzingPath, fuzzingPath, err.Error())
-		// }
+		os.Rename(paths.FuzzingTraces, filepath.Join(paths.CurrentResult, paths.NameTraces, paths.NameFuzzingTraces))
 	} else {
-		err := os.RemoveAll(paths.FuzzingTraces)
-		if err != nil {
-			log.Errorf("Could not delete fuzzingTraces: %s", err.Error())
-		}
+		os.RemoveAll(paths.FuzzingTraces)
+
 	}
 }

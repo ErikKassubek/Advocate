@@ -26,22 +26,23 @@ import (
 // Parameter:
 //   - tr *trace.Trace: the trace the constraint is build on
 //   - mut Constratin: the constratin to write
-//   - first bool: set to true, if it is the first mutation for a given test/prog
 //
 // Returns:
 //   - bool: true if max fuzzing number is reached
 //   - error
-func WriteMutConstraint(tr *trace.Trace, mut *f_constraints.Constraint, first bool) (bool, error) {
+func WriteMutConstraint(tr *trace.Trace, mut *f_constraints.Constraint) (bool, error) {
 	if MaxNumberRuns != -1 && NumberWrittenMutations > MaxNumberRuns {
 		return true, nil
 	}
-	NumberWrittenMutations++
 
-	if first {
+	if NumberWrittenFuzzing == 0 {
 		AddFuzzingTraceFolder(paths.FuzzingTraces)
 	}
 
-	fuzzingTracePath := filepath.Join(paths.FuzzingTraces, fmt.Sprintf("fuzzingTrace_%d", NumberWrittenMutations))
+	NumberWrittenMutations++
+	NumberWrittenFuzzing++
+
+	fuzzingTracePath := filepath.Join(paths.FuzzingTraces, fmt.Sprintf("%s_%d", paths.NameFuzzingTraces, NumberWrittenFuzzing))
 	ChainFiles[NumberWrittenMutations] = *mut
 
 	err := io.CreateTraceFolder(fuzzingTracePath)

@@ -13,6 +13,7 @@ import (
 	"advocate/analysis/hb/a_clock"
 	"advocate/utils/consts"
 	"advocate/utils/flags"
+	"advocate/utils/paths"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -411,7 +412,7 @@ func (this Position) String() string {
 func (this Position) Short() string {
 	pathPre := flags.ProgPath
 	if pathPre == "" {
-		pathPre = strings.Split(flags.TracePath, "/advocateResult/")[0]
+		pathPre = strings.Split(flags.TracePath, fmt.Sprintf("/%s/", paths.NameResult))[0]
 	}
 
 	pp := filepath.Dir(pathPre)

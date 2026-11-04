@@ -305,7 +305,7 @@ func MergeClosureConstraint(closure, constr *Constraint) (*Constraint, error) {
 			}
 
 			if a_hbcalc.GetHappensBefore(
-				elems[i], elems[j], a_clock.Strong,
+				elems[i], elems[j], a_clock.Weak,
 			) == a_hb.Before {
 				addEdge(i, j)
 			}

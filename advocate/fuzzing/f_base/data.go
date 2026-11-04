@@ -43,6 +43,10 @@ var (
 	FinishIfBugFound = false
 
 	NumberWrittenMutations = 0
+	NumberWrittenRewrites  = 0
+	NumberWrittenFuzzing   = 0
+	MaxRewriteExec         = -1
+
 	// for each mutation file, store the file number and the chain
 	ChainFiles = make(map[int]f_constraints.Constraint)
 
@@ -62,4 +66,9 @@ func ClearDataFull() {
 	results.Reset()
 
 	NumberOfPreviousRuns = 0
+
+	NumberFuzzingRuns = 0
+	NumberWrittenFuzzing = 0
+	NumberWrittenMutations = 0
+	NumberWrittenRewrites = 0
 }

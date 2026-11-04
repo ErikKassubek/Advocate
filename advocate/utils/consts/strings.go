@@ -19,8 +19,6 @@ const (
 
 	ConfirmedTheBug = "confirmed the bug"
 
-	RewrittenConsts = "rewrittenConstraints"
-
 	PosSep = "#"
 
 	Sep = string(filepath.Separator)

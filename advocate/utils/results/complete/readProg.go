@@ -11,6 +11,7 @@ package complete
 
 import (
 	"advocate/utils/log"
+	"advocate/utils/paths"
 	"fmt"
 	"go/ast"
 	"go/importer"
@@ -101,7 +102,7 @@ func collectGoFiles(dir string) ([]string, error) {
 			return nil
 		}
 
-		if info.IsDir() && info.Name() == "advocateResult" {
+		if info.IsDir() && info.Name() == paths.NameResult {
 			return filepath.SkipDir
 		}
 

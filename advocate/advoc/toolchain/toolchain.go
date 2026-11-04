@@ -15,6 +15,7 @@ import (
 	"advocate/utils/flags"
 	"advocate/utils/paths"
 	"fmt"
+	"os"
 )
 
 // Run is the main function for the toolchain
@@ -74,4 +75,19 @@ func Run(pathToTest string,
 	default:
 		return 0, 0, fmt.Errorf("Choose one mode from 'main' or 'test'")
 	}
+}
+
+func createResultFolder() error {
+	if flags.ModeMain || !flags.SkipExisting {
+		os.RemoveAll(paths.NameResult)
+	}
+
+	if info, _ := os.Stat(paths.NameResult); info == nil {
+		if err := os.MkdirAll(paths.NameResult, os.ModePerm); err != nil {
+			return fmt.Errorf("Failed to create %s directory: %v", paths.NameResult, err)
+		}
+	}
+
+	return nil
+
 }

@@ -24,9 +24,7 @@ func startTimeout(timeout int) {
 		// start time timeout
 		go func() {
 			time.Sleep(time.Duration(timeout) * time.Second)
-			println("TIMEOUT")
 			panic("Timeout")
 		}()
 	}
 }
-
