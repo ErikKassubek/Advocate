@@ -12,36 +12,37 @@ import (
 	"time"
 )
 
-const advocatePath = "/home/advocate/Advocate/Advocate/advocate/"
-const srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDI/"
+var advocatePath = "/home/advocate/Desktop/Advocate/advocate/"
+var srcPath string
 
 var progs = []string{
 	"argo-cd",
 	"bleve",
 	"bosun",
 	"caddy",
-	"dns",
-	"etcd",
-	"fabiolb",
-	"frp",
-	"gin",
-	"go-ethereum",
-	"gorums",
+	// "dns",
+	// "etcd",
+	// "fabiolb",
+	// "frp",
+	// "gin",
+	// "go-ethereum",
+	// "gorums",
 	"grpc",
 	"kubernetes",
-	"moby",
-	"nsq",
+	// "moby",
+	// "nsq",
 	"ollama",
-	"pholcus",
-	"prometheus",
-	"syncthing",
-	"terraform",
-	"zinx",
+	// "pholcus",
+	// "prometheus",
+	// "syncthing",
+	// "terraform",
+	// "zinx",
 }
 
 var now = time.Now()
 var id = now.Format("2006-01-02-15-04-05")
-var logName = "runner_" + id + ".log"
+var closure string
+var logName string
 
 var modes = []string{
 	// "GoPie",
@@ -49,9 +50,9 @@ var modes = []string{
 	// "GoCR",
 }
 
-var settings = "-timeoutRun 30 -stats -noInfo -maxNumberElements 10000000"
+var settings = "-timeoutRun 30 -timeoutFuz 420 -stats -noInfo -maxNumberElements 10000000"
 
-var maxWorker = 2
+var maxWorker = 1
 
 var fileMutex sync.Mutex
 
@@ -130,6 +131,28 @@ func worker(path, name string, wg *sync.WaitGroup, sem chan struct{}, last bool)
 func log(c string) {
 	fileMutex.Lock()
 	defer fileMutex.Unlock()
+
+	if len(os.Args) != 2 {
+		panic("Incalid number of args")
+	}
+
+	closure = strings.ToLower(os.Args[1])
+	logName = "runner_" + closure + "_" + id + ".log"
+
+	switch closure {
+	case "hb":
+		srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDIClosure/hbc"
+		settings += " -closure=hb"
+	case "order":
+		srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDIClosure/order"
+		settings += " -closure=order"
+	case "replay":
+		srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDIClosure/replay"
+		settings += " -closure=replay"
+	case "scpc":
+		srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDIClosure/scpc"
+		settings += " -closure=scpc"
+	}
 
 	file, err := os.OpenFile(logName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
