@@ -179,6 +179,14 @@ func (this *ElementFunc) Type(operation bool) OperationType {
 }
 
 // ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementFunc) Pan() bool {
+	return false
+}
+
+// ========================================================
 // MARK: Equal
 // ========================================================
 
@@ -223,14 +231,27 @@ func (this *ElementFunc) StringGui() string {
 	return fmt.Sprintf("F,%s,%s\n%s", this.name, this.PosDef().Short(), this.Pos().Short())
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementFunc) StringMin() string {
+	pos := this.Pos().Short()
+	if !flags.ShowFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+
+	return fmt.Sprintf("%s,-,%s", string(FuncCall), pos)
+}
+
 // ========================================================
 // MARK: VC
 // ========================================================
 
-func (this *ElementFunc) Vc(_ a_clock.VcType, _ *a_clock.VectorClock) {
+func (this *ElementFunc) SetVc(_ a_clock.VcType, _ *a_clock.VectorClock) {
 }
 
-func (this *ElementFunc) GetVC(a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementFunc) VC(a_clock.VcType) *a_clock.VectorClock {
 	return &a_clock.VectorClock{}
 }
 
@@ -259,6 +280,11 @@ func (this *ElementFunc) SetNumberConcurrent(_ int, _, _ bool) {
 
 func (this *ElementFunc) ReplayID() string {
 	return fmt.Sprintf("%d:%s:%d", this.routineId, this.posCall.file, this.posCall.line)
+}
+
+// Replayable returns if element can be part of replay
+func (this *ElementFunc) Replayable() bool {
+	return false
 }
 
 // ========================================================

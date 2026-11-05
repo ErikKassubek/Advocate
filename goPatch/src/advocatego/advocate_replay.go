@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Erik Kassubek
 //
-// File: advocate_replay.go
+// File: advocate_replay.gotrIt
 // Brief: Advocate Replay
 //
 // Author: Erik Kassubek
@@ -11,11 +11,9 @@ package advocatego
 
 import (
 	"bufio"
-	"math"
 	"os"
 	"path/filepath"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -23,7 +21,8 @@ import (
 )
 
 const (
-	activeFile = "replay_active.log"
+	activeFile = "replay_constratins.log"
+	spawnFile  = "replay_forktree.log"
 	posSep     = "#"
 )
 
@@ -43,17 +42,13 @@ var initReplay bool
 //   - init bool: true if called from init, false for main
 //
 //go:linkname InitReplay runtime.AdvocateInitReplay
-func InitReplay(tracePath string, timeout int, atomic bool, init bool) {
+func InitReplay(tracePath string, timeout int, init bool) {
 	if initReplay { // called by main but alredy run by init
 		return
 	}
 	initReplay = true
 
 	FinishFunc = FinishReplay
-
-	// use first as default
-	// runtime.SetForceExit(false)
-	runtime.SetReplayAtomic(atomic) // set to true to include replay atomic
 
 	tracePathRewritten = tracePath
 
@@ -66,78 +61,28 @@ func InitReplay(tracePath string, timeout int, atomic bool, init bool) {
 // Parameter:
 //   - timeout int: timeout in seconds
 func startReplay(timeout int) {
-	println("Reading trace from " + tracePathRewritten)
+	// if printDebug {
+	// 	println("Reading constraints from " + tracePathRewritten)
+	// }
 
 	// if trace folder does not exist, panic
 	if _, err := os.Stat(tracePathRewritten); os.IsNotExist(err) {
 		panic("Trace folder '" + tracePathRewritten + "' does not exist.")
 	}
 
-	// check for and if exists, read the rewrite_active.log file
-	activeStartTime, active, _, numberActive := readReplayActive(tracePathRewritten)
+	// check for and if exists, read the rewrite_constratins.log file
+	readReplayConstraint(tracePathRewritten)
+	readSpawnTree(tracePathRewritten)
 
-	// if activeStartTime == 0 && numberActive == 0, add later
-	if active != nil && !(activeStartTime == 0 && numberActive == 0) {
-		runtime.AddActiveTrace(activeStartTime, active, numberActive)
-	}
-
-	// traverse all files in the trace folder
-	files, err := os.ReadDir(tracePathRewritten)
-	if err != nil {
-		panic(err)
-	}
-
-	foundTraceFiles := false
-	replayData, spawns, selects := runtime.GetReplayTrace()
-	for _, file := range files {
-		// if the file is a directory, ignore it
-		if file.IsDir() {
-			continue
-		}
-
-		if file.Name() == "times.log" || file.Name() == "trace_info.log" {
-			continue
-		}
-
-		// if the file is a trace file, read the trace
-		if strings.HasSuffix(file.Name(), ".log") &&
-			file.Name() != "rewrite_info.log" &&
-			file.Name() != activeFile {
-			readTraceFile(tracePathRewritten+"/"+file.Name(), replayData, spawns, selects)
-			foundTraceFiles = true
-		}
-	}
-
-	if !foundTraceFiles {
-		panic("Could not find trace files for replay")
-	}
-
-	// sort data by time
-	sort.Slice(*replayData, func(i, j int) bool {
-		return (*replayData)[i].Time < (*replayData)[j].Time
-	})
-
-	// add active trace if activeStartTime is 0 and number active is also zero
-	if activeStartTime == 0 && numberActive == 0 {
-		active, numberActive = allTraceElemToRuntimeActive(replayData)
-		runtime.AddActiveTrace(activeStartTime, active, numberActive)
-	}
-
-	if timeout > 0 {
-		// start time timeout
-		go func() {
-			time.Sleep(time.Duration(timeout) * time.Second)
-			runtime.ExitReplayTimeout()
-			os.Exit(10)
-		}()
-	}
+	startTimeout(timeout)  // global max runtime
+	go runtime.Timeout()  // max block for each operation
 
 	// DetectBlockingGC(0)
 
 	runtime.EnableReplay()
 }
 
-// readReplayActive checks if a rewrite_active.log file exists in the path
+// readReplayConstraint checks if a rewrite_constratins.log file exists in the path
 // if not, it just returns
 // If the file exists, it is read and the replay is set to partial replay
 //
@@ -145,68 +90,93 @@ func startReplay(timeout int) {
 //   - tracePathRewritten string: the path to the trace folder
 //
 // Returns
-//   - int: switch from all to active if the element with this time has been replayed
-//     if 0, start with active replay, if -1 never start active replay
-//   - map[string][]int: the map from key to counter for the active elements
-//   - map[int]struct{}: the map containing the time of all elements that are active
-//   - int: number of active operations
-func readReplayActive(tracePathRewritten string) (int, map[string][]int, map[int]struct{}, int) {
+//   - int: number of constraint operations
+func readReplayConstraint(tracePathRewritten string) int {
 	path := filepath.Join(tracePathRewritten, activeFile)
 	file, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return -1, nil, nil, 0
+			return 0
 		}
 		panic(err)
 	}
 	defer file.Close()
 
-	active := make(map[string][]int)
-	activeTPre := make(map[int]struct{})
-	numberActive := 0
-	firstTime := -1
+	runtime.NewConstraint()
 
-	// The elements in the active file should be separated by new line and have
-	// the following form:
-	// routine:file:line,tPre,count
+	numberConstraints := 0
+
+	firstLine := true
+
 	scanner := bufio.NewScanner(file)
-	first := true
 	for scanner.Scan() {
 		elem := scanner.Text()
 		if elem == "" {
 			continue
 		}
 
-		if first {
-			first = false
-			firstTime, err = strconv.Atoi(elem)
-			if err == nil {
-				continue
-			}
-		}
-
-		fields := strings.Split(elem, ",")
-		if len(fields) != 3 {
+		if firstLine {
+			firstLine = false
+			runtime.AddConstraintInfo(elem)
 			continue
 		}
 
-		counter, err := strconv.Atoi(fields[2])
-		if err != nil {
-			continue
-		}
-
-		tPre, err := strconv.Atoi(fields[1])
-		if err != nil {
-			continue
-		}
-
-		active[fields[0]] = append(active[fields[0]], counter)
-		numberActive++
-
-		activeTPre[tPre] = struct{}{}
+		runtime.AddConstraintElemFromString(elem)
+		numberConstraints++
 	}
 
-	return firstTime, active, activeTPre, numberActive
+	return numberConstraints
+}
+
+// readReplayConstraint checks if a rewrite_spawntree.log file exists in the path
+// if not, it just returns
+// If the file exists, it is read and the spawn is set to correct values
+//
+// Parameter
+//   - tracePathRewritten string: the path to the trace folder
+func readSpawnTree(tracePathRewritten string) {
+	path := filepath.Join(tracePathRewritten, spawnFile)
+	file, err := os.Open(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			println("Could not read spawn tree file")
+			return
+		}
+		panic(err)
+	}
+	defer file.Close()
+
+	spawns := make(map[int][]int)
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		elem := scanner.Text()
+		if elem == "" {
+			continue
+		}
+
+		fields := strings.Split(elem, "#")
+		if len(fields) != 2 {
+			continue
+		}
+
+		parent, err := strconv.Atoi(fields[0])
+		if err != nil {
+			println("Could not convert %d to int", fields[0])
+		}
+		spawns[parent] = make([]int, 0)
+
+		children := strings.Split(fields[1], ",")
+		for _, child := range children {
+			childInt, err := strconv.Atoi(child)
+			if err != nil {
+				println("Could not convert %d to int", fields[0])
+			}
+			spawns[parent] = append(spawns[parent], childInt)
+		}
+	}
+
+	runtime.SetSpawns(spawns)
 }
 
 // Import the trace.
@@ -221,247 +191,247 @@ func readReplayActive(tracePathRewritten string) (int, map[string][]int, map[int
 //   - select
 //
 // We only record the relevant information for each operation.
-func readTraceFile(fileName string,
-	replayData *runtime.AdvocateReplayTrace, spawns *map[int][]int, selects *map[string][]runtime.ReplayElement) {
-	// get the routine id from the file name
-	routineID, err := strconv.Atoi(strings.TrimSuffix(strings.TrimPrefix(fileName, tracePathRewritten+"/trace_"), ".log"))
-	if err != nil {
-		panic(err)
-	}
+// func readTraceFile(fileName string,
+// 	replayData *runtime.AdvocateReplayTrace, spawns *map[int][]int, selects *map[string][]runtime.ReplayElement) {
+// 	// get the routine id from the file name
+// 	routineID, err := strconv.Atoi(strings.TrimSuffix(strings.TrimPrefix(fileName, tracePathRewritten+"/trace_"), ".log"))
+// 	if err != nil {GetReplayA
+// 		panic(err)
+// 	}
 
-	file, err := os.Open(fileName)
-	if err != nil {
-		panic(err)
-	}
+// 	file, err := os.Open(fileName)
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	scanner := bufio.NewScanner(file)
+// 	scanner := bufio.NewScanner(file)
 
-	for scanner.Scan() {
-		elem := scanner.Text()
-		if elem == "" {
-			continue
-		}
+// 	for scanner.Scan() {
+// 		elem := scanner.Text()
+// 		if elem == "" {
+// 			continue
+// 		}
 
-		fields := strings.Split(elem, ",")
+// 		fields := strings.Split(elem, ",")
 
-		tPre, err := strconv.Atoi(fields[1])
-		if err != nil {
-			panic("Invalid tPre " + fields[0] + " in line " + elem + " in file " + fileName + ".")
-		}
+// 		tPre, err := strconv.Atoi(fields[1])
+// 		if err != nil {
+// 			panic("Invalid tPre " + fields[0] + " in line " + elem + " in file " + fileName + ".")
+// 		}
 
-		var time int
-		var op runtime.Operation
-		var file string
-		var line int
-		var blocked = false
-		var suc = true
-		var index int
+// 		var time int
+// 		var op runtime.Operation
+// 		var file string
+// 		var line int
+// 		var blocked = false
+// 		var suc = true
+// 		var index int
 
-		// for some elements, the tPre and tPost are the same
-		// we here set the time value as the tPre as a default. If the element
-		// has a separate tPost, this will be set later
-		time = tPre
+// 		// for some elements, the tPre and tPost are the same
+// 		// we here set the time value as the tPre as a default. If the element
+// 		// has a separate tPost, this will be set later
+// 		time = tPre
 
-		switch fields[0] {
-		case "X": // disable replay
-			op = runtime.OperationReplayEnd
-			line, _ = strconv.Atoi(fields[2]) // misuse the line for the exit code
-			runtime.SetExpectedExitCode(line)
-		case "G":
-			op = runtime.OperationSpawn
-			// time, _ = strconv.Atoi(fields[1])
-			pos := strings.Split(fields[3], posSep)
-			file = pos[0]
-			line, _ = strconv.Atoi(pos[1])
-			index, _ = strconv.Atoi(fields[2])
-			if _, ok := (*spawns)[routineID]; !ok {
-				(*spawns)[routineID] = make([]int, 0)
-			}
-			(*spawns)[routineID] = append((*spawns)[routineID], index)
-			println("ADD SPAWN ", routineID, " ", index)
-		case "C":
-			switch fields[4] {
-			case "S":
-				op = runtime.OperationChannelSend
-			case "R":
-				op = runtime.OperationChannelRecv
-			case "C":
-				op = runtime.OperationChannelClose
-			default:
-				panic("Unknown channel operation " + fields[4] + " in line " + elem + " in file " + fileName + ".")
-			}
-			time, _ = strconv.Atoi(fields[2])
-			if time == 0 {
-				blocked = true
-			}
-			pos := strings.Split(fields[9], posSep)
-			file = pos[0]
-			line, _ = strconv.Atoi(pos[1])
-		case "M":
-			rw := false
-			if fields[4] == "R" {
-				rw = true
-			}
-			time, _ = strconv.Atoi(fields[2])
-			if fields[6] == "f" {
-				suc = false
-			}
-			pos := strings.Split(fields[7], posSep)
-			file = pos[0]
-			line, _ = strconv.Atoi(pos[1])
-			switch fields[5] {
-			case "L":
-				if rw {
-					op = runtime.OperationRWMutexLock
-				} else {
-					op = runtime.OperationMutexLock
-				}
-			case "U":
-				if rw {
-					op = runtime.OperationRWMutexUnlock
-				} else {
-					op = runtime.OperationMutexUnlock
-				}
-			case "T":
-				if rw {
-					op = runtime.OperationRWMutexTryLock
-				} else {
-					op = runtime.OperationMutexTryLock
-				}
-			case "R":
-				op = runtime.OperationRWMutexRLock
-			case "N":
-				op = runtime.OperationRWMutexRUnlock
-			case "Y":
-				op = runtime.OperationRWMutexTryRLock
-			default:
-				panic("Unknown mutex operation")
-			}
-			if fields[2] == "0" {
-				blocked = true
-			}
+// 		switch fields[0] {
+// 		case "X": // disable replay
+// 			op = runtime.OperationReplayEnd
+// 			line, _ = strconv.Atoi(fields[2]) // misuse the line for the exit code
+// 			runtime.SetExpectedExitCode(line)
+// 		case "G":
+// 			op = runtime.OperationSpawn
+// 			// time, _ = strconv.Atoi(fields[1])
+// 			pos := strings.Split(fields[3], posSep)
+// 			file = pos[0]
+// 			line, _ = strconv.Atoi(pos[1])
+// 			index, _ = strconv.Atoi(fields[2])
+// 			if _, ok := (*spawns)[routineID]; !ok {
+// 				(*spawns)[routineID] = make([]int, 0)
+// 			}
+// 			(*spawns)[routineID] = append((*spawns)[routineID], index)
+// 			println("ADD SPAWN ", routineID, " ", index)
+// 		case "C":
+// 			switch fields[4] {
+// 			case "S":
+// 				op = runtime.OperationChannelSend
+// 			case "R":
+// 				op = runtime.OperationChannelRecv
+// 			case "C":
+// 				op = runtime.OperationChannelClose
+// 			default:
+// 				panic("Unknown channel operation " + fields[4] + " in line " + elem + " in file " + fileName + ".")
+// 			}
+// 			time, _ = strconv.Atoi(fields[2])
+// 			if time == 0 {
+// 				blocked = true
+// 			}
+// 			pos := strings.Split(fields[9], posSep)
+// 			file = pos[0]
+// 			line, _ = strconv.Atoi(pos[1])
+// 		case "M":
+// 			rw := false
+// 			if fields[4] == "R" {
+// 				rw = true
+// 			}
+// 			time, _ = strconv.Atoi(fields[2])
+// 			if fields[6] == "f" {
+// 				suc = false
+// 			}
+// 			pos := strings.Split(fields[7], posSep)
+// 			file = pos[0]
+// 			line, _ = strconv.Atoi(pos[1])
+// 			switch fields[5] {
+// 			case "L":
+// 				if rw {
+// 					op = runtime.OperationRWMutexLock
+// 				} else {
+// 					op = runtime.OperationMutexLock
+// 				}
+// 			case "U":
+// 				if rw {
+// 					op = runtime.OperationRWMutexUnlock
+// 				} else {
+// 					op = runtime.OperationMutexUnlock
+// 				}
+// 			case "T":
+// 				if rw {
+// 					op = runtime.OperationRWMutexTryLock
+// 				} else {
+// 					op = runtime.OperationMutexTryLock
+// 				}
+// 			case "R":
+// 				op = runtime.OperationRWMutexRLock
+// 			case "N":
+// 				op = runtime.OperationRWMutexRUnlock
+// 			case "Y":
+// 				op = runtime.OperationRWMutexTryRLock
+// 			default:
+// 				panic("Unknown mutex operation")
+// 			}
+// 			if fields[2] == "0" {
+// 				blocked = true
+// 			}
 
-		case "O":
-			op = runtime.OperationOnceDo
-			// time, _ = strconv.Atoi(fields[1]) // read tpre to prevent false order
-			if time == 0 {
-				blocked = true
-			}
-			if fields[4] == "f" {
-				suc = false
-			}
-			pos := strings.Split(fields[5], posSep)
-			file = pos[0]
-			line, _ = strconv.Atoi(pos[1])
-		case "W":
-			switch fields[4] {
-			case "W":
-				op = runtime.OperationWaitgroupWait
-			case "A":
-				op = runtime.OperationWaitgroupAddDone
-			default:
-				panic("Unknown waitgroup operation")
-			}
-			time, _ = strconv.Atoi(fields[2])
-			if time == 0 {
-				blocked = true
-			}
-			pos := strings.Split(fields[7], posSep)
-			file = pos[0]
-			line, _ = strconv.Atoi(pos[1])
-		case "S":
-			cases := strings.Split(fields[4], "~")
-			if cases[len(cases)-1] == "D" {
-				op = runtime.OperationSelectDefault
-			} else {
-				op = runtime.OperationSelectCase
-			}
-			time, _ = strconv.Atoi(fields[2])
-			if time == 0 {
-				blocked = true
-			}
-			index, _ = strconv.Atoi(fields[5])
-			pos := strings.Split(fields[6], posSep)
-			file = pos[0]
-			line, _ = strconv.Atoi(pos[1])
-		case "D":
-			switch fields[4] {
-			case "W":
-				op = runtime.OperationCondWait
-			case "S":
-				op = runtime.OperationCondSignal
-			case "B":
-				op = runtime.OperationCondBroadcast
-			default:
-				panic("Unknown cond operation: " + fields[4])
-			}
-			pos := strings.Split(fields[5], posSep)
-			file = pos[0]
-			line, _ = strconv.Atoi(pos[1])
-			if fields[2] == "0" {
-				blocked = true
-			}
-		case "A":
-			if !runtime.GetReplayAtomic() {
-				continue
-			}
-			switch fields[3] {
-			case "L":
-				op = runtime.OperationAtomicLoad
-			case "S":
-				op = runtime.OperationAtomicStore
-			case "A":
-				op = runtime.OperationAtomicAdd
-			case "W":
-				op = runtime.OperationAtomicSwap
-			case "C":
-				op = runtime.OperationAtomicCompareAndSwap
-			case "N":
-				op = runtime.OperationAtomicAnd
-			case "O":
-				op = runtime.OperationAtomicOr
-			}
-			pos := strings.Split(fields[4], posSep)
-			if len(pos) < 2 {
-				runtime.SetReplayAtomic(false)
-				file = ""
-				line = 0
-			} else {
-				file = pos[0]
-				line, _ = strconv.Atoi(pos[1])
-			}
-		default:
-			continue
-		}
-		if blocked || time == 0 {
-			time = math.MaxInt
-		}
+// 		case "O":
+// 			op = runtime.OperationOnceDo
+// 			// time, _ = strconv.Atoi(fields[1]) // read tpre to prevent false order
+// 			if time == 0 {
+// 				blocked = true
+// 			}
+// 			if fields[4] == "f" {
+// 				suc = false
+// 			}
+// 			pos := strings.Split(fields[5], posSep)
+// 			file = pos[0]
+// 			line, _ = strconv.Atoi(pos[1])
+// 		case "W":
+// 			switch fields[4] {
+// 			case "W":
+// 				op = runtime.OperationWaitgroupWait
+// 			case "A":
+// 				op = runtime.OperationWaitgroupAddDone
+// 			default:
+// 				panic("Unknown waitgroup operation")
+// 			}
+// 			time, _ = strconv.Atoi(fields[2])
+// 			if time == 0 {
+// 				blocked = true
+// 			}
+// 			pos := strings.Split(fields[7], posSep)
+// 			file = pos[0]
+// 			line, _ = strconv.Atoi(pos[1])
+// 		case "S":
+// 			cases := strings.Split(fields[4], "~")
+// 			if cases[len(cases)-1] == "D" {
+// 				op = runtime.OperationSelectDefault
+// 			} else {
+// 				op = runtime.OperationSelectCase
+// 			}
+// 			time, _ = strconv.Atoi(fields[2])
+// 			if time == 0 {
+// 				blocked = true
+// 			}
+// 			index, _ = strconv.Atoi(fields[5])
+// 			pos := strings.Split(fields[6], posSep)
+// 			file = pos[0]
+// 			line, _ = strconv.Atoi(pos[1])
+// 		case "D":
+// 			switch fields[4] {
+// 			case "W":
+// 				op = runtime.OperationCondWait
+// 			case "S":
+// 				op = runtime.OperationCondSignal
+// 			case "B":
+// 				op = runtime.OperationCondBroadcast
+// 			default:
+// 				panic("Unknown cond operation: " + fields[4])
+// 			}
+// 			pos := strings.Split(fields[5], posSep)
+// 			file = pos[0]
+// 			line, _ = strconv.Atoi(pos[1])
+// 			if fields[2] == "0" {
+// 			GetReplayA	blocked = true
+// 			}
+// 		case "A":
+// 			if !runtime.GetReplayAtomic() {
+// 				continue
+// 			}
+// 			switch fields[3] {
+// 			case "L":
+// 				op = runtime.OperationAtomicLoad
+// 			case "S":
+// 				op = runtime.OperationAtomicStore
+// 			case "A":
+// 				op = runtime.OperationAtomicAdd
+// 			case "W":
+// 				op = runtime.OperationAtomicSwap
+// 			case "C":
+// 				op = runtime.OperationAtomicCompareAndSwap
+// 			case "N":
+// 				op = runtime.OperationAtomicAnd
+// 			case "O":
+// 				op = runtime.OperationAtomicOr
+// 			}
+// 			pos := strings.Split(fields[4], posSep)
+// 			if len(pos) < 2 {
+// 				runtime.SetReplayAtomic(false)
+// 				file = ""
+// 				line = 0
+// 			} else {
+// 				file = pos[0]
+// 				line, _ = strconv.Atoi(pos[1])
+// 			}
+// 		default:
+// 			continue
+// 		}
+// 		if blocked || time == 0 {
+// 			time = math.MaxInt
+// 		}
 
-		// do not add element to the trace if it is not active
-		// if activeTime != nil && activeStart != -1 && time > activeStart {
-		// 	if _, ok := activeTime[time]; !ok {
-		// 		continue
-		// 	}
-		// }
+// 		// do not add element to the trace if it is not active
+// 		// if activeTime != nil && activeStart != -1 && time > activeStart {
+// 		// 	if _, ok := activeTime[time]; !ok {
+// 		// 		continue
+// 		// 	}
+// 		// }
 
-		if op != runtime.OperationNone && !runtime.AdvocateIgnoreReplay(op, file) {
-			newElem := runtime.ReplayElement{
-				Op: op, Routine: routineID, Time: time, TimePre: tPre, File: file, Line: line,
-				Blocked: blocked, Suc: suc,
-				Index: index}
-			*replayData = append(*replayData, newElem)
+// 		if op != runtime.OperationNone && !runtime.AdvocateIgnoreReplay(op, file) {
+// 			newElem := runtime.ReplayElement{
+// 				Op: op, Routine: routineID, Time: time, TimePre: tPre, File: file, Line: line,
+// 				Blocked: blocked, Suc: suc,
+// 				Index: index}
+// 			*replayData = append(*replayData, newElem)
 
-			if op == runtime.OperationSelect || op == runtime.OperationSelectCase || op == runtime.OperationSelectDefault {
-				key := runtime.BuildReplayKey(routineID, file, line)
-				(*selects)[key] = append((*selects)[key], newElem)
-			}
-		}
-	}
+// 			if op == runtime.OperationSelect || op == runtime.OperationSelectCase || op == runtime.OperationSelectDefault {
+// 				key := runtime.BuildReplayKey(routineID, file, line)
+// 				(*selects)[key] = append((*selects)[key], newElem)
+// 			}
+// 		}
+// 	}
 
-	if err := scanner.Err(); err != nil {
-		panic(err)
-	}
-}
+// 	if err := scanner.Err(); err != nil {
+// 		panic(err)
+// 	}
+// }
 
 // FinishReplay waits for the replay to finish.
 //
@@ -478,27 +448,4 @@ func FinishReplay() {
 	time.Sleep(time.Second)
 
 	runtime.ExitReplayWithCode(runtime.ExitCodeDefault, "")
-}
-
-func allTraceElemToRuntimeActive(replayTrace *runtime.AdvocateReplayTrace) (map[string][]int, int) {
-	counter := make(map[string]int)
-	res := make(map[string][]int)
-	resCounter := 0
-	for _, elem := range *replayTrace {
-		if elem.NotExec() {
-			continue
-		}
-
-		pos := elem.Key()
-		counter[pos] += 1
-
-		if _, ok := res[pos]; !ok {
-			res[pos] = make([]int, 0)
-		}
-		res[pos] = append(res[pos], counter[pos])
-		resCounter++
-	}
-
-	return res, resCounter
-
 }

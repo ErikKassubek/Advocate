@@ -93,7 +93,7 @@ func AdvocateOnceCom(index int, suc bool) {
 //   - string: the string representation of the form
 //     O,[tPre],[tPost],[id],[suc],[file],[line]
 func (self AdvocateTraceOnce) toString() string {
-	return buildTraceElemString("O", self.tReq, self.tCom, self.res.id, self.suc, posToString(self.file, self.line))
+	return buildTraceElemString("O", self.tReq, self.tCom, self.res.id, self.suc, posToString(self.file, self.line), "-")
 }
 
 // getOperation is a getter for the operation
@@ -119,3 +119,5 @@ func (self AdvocateTraceOnce) hasCommit() bool {
 func (self AdvocateTraceOnce) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{self.res}
 }
+
+func (self AdvocateTraceOnce) causedPanic() traceElem { return self }

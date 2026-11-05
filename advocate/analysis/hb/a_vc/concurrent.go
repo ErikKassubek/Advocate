@@ -67,7 +67,7 @@ func GetConcurrent(elem trace.Element, all, sameElem, sameType, weak bool) []tra
 	}
 
 	res := make([]trace.Element, 0)
-	for rout, routine := range a_base.MainTrace.GetTraces() {
+	for rout, routine := range a_base.MainTrace.Routines() {
 		if rout == elem.RoutineID() {
 			continue
 		}
@@ -95,14 +95,14 @@ func GetConcurrent(elem trace.Element, all, sameElem, sameType, weak bool) []tra
 			}
 
 			if weak {
-				if a_clock.IsConcurrent(elem.GetVC(a_clock.Weak), tElem.GetVC(a_clock.Weak)) {
+				if a_clock.IsConcurrent(elem.VC(a_clock.Weak), tElem.VC(a_clock.Weak)) {
 					res = append(res, tElem)
 					if !all {
 						return res
 					}
 				}
 			} else {
-				if a_clock.IsConcurrent(elem.GetVC(a_clock.Strong), tElem.GetVC(a_clock.Strong)) {
+				if a_clock.IsConcurrent(elem.VC(a_clock.Strong), tElem.VC(a_clock.Strong)) {
 					res = append(res, tElem)
 					if !all {
 						return res

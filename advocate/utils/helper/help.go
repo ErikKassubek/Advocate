@@ -50,8 +50,7 @@ var (
 	onlyA     = newFlagVal("onlyActual", "false", "", "only test for actual bugs leading to panic and actual leaks. This will overwrite `scen`")
 
 	// timeout
-	timeoutRec    = newFlagVal("timeoutRec", "600", "", "Set the timeout in seconds for the recording. To disable set to -1")
-	timeoutRep    = newFlagVal("timeoutRep", "900", "", "Set a timeout in seconds for the replay. To disable set to -1")
+	timeout       = newFlagVal("timeout", "180", "", "Set a timeout in seconds for one run. To disable set to -1")
 	timeoutFuz    = newFlagVal("timeoutFuz", "420", "", "Timeout of fuzzing per test/program in seconds. To Disable, set to -1")
 	maxFuzzingRun = newFlagVal("maxFuzzingRuns", "-1", "", "Maximum number of fuzzing runs per test/prog. To Disable, set to -1")
 
@@ -268,7 +267,7 @@ func printHelpRecord() {
 	fmt.Println(exec1.toString(false))
 
 	// timeout
-	fmt.Println(timeoutRec.toString(false))
+	fmt.Println(timeout.toString(false))
 
 	// statistics
 	fmt.Println(measureTime.toString(false))
@@ -316,7 +315,7 @@ func printHelpReplay() {
 	fmt.Println(trace.toString(true))
 
 	// timeout
-	fmt.Println(timeoutRep.toString(false))
+	fmt.Println(timeout.toString(false))
 
 	fmt.Println(output.toString(false))
 
@@ -360,8 +359,7 @@ func printHelpAnalysis() {
 	fmt.Println(onlyA.toString(false))
 
 	// timeout
-	fmt.Println(timeoutRec.toString(false))
-	fmt.Println(timeoutRep.toString(false))
+	fmt.Println(timeout.toString(false))
 
 	// statistics
 	fmt.Println(measureTime.toString(false))
@@ -422,8 +420,7 @@ func printHelpFuzzing() {
 	fmt.Println(onlyA.toString(false))
 
 	// timeout
-	fmt.Println(timeoutRec.toString(false))
-	fmt.Println(timeoutRep.toString(false))
+	fmt.Println(timeout.toString(false))
 	fmt.Println(timeoutFuz.toString(false))
 	fmt.Println(maxFuzzingRun.toString(false))
 

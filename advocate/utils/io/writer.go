@@ -33,16 +33,8 @@ func WriteTrace(traceToWrite *trace.Trace, path string, replay, control bool) er
 	timer.Start(timer.Io)
 	defer timer.Stop(timer.Io)
 
-	// delete folder if exists
-	if _, err := os.Stat(path); err == nil {
-		log.Info(path + " already exists. Delete folder " + path)
-		if err := os.RemoveAll(path); err != nil {
-			return err
-		}
-	}
-
-	// create new folder
-	if err := os.Mkdir(path, 0755); err != nil {
+	err := CreateTraceFolder(path)
+	if err != nil {
 		return err
 	}
 
@@ -61,7 +53,7 @@ func WriteTrace(traceToWrite *trace.Trace, path string, replay, control bool) er
 			}
 			defer file.Close()
 
-			rout := traceToWrite.GetRoutineTrace(i)
+			rout := traceToWrite.GetRoutine(i)
 			// if rout == nil {
 			// 	return
 			// }
@@ -101,6 +93,23 @@ func WriteTrace(traceToWrite *trace.Trace, path string, replay, control bool) er
 	return nil
 }
 
+func CreateTraceFolder(path string) error {
+	// delete folder if exists
+	if _, err := os.Stat(path); err == nil {
+		log.Info(path + " already exists. Delete folder " + path)
+		if err := os.RemoveAll(path); err != nil {
+			return err
+		}
+	}
+
+	// create new folder
+	if err := os.Mkdir(path, 0755); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Check if the element is relevant for replay
 //
 // Parameter:
@@ -109,8 +118,7 @@ func WriteTrace(traceToWrite *trace.Trace, path string, replay, control bool) er
 // Returns:
 //   - true if relevant for replay, false if ignored in replay
 func isReplay(element trace.Element) bool {
-	t := element.Type(false)
-	return !(t == trace.New || t == trace.End)
+	return !(element.Type(false) == trace.New || element.Type(true) == trace.RoutEnd)
 }
 
 // WriteRewriteInfoFile create a file with the result message and the exit code for the rewrite
@@ -142,7 +150,7 @@ func WriteRewriteInfoFile(path string, bug bugs.Bug, exitCode int, resultIndex i
 }
 
 func writeControlFile(path string) {
-	activePath := filepath.Join(path, paths.NameReplayActive)
+	activePath := filepath.Join(path, paths.NameReplayConstraints)
 
 	f, err := os.Create(activePath)
 	if err != nil {

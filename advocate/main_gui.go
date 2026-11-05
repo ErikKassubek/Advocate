@@ -32,6 +32,8 @@ func main() {
 
 	advoc.Initialize()
 
+	flags.ContainsGui = true
+
 	if flags.Mode == "gui" {
 		gui.Run()
 	} else {

@@ -16,40 +16,25 @@ const (
 
 var (
 	advocateFuzzingEnabled       = false
-	advocateFuzzingDelayEnabled  = false
 	advocateFuzzingReplayEnabled = false
 	fuzzingSelectData            = make(map[string][]int)
 	fuzzingSelectDataIndex       = make(map[string]int)
-	fuzzingFlowData              = make(map[string][]int)
-	fuzzingFlowCounter           = make(map[string]int)
-	fuzzingFlowDataCounter       = make(map[string]int)
 
 	finishFuzzingFunc func()
 )
 
-// Init fuzzing based on simple delay of flow and preferred select cases
+// Init fuzzing based on preferred select cases
 //
 // Parameter:
 //   - selectData map[string][]int: preferred select cases (select pos -> []preferred case index)
 //   - fuzzingFlow map[string][]int: operations to delay (file -> []lines)
 //   - finishFuzzing func(): function that should be called if fuzzing has finished
-func InitFuzzingDelay(selectData map[string][]int, fuzzingFlow map[string][]int, finishFuzzing func()) {
+func InitFuzzingSelect(selectData map[string][]int, fuzzingFlow map[string][]int, finishFuzzing func()) {
 	finishFuzzingFunc = finishFuzzing
-	fuzzingSelectData = selectData
-	fuzzingFlowData = fuzzingFlow
-
-	for key := range fuzzingSelectData {
-		fuzzingSelectDataIndex[key] = 0
-	}
-
-	for key := range fuzzingFlowData {
-		fuzzingFlowCounter[key] = 0
-		fuzzingFlowDataCounter[key] = 0
-	}
+	selects = selectData
 
 	advocateFuzzingEnabled = true
-	advocateFuzzingDelayEnabled = true
-
+	selectEnabled = true
 }
 
 // InitFuzzingReplay initializes fuzzing based on full replay
@@ -70,6 +55,8 @@ func IsAdvocateFuzzingEnabled() bool {
 	return advocateFuzzingEnabled
 }
 
+// TODO: fix for gfuzz
+
 // Get the preferred case for the specified select
 //
 // Parameter:
@@ -89,7 +76,7 @@ func AdvocateFuzzingGetPreferredCase(skip int) (bool, int) {
 	if AdvocateIgnore(file) {
 		return false, 0
 	}
-	key := BuildReplayKey(routine, file, line)
+	key := intToString(routine) + ":" + file + "#" + intToString(line)
 
 	if val, ok := fuzzingSelectData[key]; ok {
 		index := fuzzingSelectDataIndex[key]
@@ -101,43 +88,4 @@ func AdvocateFuzzingGetPreferredCase(skip int) (bool, int) {
 	}
 
 	return false, 0
-}
-
-// FuzzingFlowWait is called by the operations to check if they should wait for
-// the delay based fuzzing.
-// Currently used in once.Do, chan.send, chan.recv, mutex.(Try)Lock, rwmutex.(Try)(R)Lock
-//
-// Parameter:
-//   - skip int: skip for runtime.Caller
-func FuzzingFlowWait(skip int) {
-	if !advocateFuzzingDelayEnabled {
-		return
-	}
-
-	routine := GetReplayRoutineID()
-
-	_, file, line, _ := Caller(skip)
-	if AdvocateIgnore(file) {
-		return
-	}
-
-	pos := BuildReplayKey(routine, file, line)
-
-	if countList, ok := fuzzingFlowData[pos]; ok {
-		dataCounter := fuzzingFlowDataCounter[pos]
-		if dataCounter >= len(countList) {
-			return
-		}
-
-		count := countList[dataCounter]
-
-		newCount := fuzzingFlowCounter[pos] + 1
-
-		if count == newCount {
-			fuzzingFlowDataCounter[pos] = fuzzingFlowDataCounter[pos] + 1
-			sleep(flowSleepTimeSec)
-		}
-
-		fuzzingFlowCounter[pos] = newCount
-	}
 }

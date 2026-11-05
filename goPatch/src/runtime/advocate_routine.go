@@ -25,6 +25,7 @@ var projectPath string
 //   - G *g: the g struct of the routine
 //   - Trace []traceElem: the trace of the routine
 //   - oat []uint64: object aware trace elements, ids of blocked object the routine can access
+//   - ignored bool: the routine gets ignored for tracing and replay
 //   - replayID int: when used in reply, id of the new routine in the replayed trace
 //   - forkFile string: file where the routine was created in, "main" for main routine
 //   - forkLine int: line where ther routine was created in, 0 for main routine
@@ -33,12 +34,14 @@ var projectPath string
 //   - parkForeverReplay bool: if true, routine parks forever based on replay
 //   - wokenByTimeout bool: in replay block was woken up by timeout
 //   - hasReturned bool: true if the routine has terminated
+//   - hasPaniked bool: true if the routine has panicked
 type AdvocateRoutine struct {
 	id                   uint64
 	maxObjectId          uint64
 	G                    *g
 	Trace                []traceElem
 	oat                  []uint64
+	ignored bool
 	replayID             int
 	forkFile             string
 	forkLine             int32
@@ -47,6 +50,7 @@ type AdvocateRoutine struct {
 	wokenButTimeout      bool
 	wokenNoTimeout       bool
 	startedWritingToFile bool
+	hasPanicked          bool
 }
 
 // Create a new advocate routine
@@ -55,10 +59,11 @@ type AdvocateRoutine struct {
 //   - replayRoutine int: when used in reply, id of the new routine in the replayed trace the replay ids of the routines forked from this routine
 //   - file string: file, where the routine was created
 //   - line int32: line, where the routine was created
+//   - ignored bool: ignore routine
 //
 // Return:
 //   - the new advocate routine
-func newAdvocateRoutine(g *g, replayRoutine int, file string, line int32) *AdvocateRoutine {
+func newAdvocateRoutine(g *g, replayRoutine int, file string, line int32, ignored bool) *AdvocateRoutine {
 	// ignore the internal routines that are run before the main/test function starts
 	if AdvocateTracingDisabled {
 		return &AdvocateRoutine{
@@ -69,17 +74,31 @@ func newAdvocateRoutine(g *g, replayRoutine int, file string, line int32) *Advoc
 			forkFile:    file,
 			forkLine:    line,
 			replayID:    replayRoutine,
+			ignored: ignored,
 		}
 	}
 
+	var id uint64 = 0
+	
+	if ignored {
+		id = 0
+		} else{
+		if replayRoutine != -1 {
+			id = uint64(replayRoutine)
+		} else {
+			id = GetNewAdvocateRoutineID()
+		}
+}
+
 	advocateRoutineInfo := &AdvocateRoutine{
-		id:          GetNewAdvocateRoutineID(),
+		id:          id,
 		maxObjectId: 0,
 		G:           g,
 		Trace:       make([]traceElem, 0),
 		replayID:    replayRoutine,
 		forkFile:    file,
 		forkLine:    line,
+		ignored: ignored,
 	}
 
 	lock(&AdvocateRoutinesLock)
@@ -141,8 +160,12 @@ func (gi *AdvocateRoutine) getPosCreated() string {
 	return posToString(gi.forkFile, int(int(gi.forkLine)))
 }
 
-func (gi *AdvocateRoutine) getLastElement() traceElem {
-	return gi.Trace[len(gi.Trace)-1]
+func (gi *AdvocateRoutine) getLastElement() (int, traceElem) {
+	if len(gi.Trace) == 0 {
+		return 0, nil
+	}
+	index := len(gi.Trace) - 1
+	return index, gi.Trace[index]
 }
 
 func (gi *AdvocateRoutine) GetForkPos() string {
@@ -171,6 +194,28 @@ func (gi *AdvocateRoutine) updateElement(index int, elem traceElem) {
 	}
 
 	gi.Trace[index] = elem
+}
+
+func (gi *AdvocateRoutine) panicked() {
+	if AdvocateTracingDisabled {
+		return
+	}
+
+	if gi == nil {
+		return
+	}
+
+	if gi.Trace == nil {
+		panic("Tried to update element in nil trace")
+	}
+
+	gi.hasPanicked = true
+
+	i, lastElem := gi.getLastElement()
+	if lastElem != nil {
+		gi.updateElement(i, lastElem.causedPanic())
+	}
+
 }
 
 // Get the current routine

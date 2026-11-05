@@ -323,7 +323,7 @@ func advocateControllFlow(string, int, int)
 
 func AdvocateInitTracing(int, bool)
 func AdvocateFinishTracing()
-func AdvocateInitReplay(string, int, bool, bool)
+func AdvocateInitReplay(string, int, bool)
 func AdvocateFinishReplay()
 func AdvocateInitFuzzing(string, int, bool)
 func AdvocateFinishFuzzing()

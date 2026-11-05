@@ -11,6 +11,7 @@ package f_helper
 
 import (
 	"advocate/fuzzing/f_base"
+	"advocate/fuzzing/f_constraints"
 	"advocate/trace"
 	"advocate/utils/paths"
 	"advocate/utils/timer"
@@ -108,8 +109,8 @@ func GetPath(path string) string {
 //   - partTime int: if 0, the replay will partial replay from the beginning
 //     otherwise it will switch to partial replay when the element with this
 //     time is the next element to be replayed
-func WriteMutActive(fuzzingTracePath string, tr *trace.Trace, mut *f_base.Constraint, partTime int) {
-	activePath := filepath.Join(fuzzingTracePath, paths.NameReplayActive)
+func WriteMutActive(fuzzingTracePath string, tr *trace.Trace, mut *f_constraints.Constraint, partTime int) {
+	activePath := filepath.Join(fuzzingTracePath, paths.NameReplayConstraints)
 
 	f, err := os.Create(activePath)
 	if err != nil {

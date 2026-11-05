@@ -26,10 +26,13 @@ func main() {
 
 	cont := advoc.CommandLine()
 	if !cont {
+		log.Error("Failed CL Check. Cancel...")
 		return
 	}
 
 	advoc.Initialize()
+
+	flags.ContainsGui = false
 
 	if flags.Mode == "gui" {
 		log.Error("Gui mode is only available if advocate was build with -tags gui (go build -tags gui).")

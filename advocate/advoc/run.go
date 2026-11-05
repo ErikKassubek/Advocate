@@ -65,14 +65,14 @@ func Run() error {
 	}
 
 	// don't run any HB Analysis for direct GFuzz, GoPie and GoCR
-	if flags.Mode == "fuzzing" && (flags.FuzzingMode == f_base.GFuzz ||
+	if flags.Mode == flags.ModeFuzzing && (flags.FuzzingMode == f_base.GFuzz ||
 		flags.FuzzingMode == f_base.GoPie || flags.FuzzingMode == f_base.GoCR) {
 		flags.Scenarios = "-"
 		flags.OnlyAPanicAndLeak = true
 	}
 
 	if flags.FuzzingMode == "" {
-		flags.FuzzingMode = f_base.Guided
+		flags.FuzzingMode = f_base.Full
 	}
 
 	a_base.AnalysisCasesMap, err = flags.ParseAnalysisCases()
@@ -81,13 +81,9 @@ func Run() error {
 		return err
 	}
 
-	modeMainTest := "test"
-	if flags.ModeMain {
-		modeMainTest = "main"
+	if flags.Mode != "show" {
+		command.RunGoModTidy()
 	}
-
-	CheckProg()
-	command.RunGoModTidy()
 
 	if flags.ModeMain && flags.ExecName == "" {
 		log.Error("Could not determine executable name from go.mod. Provide with -exec [ExecutableName]")
@@ -95,23 +91,27 @@ func Run() error {
 	}
 
 	switch flags.Mode {
-	case "analysis":
-		err = modeToolchain(modeMainTest, record, analysis, replay)
-	case "fuzzing":
+	case flags.ModeAnalysis:
+		err = modeToolchain(record, analysis, replay)
+	case flags.ModeFuzzing:
 		err = modeFuzzing()
-	case "record", "recording", "trace":
+	case flags.ModeRecord:
 		flags.DeleteTraces = false
-		err = modeToolchain(modeMainTest, record, !analysis, !replay)
-	case "replay":
-		err = modeToolchain(modeMainTest, !record, !analysis, replay)
-	// case "static": // TODO: only for testing, when working move into analysis
+		err = modeToolchain(record, !analysis, !replay)
+	case flags.ModeReplay:
+		err = modeToolchain(!record, !analysis, replay)
+	case flags.ModeExperiments:
+		err = modeExperiments()
+	case flags.ModeShow:
+		err = modeShowTrace()
+		return nil
+		// case "static": // TODO: only for testing, when working move into analysis
+		// flags.Mode = consts.ModeReplay
 	// 	flags.DeleteTraces = false
 	// 	err = modeToolchain(modeMainTest, record, analysis, !replay)
 	// 	err = s_blocking.BuildStaticBlockingAnalysis()
 
 	default:
-		log.Errorf("Unknown mode %s\n", os.Args[1])
-		log.Error("Select one mode from  'analysis', 'fuzzing', 'replay', 'record' or 'gui' (only if -tags gui is set)")
 		err = fmt.Errorf("Unknown mode %s", os.Args[1])
 		helper.PrintHelp()
 	}
@@ -131,7 +131,7 @@ func Run() error {
 	} else {
 		log.Errorf("%d internal replay timeouts occurred", numberTimeout)
 	}
-	if flags.Mode == "analysis" || flags.Mode == "fuzzing" {
+	if flags.Mode == flags.ModeAnalysis || flags.Mode == flags.ModeFuzzing {
 		if numberTestWithRes == 0 {
 			log.Info("No bugs have been found/indicated")
 		} else {

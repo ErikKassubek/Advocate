@@ -16,6 +16,7 @@ import (
 	"strconv"
 
 	"advocate/analysis/hb/a_clock"
+	"advocate/utils/flags"
 )
 
 // ========================================================
@@ -34,6 +35,8 @@ import (
 //   - op ObjectType: The operation on the mutex
 //   - suc bool: Whether the operation was successful (only for trylock else always true)
 //   - function *ElementFunc: the function the operation is in
+//   - pan bool: caused panic
+//   - partner *ElementMutex: for lock the unlock that unlocks it, for unlock the lock it unlocks. Can be nil
 type ElementMutex struct {
 	ElementBase
 
@@ -45,7 +48,9 @@ type ElementMutex struct {
 	rw       bool
 	op       OperationType
 	suc      bool
+	partner  *ElementMutex
 	function *ElementFunc
+	pan      bool
 }
 
 // ========================================================
@@ -63,9 +68,10 @@ type ElementMutex struct {
 //   - opM string: The operation on the mutex
 //   - suc string: Whether the operation was successful (only for trylock else always true)
 //   - pos string: The position of the mutex operation in the code
+//   - pan string: Cased a panic
 func (this *Trace) AddTraceElementMutex(routine int, tReq string,
 	tCom string, id string, rw string, opM string, suc string,
-	pos string) error {
+	pos string, pan string) error {
 	tReqInt, err := strconv.Atoi(tReq)
 	if err != nil {
 		return errors.New("tReq is not an integer")
@@ -86,20 +92,20 @@ func (this *Trace) AddTraceElementMutex(routine int, tReq string,
 		rwBool = true
 	}
 
-	var opMInt OperationType
+	var opMVal OperationType
 	switch opM {
 	case "L":
-		opMInt = MutexLock
+		opMVal = MutexLock
 	case "R":
-		opMInt = MutexRLock
+		opMVal = MutexRLock
 	case "T":
-		opMInt = MutexTryLock
+		opMVal = MutexTryLock
 	case "Y":
-		opMInt = MutexTryRLock
+		opMVal = MutexTryRLock
 	case "U":
-		opMInt = MutexUnlock
+		opMVal = MutexUnlock
 	case "N":
-		opMInt = MutexRUnlock
+		opMVal = MutexRUnlock
 	default:
 		return errors.New("opM is not a valid operation")
 	}
@@ -114,17 +120,39 @@ func (this *Trace) AddTraceElementMutex(routine int, tReq string,
 		return err
 	}
 
+	panBool := false
+	if pan == "P" {
+		panBool = true
+	}
+
 	elem := ElementMutex{
 		ElementBase: this.newElementBase(this, routine),
 		tReq:        tReqInt,
 		tCom:        tComInt,
 		objId:       idInt,
 		rw:          rwBool,
-		op:          opMInt,
+		op:          opMVal,
 		suc:         sucBool,
 		pos:         NewPosition(file, line),
 		ci:          newConcInfo(),
 		function:    getLastCall(routine),
+		pan:         panBool,
+	}
+
+	// Partner
+	switch opMVal {
+	case MutexLock, MutexRLock:
+		this.lastMutexAcq[idInt] = &elem
+	case MutexTryLock, MutexTryRLock:
+		if sucBool {
+			this.lastMutexAcq[idInt] = &elem
+		}
+	case MutexUnlock, MutexRUnlock:
+		partner := this.lastMutexAcq[idInt]
+		if partner != nil {
+			elem.partner = partner
+			partner.partner = &elem
+		}
 	}
 
 	this.AddElement(&elem)
@@ -268,6 +296,14 @@ func (this *ElementMutex) Type(operation bool) OperationType {
 	return this.op
 }
 
+func (this *ElementMutex) IsAcq() bool {
+	return this.op == MutexLock || this.op == MutexRLock || this.op == MutexTryLock || this.op == MutexTryRLock
+}
+
+func (this *ElementMutex) IsRel() bool {
+	return this.op == MutexUnlock || this.op == MutexRUnlock
+}
+
 // ========================================================
 // MARK: Request (gui)
 // ========================================================
@@ -278,6 +314,14 @@ func (this *ElementMutex) CanBeRequest() bool {
 		return true
 	}
 	return false
+}
+
+// ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementMutex) Pan() bool {
+	return this.pan
 }
 
 // ========================================================
@@ -372,7 +416,12 @@ func (this *ElementMutex) StringDebug() string {
 	if this.ElementBase.init {
 		routine = "   *"
 	}
-	return fmt.Sprintf("%s@%s", routine, this.String())
+	res := fmt.Sprintf("%s@%s", routine, this.String())
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
 }
 
 // StringGui returns the gui string representation of the element
@@ -397,6 +446,30 @@ func (this *ElementMutex) StringGui() string {
 		res += ",f"
 	}
 	res += "\n" + this.Pos().Short()
+
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
+}
+
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementMutex) StringMin() string {
+	pos := this.Pos().Short()
+	if !flags.ShowFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+
+	res := fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, pos)
+
+	if this.pan {
+		res += ",🗲"
+	}
+
 	return res
 }
 
@@ -412,23 +485,23 @@ func (this *ElementMutex) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-// Vc sets the vector clock
+// SetVc sets the vector clock
 //
 // Parameter:
 //   - weak bool: set the weak wv
 //   - cl *clock.VectorClock: the vector clock
-func (this *ElementMutex) Vc(weak a_clock.VcType, cl *a_clock.VectorClock) {
+func (this *ElementMutex) SetVc(weak a_clock.VcType, cl *a_clock.VectorClock) {
 	this.ci.setVC(weak, cl)
 }
 
-// GetVC returns the vector clock of the element
+// VC returns the vector clock of the element
 //
 // Parameter:
 //   - weak bool: get the weak
 //
 // Returns:
 //   - VectorClock: The vector clock of the element
-func (this *ElementMutex) GetVC(weak a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementMutex) VC(weak a_clock.VcType) *a_clock.VectorClock {
 	return this.ci.getVC(weak)
 }
 
@@ -467,6 +540,11 @@ func (this *ElementMutex) ReplayID() string {
 	return fmt.Sprintf("%d:%s:%d", this.routineId, this.pos.file, this.pos.line)
 }
 
+// Replayable returns if element can be part of replay
+func (this *ElementMutex) Replayable() bool {
+	return true
+}
+
 // ========================================================
 // MARK: Copy
 // ========================================================
@@ -481,8 +559,13 @@ func (this *ElementMutex) ReplayID() string {
 // Returns:
 //   - TraceElement: The copy of the element
 func (this *ElementMutex) Copy(trace *Trace, mapping map[int]Element, keep bool) Element {
+	id := this.ID()
+	if existing, ok := mapping[id]; ok {
+		return existing
+	}
+
 	if !keep {
-		return &ElementMutex{
+		newMut := ElementMutex{
 			ElementBase: this.ElementBase.Copy(trace),
 			tReq:        0,
 			tCom:        0,
@@ -493,10 +576,22 @@ func (this *ElementMutex) Copy(trace *Trace, mapping map[int]Element, keep bool)
 			pos:         this.pos.copy(),
 			ci:          newConcInfo(),
 			function:    this.function.CopyFunc(trace, mapping, keep),
+			pan:         this.pan,
 		}
+
+		mapping[id] = &newMut
+
+		var newPartner *ElementMutex
+		if this.partner != nil {
+			newPartner = this.partner.Copy(trace, mapping, keep).(*ElementMutex)
+		}
+
+		newMut.partner = newPartner
+
+		return &newMut
 	}
 
-	return &ElementMutex{
+	newMut := ElementMutex{
 		ElementBase: this.ElementBase.Copy(trace),
 		tReq:        this.tReq,
 		tCom:        this.tCom,
@@ -507,7 +602,19 @@ func (this *ElementMutex) Copy(trace *Trace, mapping map[int]Element, keep bool)
 		pos:         this.pos.copy(),
 		ci:          this.ci.copy(),
 		function:    this.function.CopyFunc(trace, mapping, keep),
+		pan:         this.pan,
 	}
+
+	mapping[id] = &newMut
+
+	var newPartner *ElementMutex
+	if this.partner != nil {
+		newPartner = this.partner.Copy(trace, mapping, keep).(*ElementMutex)
+	}
+
+	newMut.partner = newPartner
+
+	return &newMut
 }
 
 // ========================================================
@@ -544,4 +651,12 @@ func (this *ElementMutex) IsSuc() bool {
 //   - s bool: For trylock wether it was successful, otherwise always true
 func (this *ElementMutex) SetSuc(s bool) {
 	this.suc = s
+}
+
+// IsSuc returns the partner of the operation
+//
+// Returns:
+//   - *ElementMutex: for lock the unlock that unlocks it, for unlock the lock that unlocks it
+func (this *ElementMutex) Partner() *ElementMutex {
+	return this.partner
 }

@@ -13,10 +13,10 @@ import (
 	"advocate/advoc/toolchain"
 	"advocate/analysis/a_base"
 	"advocate/fuzzing/f_base"
-	"advocate/fuzzing/f_flow"
-	"advocate/fuzzing/f_gfuzz"
-	"advocate/fuzzing/f_gopie"
-	"advocate/fuzzing/f_roc"
+	"advocate/fuzzing/f_constraints"
+	"advocate/fuzzing/modes/f_gfuzz"
+	"advocate/fuzzing/modes/f_gopie"
+	"advocate/fuzzing/modes/f_guided"
 	"advocate/utils/control"
 	"advocate/utils/flags"
 	"advocate/utils/log"
@@ -32,9 +32,9 @@ import (
 
 // Fuzzing creates the fuzzing data and runs the fuzzing executions
 func Fuzzing() error {
-	modes := []string{f_base.GoPie, f_base.GoCR, f_base.GoCRHB, f_base.GFuzz, f_base.GFuzzHBFlow, f_base.GFuzzHB, f_base.Flow, f_base.Guided}
+	modes := []string{f_base.GoPie, f_base.GoCR, f_base.Full, f_base.GFuzz, f_base.GFuzzHBFlow, f_base.GFuzzHB, f_base.Guided}
 	if !types.Contains(modes, flags.FuzzingMode) {
-		return fmt.Errorf("Invalid fuzzing mode '%s'. Possible values are Guided, GoPie, GoCR, GoCRHB, GFuzz, GFuzzFlow, GFuzzHB, Flow", flags.FuzzingMode)
+		return fmt.Errorf("Invalid fuzzing mode '%s'. Possible values are Full (Default), Guided, GoPie, GoCR, GFuzz, GFuzzFlow, GFuzzHB, Flow", flags.FuzzingMode)
 	}
 
 	f_base.MaxNumberRuns = flags.MaxFuzzingRun
@@ -43,12 +43,11 @@ func Fuzzing() error {
 		f_base.MaxTimeSet = true
 	}
 
-	f_base.FuzzingModeGoPie = (flags.FuzzingMode == f_base.GoPie || flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.GoCRHB)
-	f_base.FuzzingModeGoCRHBPlus = (flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.GoCRHB)
+	f_base.FuzzingModeGoPie = (flags.FuzzingMode == f_base.GoPie || flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.Full)
+	f_base.FuzzingModeGoCRHBPlus = (flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.Full)
 	f_base.FuzzingModeGFuzz = (flags.FuzzingMode == f_base.GFuzz || flags.FuzzingMode == f_base.GFuzzHBFlow || flags.FuzzingMode == f_base.GFuzzHB)
-	f_base.FuzzingModeFlow = (flags.FuzzingMode == f_base.Flow || flags.FuzzingMode == f_base.GFuzzHBFlow)
-	f_base.FuzzingModeGuided = (flags.FuzzingMode == f_base.Guided || flags.FuzzingMode == f_base.Default)
-	f_base.UseHBInfoFuzzing = (flags.FuzzingMode == f_base.Guided || flags.FuzzingMode == f_base.GFuzzHB || flags.FuzzingMode == f_base.GFuzzHBFlow || flags.FuzzingMode == f_base.Flow || flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.GoCRHB)
+	f_base.FuzzingModeGuided = (flags.FuzzingMode == f_base.Guided || flags.FuzzingMode == f_base.Default || flags.FuzzingMode == f_base.Full)
+	f_base.UseHBInfoFuzzing = (flags.FuzzingMode == f_base.Guided || flags.FuzzingMode == f_base.GFuzzHB || flags.FuzzingMode == f_base.GFuzzHBFlow || flags.FuzzingMode == f_base.GoCR || flags.FuzzingMode == f_base.Full)
 
 	if flags.Continue {
 		log.Info("Continue fuzzing")
@@ -122,7 +121,7 @@ func Fuzzing() error {
 				time.Sleep(6 * time.Second)
 			}
 
-			a_base.Clear()
+			a_base.Clear(true)
 			ResetFuzzing()
 			timer.ResetTest()
 
@@ -193,8 +192,8 @@ func runFuzzing(testPath string, firstRun bool, fileNumber, testNumber int) erro
 			order = popMutation()
 			if order.MutType == f_base.MutPiType {
 				fuzzingPath = filepath.Join(progPathDir,
-					filepath.Join("fuzzingTraces",
-						fmt.Sprintf("fuzzingTrace_%d", order.MutPie)))
+					filepath.Join(paths.NameFuzzingTraces,
+						fmt.Sprintf("%s_%d", paths.NameFuzzingTraces, order.MutPie)))
 			} else {
 				err := f_base.WriteMutationToFile(progPathDir, order)
 				if err != nil {
@@ -206,15 +205,9 @@ func runFuzzing(testPath string, firstRun bool, fileNumber, testNumber int) erro
 		firstRun = firstRun && (f_base.NumberFuzzingRuns == 0)
 
 		// Run the test/mutation
-
-		mode := "test"
-		if flags.ModeMain {
-			mode = "main"
-		}
-
 		runAnalysis := true
 		runRecord := true
-		traceID, numberResults, err := toolchain.Run(mode, testPath, runRecord, runAnalysis, runAnalysis,
+		traceID, numberResults, err := toolchain.Run(testPath, runRecord, runAnalysis, runAnalysis,
 			f_base.NumberFuzzingRuns, fuzzingPath, firstRun, fileNumber, testNumber)
 
 		f_base.NumberFuzzingRuns++
@@ -244,18 +237,12 @@ func runFuzzing(testPath string, firstRun bool, fileNumber, testNumber int) erro
 
 			// add mutation based on guided fuzzing
 			if f_base.FuzzingModeGuided {
-				f_roc.CreateMutations()
+				f_guided.CreateMutations()
 			}
 			// Add mutation based on GFuzz
 			if f_base.FuzzingModeGFuzz {
 				f_gfuzz.CreateMutations(false)
 			}
-
-			// add new mutations based on flow path expansion
-			// if f_base.FuzzingModeFlow {
-			// 	f_flow.CreateMutations()
-			// }
-
 			// add mutations based on GoPie
 			if f_base.FuzzingModeGoPie {
 				f_gopie.CreateMutations(order.MutPie)
@@ -274,25 +261,26 @@ func runFuzzing(testPath string, firstRun bool, fileNumber, testNumber int) erro
 
 		// cancel if max number of mutations have been reached
 		if f_base.MaxNumberRuns != -1 && f_base.NumberFuzzingRuns >= f_base.MaxNumberRuns {
-			log.Infof("Finish fuzzing because maximum number of mutation runs (%d) have been reached", f_base.MaxNumberRuns)
-			return nil
+			log.Infof("Finished fuzzing because maximum number of mutation runs (%d) have been reached", f_base.MaxNumberRuns)
+			break
 		}
 
 		// cancel if max fuzzing time has been reached
 		if f_base.MaxTimeSet {
 			since := time.Since(startTime)
 			if since > f_base.MaxTime {
-				log.Infof("Finish fuzzing because maximum runtime for fuzzing (%d min) has been reached", int(f_base.MaxTime.Minutes()))
-				return nil
+				log.Infof("Finished fuzzing because maximum runtime for fuzzing (%d min) has been reached", int(f_base.MaxTime.Minutes()))
+				break
 			} else {
 				remaining := f_base.MaxTime - time.Since(startTime)
-				log.Infof("Remaining fuzzing time: %d:%d min", int(remaining.Minutes()), int(remaining.Seconds())%60)
+				log.Infof("Remaining fuzzing time: %d:%02d min", int(remaining.Minutes()), int(remaining.Seconds())%60)
 			}
 		}
 
 		// cancel if bug was found
 		if f_base.FinishIfBugFound && numberResults > 0 {
-			return nil
+			log.Info("Finish Fuzzing since bug was found.")
+			break
 		}
 
 		a_base.ClearTrace()
@@ -300,11 +288,9 @@ func runFuzzing(testPath string, firstRun bool, fileNumber, testNumber int) erro
 
 	}
 
-	if f_base.FuzzingModeGoPie {
-		toolchain.ClearFuzzingTrace()
-	}
+	toolchain.CollectFuzzingTrace()
 
-	log.Infof("Finish fuzzing after %d runs\n", f_base.NumberFuzzingRuns)
+	log.Infof("Finished fuzzing after %d runs\n", f_base.NumberFuzzingRuns)
 
 	return nil
 }
@@ -323,7 +309,7 @@ func ResetFuzzing() {
 	f_base.MutationQueue = types.NewQueue[f_base.Mutation]()
 	// count how often a specific mutation has been in the queue
 	f_base.AllMutations = make(map[string]int)
-	f_base.ChainFiles = make(map[int]f_base.Constraint)
+	f_base.ChainFiles = make(map[int]f_constraints.Constraint)
 
 }
 
@@ -331,11 +317,9 @@ func clearDataFull() {
 	f_base.ClearDataFull()
 	f_gopie.ClearData()
 	f_gfuzz.ClearDataFull()
-	f_flow.ClearData()
 }
 
 func clearDataRun() {
 	f_gopie.ClearDataRun()
 	f_gfuzz.ClearDataRun()
-	f_flow.ClearData()
 }

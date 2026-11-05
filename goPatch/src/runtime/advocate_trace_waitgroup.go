@@ -25,6 +25,7 @@ import "unsafe"
 //   - val int32: value of the internal counter after the operation was executed
 //   - file string: file where the operation occurred
 //   - line int: line where the operation occurred
+//   - pan bool: true if operation caused panic
 type AdvocateTraceWaitGroup struct {
 	tReq  int64
 	tCom  int64
@@ -34,6 +35,7 @@ type AdvocateTraceWaitGroup struct {
 	val   int32
 	file  string
 	line  int
+	pan   bool
 }
 
 // AdvocateWaitGroupAdd adds a waitgroup add or done to the trace
@@ -149,21 +151,26 @@ func AdvocateWaitGroupCom(index int) {
 // Returns:
 //   - string: the string representation of the form
 //     W,[tPre],[tPost],[id],[op],[delta],[val],[file],[line]
-func (elem AdvocateTraceWaitGroup) toString() string {
+func (self AdvocateTraceWaitGroup) toString() string {
 	opStr := "A"
-	if elem.op == OperationWaitgroupWait {
+	if self.op == OperationWaitgroupWait {
 		opStr = "W"
 	}
 
-	return buildTraceElemString("W", elem.tReq, elem.tCom, elem.res.id, opStr, elem.delta, elem.val, posToString(elem.file, elem.line))
+	panStr := "-"
+	if self.pan {
+		panStr = "P"
+	}
+
+	return buildTraceElemString("W", self.tReq, self.tCom, self.res.id, opStr, self.delta, self.val, posToString(self.file, self.line), panStr)
 }
 
 // getOperation is a getter for the operation
 //
 // Returns:
 //   - Operation: the operation
-func (elem AdvocateTraceWaitGroup) getOperation() Operation {
-	return elem.op
+func (self AdvocateTraceWaitGroup) getOperation() Operation {
+	return self.op
 }
 
 // hasCommit returns if the event has committed
@@ -180,4 +187,9 @@ func (self AdvocateTraceWaitGroup) hasCommit() bool {
 //   - []AdvocateTraceResource: recources
 func (self AdvocateTraceWaitGroup) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{self.res}
+}
+
+func (self AdvocateTraceWaitGroup) causedPanic() traceElem {
+	self.pan = true
+	return self
 }

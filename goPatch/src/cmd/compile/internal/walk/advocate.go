@@ -66,7 +66,6 @@ func addInit(body ir.Nodes, pos src.XPos) ir.Nodes {
 			[]ir.Node{
 				ir.NewString(pos, base.Flag.AdvocatePath),
 				ir.NewInt(pos, int64(base.Flag.AdvocateTimeout)),
-				ir.NewBool(pos, base.Flag.AdvocateAtomics),
 				ir.NewBool(pos, true),
 			},
 			false,

@@ -40,7 +40,7 @@ func ReadAnalysisResults(resMachinePath string, index int) (bool, bugs.Bug, erro
 		log.Error("Error opening file: " + resMachinePath)
 		return false, bugs.Bug{}, err
 	}
-	file.Close()
+	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 
@@ -53,7 +53,7 @@ func ReadAnalysisResults(resMachinePath string, index int) (bool, bugs.Bug, erro
 		i++
 
 		if err := scanner.Err(); err != nil {
-			println("Error reading file line.")
+			log.Error("Error reading file line.")
 			break
 		}
 	}

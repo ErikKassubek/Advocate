@@ -11,6 +11,7 @@ package trace
 
 import (
 	"advocate/analysis/hb/a_clock"
+	"advocate/utils/flags"
 	"errors"
 	"fmt"
 	"math"
@@ -257,6 +258,14 @@ func (this *ElementCond) CanBeRequest() bool {
 }
 
 // ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementCond) Pan() bool {
+	return false
+}
+
+// ========================================================
 // MARK: Equal
 // ========================================================
 
@@ -349,6 +358,19 @@ func (this *ElementCond) StringGui() string {
 	return fmt.Sprintf("D,%d,%s\n%s", this.objId, opString, this.Pos().Short())
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementCond) StringMin() string {
+	pos := this.Pos().Short()
+	if !flags.ShowFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+
+	return fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, pos)
+}
+
 // ========================================================
 // MARK: Function
 // ========================================================
@@ -361,23 +383,23 @@ func (this *ElementCond) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-// Vc sets the vector clock
+// SetVc sets the vector clock
 //
 // Parameter:
 //   - weak bool: set the weak wv
 //   - cl *clock.VectorClock: the vector clock
-func (this *ElementCond) Vc(weak a_clock.VcType, cl *a_clock.VectorClock) {
+func (this *ElementCond) SetVc(weak a_clock.VcType, cl *a_clock.VectorClock) {
 	this.ci.setVC(weak, cl)
 }
 
-// GetVC returns the vector clock of the element
+// VC returns the vector clock of the element
 //
 // Parameter:
 //   - weak bool: get the weak
 //
 // Returns:
 //   - VectorClock: The vector clock of the element
-func (this *ElementCond) GetVC(weak a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementCond) VC(weak a_clock.VcType) *a_clock.VectorClock {
 	return this.ci.getVC(weak)
 }
 
@@ -414,6 +436,11 @@ func (this *ElementCond) SetNumberConcurrent(c int, weak, sameElem bool) {
 //   - The replay id
 func (this *ElementCond) ReplayID() string {
 	return fmt.Sprintf("%d:%s:%d", this.routineId, this.pos.file, this.pos.line)
+}
+
+// Replayable returns if element can be part of replay
+func (this *ElementCond) Replayable() bool {
+	return true
 }
 
 // ========================================================

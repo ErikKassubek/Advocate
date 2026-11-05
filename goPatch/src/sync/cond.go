@@ -92,16 +92,19 @@ func (c *Cond) Wait() {
 	// ADVOCATE-START
 
 	// replay
-	wait, ch, _, _ := runtime.WaitForReplay(runtime.OperationCondWait, runtime.CallerSkipCond, false)
-	if wait {
-		<-ch
+	key, chWait := runtime.WaitForReplay(runtime.OperationCondWait, runtime.CallerSkipCond)
+	if chWait != nil {
+		<-chWait
 	}
 
 	//record
 	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondWait)
 	defer runtime.AdvocateCondCom(advocateIndex)
-	// ADVOCATE-END
 
+	if chWait != nil {
+		runtime.AckReplay(key)
+	}
+	// ADVOCATE-END
 	c.checker.check()
 	t := runtime_notifyListAdd(&c.notify)
 	c.L.Unlock()
@@ -120,17 +123,18 @@ func (c *Cond) Signal() {
 	// ADVOCATE-START
 
 	// replay
-	wait, ch, chAck, _ := runtime.WaitForReplay(runtime.OperationCondSignal, runtime.CallerSkipCond, true)
-	if wait {
-		defer func() { chAck <- struct{}{} }()
-		<-ch
+	key, chWait := runtime.WaitForReplay(runtime.OperationCondSignal, runtime.CallerSkipCond)
+	if chWait != nil {
+		<-chWait
 	}
 
 	// recording
 	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondSignal)
 	defer runtime.AdvocateCondCom(advocateIndex)
+	if chWait != nil {
+		runtime.AckReplay(key)
+	}
 	// ADVOCATE-END
-
 	c.checker.check()
 	runtime_notifyListNotifyOne(&c.notify)
 }
@@ -145,17 +149,19 @@ func (c *Cond) Broadcast() {
 	// ADVOCATE-START
 
 	// replay
-	wait, ch, chAck, _ := runtime.WaitForReplay(runtime.OperationCondBroadcast, runtime.CallerSkipCond, true)
-	if wait {
-		defer func() { chAck <- struct{}{} }()
-		<-ch
+	key, chWait := runtime.WaitForReplay(runtime.OperationCondBroadcast, runtime.CallerSkipCond)
+	if chWait != nil {
+		<-chWait
 	}
 
 	//recording
 	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondBroadcast)
 	defer runtime.AdvocateCondCom(advocateIndex)
-	// ADVOCATE-END
 
+	if chWait != nil {
+		runtime.AckReplay(key)
+	}
+	// ADVOCATE-END
 	c.checker.check()
 	runtime_notifyListNotifyAll(&c.notify)
 }

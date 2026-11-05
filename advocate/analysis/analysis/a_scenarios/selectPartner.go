@@ -53,12 +53,12 @@ func CheckForSelectCaseWithPartner() {
 				a_base.SelectCases[j].PartnerFound = true
 				a_base.SelectCases[i].Partner = append(a_base.SelectCases[i].Partner, a_base.ElemWithVcVal{
 					Elem: a_base.SelectCases[j].Sel,
-					Vc:   a_base.SelectCases[j].Sel.GetVC(a_clock.Strong),
+					Vc:   a_base.SelectCases[j].Sel.VC(a_clock.Strong),
 					Val:  0,
 				})
 				a_base.SelectCases[j].Partner = append(a_base.SelectCases[j].Partner, a_base.ElemWithVcVal{
 					Elem: a_base.SelectCases[i].Sel,
-					Vc:   a_base.SelectCases[i].Sel.GetVC(a_clock.Strong),
+					Vc:   a_base.SelectCases[i].Sel.VC(a_clock.Strong),
 					Val:  0,
 				})
 			}
@@ -115,7 +115,7 @@ func CheckForSelectCaseWithPartnerSelect(se *trace.ElementSelect, vc *a_clock.Ve
 				found = true
 				vcTID := a_base.ElemWithVcVal{
 					Elem: p,
-					Vc:   p.GetVC(a_clock.Strong).Copy(),
+					Vc:   p.VC(a_clock.Strong).Copy(),
 					Val:  0,
 				}
 				partner = append(partner, vcTID)
@@ -253,10 +253,10 @@ func CheckForSelectCaseWithPartnerClose(cl *trace.ElementChannel, vc *a_clock.Ve
 // is needed to find potential communication partners for not executed
 // select cases, if the select was executed after the channel
 func RerunCheckForSelectCaseWithPartnerChannel() {
-	for _, routine := range a_base.MainTrace.GetTraces() {
+	for _, routine := range a_base.MainTrace.Routines() {
 		for _, elem := range routine.Elems() {
 			if e, ok := elem.(*trace.ElementChannel); ok {
-				CheckForSelectCaseWithPartnerChannel(e, e.GetVC(a_clock.Strong),
+				CheckForSelectCaseWithPartnerChannel(e, e.VC(a_clock.Strong),
 					e.Type(true) == trace.ChannelSend, e.IsBuffered())
 			}
 		}

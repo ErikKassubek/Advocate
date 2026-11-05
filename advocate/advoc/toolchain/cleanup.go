@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 var LastMovedTraceDest = ""
@@ -28,16 +29,19 @@ var LastMovedTraceDest = ""
 //   - packagePath string: path to the package directory
 //   - destination string: path to the destination directory
 //   - total bool: merge all already created logs into total log, for fuzzing
-func collect(progPath, packagePath, destination string, total bool) {
+//   - collectReplayFuzzing bool: collect the constraint files
+func collect(progPath, packagePath, destination string, total bool, collectReplayFuzzing bool) {
 	filesToMove := []string{
-		"advocateTrace",
+		paths.NameTrace,
 		paths.NameResultMachine,
 		paths.NameResultReadable,
 		paths.NameOutput,
 	}
 
-	pattersToMove := []string{
-		"rewrittenTrace*",
+	pattersToMove := []string{}
+
+	if collectReplayFuzzing {
+		pattersToMove = append(pattersToMove, paths.NameRewrittenConsts+"*")
 	}
 
 	logsToCollect := []string{
@@ -99,7 +103,7 @@ func collect(progPath, packagePath, destination string, total bool) {
 		}
 		dest := filepath.Join(destination, file)
 
-		if file == "advocateTrace" {
+		if file == paths.NameTrace {
 			movedTraces++
 			dest = filepath.Join(pathTraces, file+"_"+strconv.Itoa(movedTraces))
 			LastMovedTraceDest = dest
@@ -121,7 +125,10 @@ func collect(progPath, packagePath, destination string, total bool) {
 
 		for _, trace := range files {
 			dest := filepath.Join(pathTraces, filepath.Base(trace))
-			_ = os.Rename(trace, dest)
+			err = os.Rename(trace, dest)
+			if err != nil {
+				log.Error(err.Error())
+			}
 		}
 	}
 }
@@ -133,7 +140,6 @@ func collect(progPath, packagePath, destination string, total bool) {
 func RemoveTraces(path string) {
 	pattersToMove := []string{
 		"advocateTrace_*",
-		"rewrittenTrace*",
 		paths.NameFuzzingData,
 		// "fuzzingTrace_*",
 	}
@@ -142,6 +148,10 @@ func RemoveTraces(path string) {
 	filepath.WalkDir(path, func(p string, _ os.DirEntry, err error) error {
 		if err != nil {
 			return err
+		}
+
+		if flags.TracePath != "" && strings.HasPrefix(p, strings.TrimSuffix(flags.TracePath, string(filepath.Separator))) {
+			return nil
 		}
 
 		// Use Glob to check if the file/directory matches the pattern
@@ -182,18 +192,12 @@ func removeLogs(path string) {
 	}
 }
 
-// ClearFuzzingTrace removes the fuzzing trace folder
-func ClearFuzzingTrace() {
-
+// CollectFuzzingTrace removes the fuzzing trace folder
+func CollectFuzzingTrace() {
 	if !flags.DeleteTraces {
-		_ = os.Rename(paths.FuzzingTraces, filepath.Join(paths.CurrentResult, paths.NameFuzzingTraces))
-		// if err != nil {
-		// 	log.Errorf("failed to move folder %s to %s: %s", fuzzingPath, fuzzingPath, err.Error())
-		// }
+		os.Rename(paths.FuzzingTraces, filepath.Join(paths.CurrentResult, paths.NameTraces, paths.NameFuzzingTraces))
 	} else {
-		err := os.RemoveAll(paths.FuzzingTraces)
-		if err != nil {
-			log.Errorf("Could not delete fuzzingTraces: %s", err.Error())
-		}
+		os.RemoveAll(paths.FuzzingTraces)
+
 	}
 }

@@ -14,8 +14,10 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"advocate/analysis/hb/a_clock"
+	"advocate/utils/flags"
 )
 
 // ========================================================
@@ -40,6 +42,7 @@ import (
 //   - selIndex int: index of the channel in sel.chases if sel != nil, otherwise -1
 //   - partner *ElementChannel: The partner of the channel operation
 //   - function *ElementFunc: the function the operation is in
+//   - pan bool: cause a panic
 type ElementChannel struct {
 	ElementBase
 
@@ -57,6 +60,7 @@ type ElementChannel struct {
 	selIndex int
 	partner  *ElementChannel
 	function *ElementFunc
+	pan      bool
 }
 
 // ========================================================
@@ -81,7 +85,7 @@ type ElementChannel struct {
 //   - error
 func (this *Trace) AddTraceElementChannel(routine int, tReq string,
 	tCom string, id string, opC string, cl string, oID string, qSize string,
-	qCount string, pos string) error {
+	qCount string, pos string, pan string) error {
 
 	tReqInt, err := strconv.Atoi(tReq)
 	if err != nil {
@@ -138,6 +142,11 @@ func (this *Trace) AddTraceElementChannel(routine int, tReq string,
 		return err
 	}
 
+	panBool := false
+	if pan == "P" {
+		panBool = true
+	}
+
 	elem := ElementChannel{
 		ElementBase: this.newElementBase(this, routine),
 		tReq:        tReqInt,
@@ -152,6 +161,7 @@ func (this *Trace) AddTraceElementChannel(routine int, tReq string,
 		selIndex:    -1,
 		ci:          newConcInfo(),
 		function:    getLastCall(routine),
+		pan:         panBool,
 	}
 
 	elem.findPartner(this)
@@ -363,6 +373,14 @@ func (this *ElementChannel) CanBeRequest() bool {
 }
 
 // ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementChannel) Pan() bool {
+	return this.pan
+}
+
+// ========================================================
 // MARK: Equal
 // ========================================================
 
@@ -467,7 +485,13 @@ func (this *ElementChannel) StringDebug() string {
 	if this.ElementBase.init {
 		routine = "   *"
 	}
-	return fmt.Sprintf("%s@%s", routine, this.String())
+	res := fmt.Sprintf("%s@%s", routine, this.String())
+
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
 }
 
 // StringGui returns the gui string representation of the element.
@@ -477,7 +501,32 @@ func (this *ElementChannel) StringDebug() string {
 func (this *ElementChannel) StringGui() string {
 	opString := string(string(this.op)[1])
 
-	return fmt.Sprintf("C,%d,%s\n%s", this.objId, opString, this.Pos().Short())
+	res := fmt.Sprintf("C,%d,%s\n%s", this.objId, opString, this.Pos().Short())
+
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
+}
+
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementChannel) StringMin() string {
+	pos := this.Pos().Short()
+	if !flags.ShowFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+
+	res := fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, pos)
+
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
 }
 
 // ========================================================
@@ -492,23 +541,23 @@ func (this *ElementChannel) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-// Vc sets the vector clock
+// SetVc sets the vector clock
 //
 // Parameter:
 //   - weak bool: set the weak wv
 //   - cl *clock.VectorClock: the vector clock
-func (this *ElementChannel) Vc(weak a_clock.VcType, cl *a_clock.VectorClock) {
+func (this *ElementChannel) SetVc(weak a_clock.VcType, cl *a_clock.VectorClock) {
 	this.ci.setVC(weak, cl)
 }
 
-// GetVC returns the vector clock of the element
+// VC returns the vector clock of the element
 //
 // Parameter:
 //   - weak bool: get the weak
 //
 // Returns:
 //   - VectorClock: The vector clock of the element
-func (this *ElementChannel) GetVC(weak a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementChannel) VC(weak a_clock.VcType) *a_clock.VectorClock {
 	return this.ci.getVC(weak)
 }
 
@@ -547,6 +596,11 @@ func (this *ElementChannel) ReplayID() string {
 	return fmt.Sprintf("%d:%s:%d", this.routineId, this.pos.file, this.pos.line)
 }
 
+// Replayable returns if element can be part of replay
+func (this *ElementChannel) Replayable() bool {
+	return true
+}
+
 // ========================================================
 // MARK: Copy
 // ========================================================
@@ -581,6 +635,7 @@ func (this *ElementChannel) Copy(trace *Trace, mapping map[int]Element, keep boo
 			selIndex:    this.selIndex,
 			ci:          newConcInfo(),
 			function:    this.function.CopyFunc(trace, mapping, keep),
+			pan:         this.pan,
 		}
 
 		mapping[id] = &newCh
@@ -615,6 +670,7 @@ func (this *ElementChannel) Copy(trace *Trace, mapping map[int]Element, keep boo
 		selIndex:    this.selIndex,
 		ci:          this.ci.copy(),
 		function:    this.function.CopyFunc(trace, mapping, keep),
+		pan:         this.pan,
 	}
 
 	mapping[id] = &newCh
@@ -779,4 +835,17 @@ func (this *ElementChannel) findPartner(tr *Trace) *ElementChannel {
 	tr.channelWithoutPartner[id][oID] = this
 
 	return nil
+}
+
+// IsTimer checks if the channel is a time channel
+func (this *ElementChannel) IsTimer() bool {
+	resource := this.Resource()
+
+	alloc := resource.Alloc()
+	if alloc == nil {
+		return false
+	}
+
+	allocFile := alloc.File()
+	return strings.Contains(allocFile, "goPatch/src/time/sleep.go")
 }

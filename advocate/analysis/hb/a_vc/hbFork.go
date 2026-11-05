@@ -23,8 +23,8 @@ import (
 func UpdateHBFork(fo *trace.ElementFork) {
 	routine := fo.RoutineID()
 
-	fo.Vc(a_clock.Strong, CurrentVC[routine])
-	fo.Vc(a_clock.Weak, CurrentWVC[routine])
+	fo.SetVc(a_clock.Strong, CurrentVC[routine])
+	fo.SetVc(a_clock.Weak, CurrentWVC[routine])
 
 	oldRout := fo.RoutineID()
 	newRout := fo.ResourceID()

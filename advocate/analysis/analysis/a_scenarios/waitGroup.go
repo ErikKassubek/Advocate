@@ -14,8 +14,8 @@ import (
 	"advocate/analysis/a_hb"
 	"advocate/analysis/hb/a_clock"
 	"advocate/trace"
-	"advocate/utils/helper"
 	"advocate/utils/log"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/timer"
 	"advocate/utils/types"
@@ -114,7 +114,7 @@ func CheckForDoneBeforeAdd() {
 			for i := 0; i < len(addsNegWg); {
 				removed := false
 				for j := 0; j < len(donesNegWg); {
-					if a_clock.GetHappensBefore(addsNegWg[i].GetVC(a_clock.Strong), donesNegWg[j].GetVC(a_clock.Strong)) == a_hb.Concurrent {
+					if a_clock.GetHappensBefore(addsNegWg[i].VC(a_clock.Strong), donesNegWg[j].VC(a_clock.Strong)) == a_hb.Concurrent {
 						addsNegWgSorted = append(addsNegWgSorted, addsNegWg[i])
 						donesNEgWgSorted = append(donesNEgWgSorted, donesNegWg[j])
 						// remove the element from the list
@@ -170,8 +170,7 @@ func CheckForDoneBeforeAdd() {
 
 			}
 
-			results.Result(results.CRITICAL, helper.PNegWG,
-				"done", args1, "add", args2)
+			results.Result(results.CRITICAL, buginfo.PNegWG, args1, args2)
 		}
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"advocate/analysis/a_hb"
 	"advocate/analysis/hb/a_clock"
 	"advocate/utils/control"
+	"advocate/utils/flags"
 	"advocate/utils/log"
 	"advocate/utils/types"
 	"errors"
@@ -33,6 +34,7 @@ import (
 //   - hbWasCalc bool: set to true if the vector clock has been calculated for all elements
 //   - hasPassedMain bool: true if main func has been passed. Used to determine init
 //   - channelWithoutPartner  map[int]map[int]*TraceElementChannel: channel for witch no partner has been found yet, id -> opId -> element
+//   - lastMutexAcq map[int]*ElementMutex, for each mutex the last acq. Set to nil when release
 //   - channelIDs map[int]struct{}: all channel ids in the trace
 //   - objectAware map[int][]int: for not terminated routines, the blocked objects they can access
 //   - blocked map[resource][]int: routines which are blocked and the objects that block it
@@ -43,13 +45,16 @@ import (
 //   - request bool: if true, requests and commits are separate elements, otherwise they are the same
 type Trace struct {
 	routines              map[int]*Routine
+	numberRoutines        int
 	hbWasCalc             bool
 	hasPassedMain         bool
 	minTraceID            int
 	channelWithoutPartner map[int]map[int]*ElementChannel
+	lastMutexAcq          map[int]*ElementMutex
 	channelIDs            map[int]struct{}
 	blocked               map[int]Element
 	forks                 map[int]*ElementFork
+	forkTree              map[int][]int
 	allocs                map[int]*ElementAlloc
 	resources             map[int]Resource
 	callTree              CallTree
@@ -63,11 +68,14 @@ type Trace struct {
 func NewTrace() Trace {
 	return Trace{
 		routines:              make(map[int]*Routine),
+		numberRoutines:        0,
 		hbWasCalc:             false,
 		minTraceID:            0,
 		channelWithoutPartner: make(map[int]map[int]*ElementChannel),
+		lastMutexAcq:          make(map[int]*ElementMutex),
 		blocked:               make(map[int]Element),
 		forks:                 make(map[int]*ElementFork),
+		forkTree:              make(map[int][]int),
 		allocs:                make(map[int]*ElementAlloc),
 		resources:             make(map[int]Resource),
 		callTree:              *newCallGraph(),
@@ -78,10 +86,13 @@ func NewTrace() Trace {
 func (this *Trace) Clear() {
 	this.routines = make(map[int]*Routine)
 	this.hbWasCalc = false
+	this.numberRoutines = 0
 	this.minTraceID = 0
 	this.channelWithoutPartner = make(map[int]map[int]*ElementChannel)
+	this.lastMutexAcq = make(map[int]*ElementMutex)
 	this.blocked = make(map[int]Element)
 	this.forks = make(map[int]*ElementFork)
+	this.forkTree = make(map[int][]int)
 	this.allocs = make(map[int]*ElementAlloc)
 	this.resources = make(map[int]Resource)
 	this.callTree = *newCallGraph()
@@ -101,6 +112,10 @@ func (this *Trace) AddElement(elem Element) {
 	switch e := elem.(type) {
 	case *ElementFork:
 		this.forks[e.objId] = e
+		if _, ok := this.forkTree[routine]; !ok {
+			this.forkTree[routine] = make([]int, 0)
+		}
+		this.forkTree[routine] = append(this.forkTree[routine], e.objId)
 	}
 
 	this.AddRoutine(routine)
@@ -113,7 +128,7 @@ func (this *Trace) AddElement(elem Element) {
 // AddElement adds a resouce if elem has a resource and if it is not created yet
 func (this *Trace) AddResource(elem Element) {
 	switch elem.(type) {
-	case *ElementFork, *ElementFunc, *ElementReturn, *ElementRoutineEnd, *ElementReplay, *ElementControllFlow:
+	case *ElementFork, *ElementFunc, *ElementReturn, *ElementRoutineEnd, *ElementControllFlow, *ElementSelect:
 		return
 	}
 
@@ -135,22 +150,25 @@ func (this *Trace) AddResource(elem Element) {
 //
 // Parameter:
 //   - routine int: The routine
-func (this *Trace) AddRoutine(routine int) {
+func (this *Trace) AddRoutine(routine int) *Routine {
 	if _, ok := this.routines[routine]; !ok {
 		this.routines[routine] = NewRoutine(routine)
+		this.numberRoutines = len(this.routines)
 	}
+
+	return this.routines[routine]
 }
 
-// GetTraces returns the traces
+// Routines returns the traces
 //
 // Returns:
 //   - map[int][]traceElement: The traces
-func (this *Trace) GetTraces() map[int]*Routine {
+func (this *Trace) Routines() map[int]*Routine {
 	return this.routines
 }
 
-// GetTraceSize returns the number of TraceElement with cap and len
-func (this *Trace) GetTraceSize() (int, int) {
+// GetRoutineSize returns the number of TraceElement with cap and len
+func (this *Trace) GetRoutineSize() (int, int) {
 	capTot := 0
 	lenTot := 0
 	for _, rout := range this.routines {
@@ -161,15 +179,19 @@ func (this *Trace) GetTraceSize() (int, int) {
 	return capTot, lenTot
 }
 
-// GetRoutineTrace returns the trace of the given routine
+// GetRoutine returns the trace of the given routine
 //
 // Parameter:
 //   - id int: The id of the routine
 //
 // Returns:
 //   - []Element: The trace of the routine
-func (this *Trace) GetRoutineTrace(id int) *Routine {
-	return this.routines[id]
+func (this *Trace) GetRoutine(id int) *Routine {
+	if r, ok := this.routines[id]; ok {
+		return r
+	}
+
+	return this.AddRoutine(id)
 }
 
 // GetRoutineTrace returns the trace of the given routine
@@ -204,7 +226,7 @@ func (this *Trace) GetNotReturned(onlyNonBlocked bool) []int {
 			continue
 		}
 		last := rout.Last()
-		if last.Type(false) != End && (!onlyNonBlocked || last.Committed()) {
+		if last.Type(true) != RoutEnd && (!onlyNonBlocked || last.Committed()) {
 			res = append(res, id)
 		}
 	}
@@ -222,7 +244,7 @@ func (this *Trace) GetNotReturned(onlyNonBlocked bool) []int {
 //   - *TraceElement: The element
 //   - error: An error if the element does not exist
 func (this *Trace) GetTraceElementFromBugArg(bugArg string) (Element, error) {
-	splitArg := strings.Split(bugArg, ":")
+	splitArg := strings.Split(bugArg, "#")
 
 	if splitArg[0] != "T" {
 		return nil, errors.New("Bug argument is not a trace element (does not start with T): " + bugArg)
@@ -240,6 +262,10 @@ func (this *Trace) GetTraceElementFromBugArg(bugArg string) (Element, error) {
 	tPre, err := strconv.Atoi(splitArg[3])
 	if err != nil {
 		return nil, errors.New("Could not parse tPre from bug argument: " + bugArg)
+	}
+
+	if _, ok := this.routines[routine]; !ok {
+		return nil, fmt.Errorf("Could not get routine information for routine ID %d", routine)
 	}
 
 	for index, elem := range this.routines[routine].elems {
@@ -394,7 +420,7 @@ func (this *Trace) PrintTraceArgs(ty []string, clocks bool) {
 					thread int
 					vc     *a_clock.VectorClock
 					wVc    *a_clock.VectorClock
-				}{elemStr, elem.T(Commit), elem.RoutineID(), elem.GetVC(a_clock.Strong), elem.GetVC(a_clock.Weak)})
+				}{elemStr, elem.T(Commit), elem.RoutineID(), elem.VC(a_clock.Strong), elem.VC(a_clock.Weak)})
 			}
 		}
 	}
@@ -412,7 +438,7 @@ func (this *Trace) PrintTraceArgs(ty []string, clocks bool) {
 
 	for _, elem := range elements {
 		if clocks {
-			fmt.Println(elem.thread, elem.string, elem.vc.ToString(), elem.wVc.ToString())
+			fmt.Println(elem.thread, elem.string, elem.vc.String(), elem.wVc.String())
 		} else {
 			fmt.Println(elem.thread, elem.string)
 		}
@@ -447,7 +473,7 @@ func (this *Trace) GetConcurrentWaitGroups(element Element) map[string][]Element
 
 			e := elem.(*ElementCond)
 
-			if a_clock.GetHappensBefore(element.GetVC(a_clock.Strong), e.GetVC(a_clock.Strong)) == a_hb.Concurrent {
+			if a_clock.GetHappensBefore(element.VC(a_clock.Strong), e.VC(a_clock.Strong)) == a_hb.Concurrent {
 				e := elem.(*ElementCond)
 				switch e.op {
 				case CondSignal:
@@ -483,6 +509,14 @@ func (this *Trace) SetTSortAtIndex(tPost, routine, index int) {
 
 func (this *Trace) CallTree() *CallTree {
 	return &this.callTree
+}
+
+func (this *Trace) ForkTree() map[int][]int {
+	return this.forkTree
+}
+
+func (this *Trace) HbWasCalc() bool {
+	return this.hbWasCalc
 }
 
 // ========================================================
@@ -641,7 +675,7 @@ func (this *Trace) ShiftConcurrentOrAfterToAfter(element Element) {
 				continue
 			}
 
-			if !(a_clock.GetHappensBefore(elem.GetVC(a_clock.Strong), element.GetVC(a_clock.Strong)) == a_hb.Before) {
+			if !(a_clock.GetHappensBefore(elem.VC(a_clock.Strong), element.VC(a_clock.Strong)) == a_hb.Before) {
 				elemsToShift = append(elemsToShift, elem)
 				if minTime == -1 || elem.T(Request) < minTime {
 					minTime = elem.T(Request)
@@ -677,7 +711,7 @@ func (this *Trace) ShiftConcurrentOrAfterToAfterStartingFromElement(element Elem
 				continue
 			}
 
-			if !(a_clock.GetHappensBefore(elem.GetVC(a_clock.Strong), element.GetVC(a_clock.Strong)) == a_hb.Before) {
+			if !(a_clock.GetHappensBefore(elem.VC(a_clock.Strong), element.VC(a_clock.Strong)) == a_hb.Before) {
 				if elem.T(Request) <= start {
 					continue
 				}
@@ -735,7 +769,7 @@ func (this *Trace) RemoveConcurrent(element Element, tMin int) {
 				continue
 			}
 
-			if a_clock.GetHappensBefore(elem.GetVC(a_clock.Strong), element.GetVC(a_clock.Strong)) != a_hb.Concurrent {
+			if a_clock.GetHappensBefore(elem.VC(a_clock.Strong), element.VC(a_clock.Strong)) != a_hb.Concurrent {
 				result = append(result, elem)
 			}
 		}
@@ -762,7 +796,7 @@ func (this *Trace) RemoveConcurrentOrAfter(element Element, tMin int) {
 				continue
 			}
 
-			if a_clock.GetHappensBefore(elem.GetVC(a_clock.Strong), element.GetVC(a_clock.Strong)) != a_hb.Before {
+			if a_clock.GetHappensBefore(elem.VC(a_clock.Strong), element.VC(a_clock.Strong)) != a_hb.Before {
 				result = append(result, elem)
 			}
 		}
@@ -785,7 +819,7 @@ func (this *Trace) GetConcurrentEarliest(element Element) map[int]Element {
 				continue
 			}
 
-			if a_clock.GetHappensBefore(element.GetVC(a_clock.Strong), elem.GetVC(a_clock.Strong)) == a_hb.Concurrent {
+			if a_clock.GetHappensBefore(element.VC(a_clock.Strong), elem.VC(a_clock.Strong)) == a_hb.Concurrent {
 				concurrent[routine] = elem
 			}
 		}
@@ -793,16 +827,21 @@ func (this *Trace) GetConcurrentEarliest(element Element) map[int]Element {
 	return concurrent
 }
 
-// RemoveLater removes all elements that have a later tPost that the given tPost
+// RemoveLater removes all elements that have a later tCom that the given tCom
+// Elements with the given TCom are removed.
 //
 // Parameter:
-//   - tPost int: Remove elements after tPost
-func (this *Trace) RemoveLater(tPost int) {
+//   - tCom int: Remove elements after and including tCom
+func (this *Trace) RemoveLater(tCom int) {
 	mapping := make(map[int]Element)
 	for routine, rout := range this.routines {
 		newElems := make([]Element, 0)
 		for _, elem := range rout.elems {
-			if elem.T(Commit) > tPost {
+			if !elem.Committed() {
+				continue
+			}
+
+			if elem.T(Commit) < tCom {
 				newElems = append(newElems, elem.Copy(this, mapping, true))
 			}
 		}
@@ -901,6 +940,58 @@ func (this *Trace) NormalizeRequestCommit() {
 		elem.SetT(Commit, i)
 		i++
 	}
+}
+
+// TODO: print in color
+// TODO: print select with case
+func (this *Trace) PrintAsTab() {
+	colSize := 34
+	if !flags.ShowFile {
+		colSize = 12
+	}
+
+	colFmt := fmt.Sprintf("%%-%d.%ds", colSize, colSize)
+
+	trIter := this.AsIterator()
+	numberRout := this.numberRoutines
+
+	printRow := func(i int, rout int, val string) string {
+		res := "e" + fmt.Sprintf("%-3d", i) + " | "
+		for i := 0; i < rout-1; i++ {
+			res += fmt.Sprintf(colFmt, "") + "| "
+		}
+		res += fmt.Sprintf(colFmt, val)
+		for i := rout - 1; i < numberRout-1; i++ {
+			res += "| " + fmt.Sprintf(colFmt, "")
+		}
+		res += "|"
+
+		return res
+	}
+
+	header := "     |"
+
+	for i := 0; i < numberRout; i++ {
+		header += fmt.Sprintf(colFmt, " G"+fmt.Sprintf("%d", i+1)) + " |"
+	}
+	header += "\n     "
+
+	for i := 0; i < numberRout; i++ {
+		header += "| " + fmt.Sprintf(colFmt, strings.Repeat("=", colSize-1))
+	}
+	header += "|"
+	println(header)
+
+	i := 1
+	for elem := trIter.Next(); elem != nil; elem = trIter.Next() {
+		if elem.Committed() || elem.Pan() {
+			println(printRow(i, elem.RoutineID(), elem.StringMin()))
+		} else {
+			println(printRow(i, elem.RoutineID(), elem.StringMin()+"?"))
+		}
+		i++
+	}
+
 }
 
 // ========================================================
@@ -1064,7 +1155,7 @@ func (this *Trace) GetResources(elem Element) []Resource {
 	res := make([]Resource, 0)
 
 	switch elem := elem.(type) {
-	case *ElementFork, *ElementFunc, *ElementReturn, *ElementRoutineEnd, *ElementReplay:
+	case *ElementFork, *ElementFunc, *ElementReturn, *ElementRoutineEnd:
 	case *ElementSelect:
 		for _, c := range elem.GetCases() {
 			r, ok := this.resources[c.ResourceID()]

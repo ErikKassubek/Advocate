@@ -543,7 +543,7 @@ The columns are
 - A06: Actual unlock of not locked mutex
 - A07: Actual Leak (Non-Cyclic blocking bug)
 - A08: Actual Deadlock (Cyclic blocking bug)
-- A09: Concurrent Receives on the same channel
+- A09: Actual Mixed Deadlock
 - P01: Possible send on closed channel
 - P02: Possible receive on closed channel
 - P03: Possible negative waitgroup counter

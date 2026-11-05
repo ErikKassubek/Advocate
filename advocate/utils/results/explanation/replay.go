@@ -11,9 +11,9 @@ package explanation
 
 import (
 	"advocate/utils/consts"
-	"advocate/utils/helper"
 	"advocate/utils/log"
 	"advocate/utils/paths"
+	"advocate/utils/results/buginfo"
 	"fmt"
 	"os"
 	"strconv"
@@ -29,7 +29,7 @@ import (
 //
 // Returns:
 //   - map[bugKeys]string: Information for the rewrite/replay part of the explanation file
-func getRewriteInfo(bugType helper.ResultType, codes map[string]string, index string) map[bugKeys]string {
+func getRewriteInfo(bugType buginfo.ResultType, codes map[string]string, index string) map[bugKeys]string {
 	res := make(map[bugKeys]string)
 
 	rewType := getRewriteType(bugType)
@@ -42,24 +42,13 @@ func getRewriteInfo(bugType helper.ResultType, codes map[string]string, index st
 	var err error
 
 	switch rewType {
-	case consts.Actual:
+	case Actual:
 		res[desc] += "The bug is an actual bug. Therefore no rewrite is possible."
 		codes[fmt.Sprint(index)] = "fail"
-	case consts.Possible:
+	case Potential:
 		res[desc] += "The bug is a potential bug.\n"
 		res[desc] += consts.TheAnalyzerHasTriedToRewriteTheTraceInSuchAWay + " "
 		res[desc] += "that the bug will be triggered when replaying the trace."
-	case "LeakPos":
-		res[desc] += "The analyzer found a leak in the recorded trace.\n"
-		res[desc] += "The analyzer found a way to resolve the leak, meaning the "
-		res[desc] += "leak should not reappear in the rewritten trace."
-	case consts.Leak:
-		res[desc] += "The analyzer found a leak in the recorded trace.\n"
-		res[desc] += "The analyzer could not find a way to resolve the leak. "
-		res[desc] += "No rewritten trace was created. This does not need to mean, "
-		res[desc] += "that the leak can not be resolved, especially because the "
-		res[desc] += "analyzer is only aware of executed operations."
-		codes[fmt.Sprint(index)] = "fail"
 	}
 	res[exitCode], res[exitCodeDesc], res[replaySuc], err = getReplayInfo(codes, index)
 
@@ -78,37 +67,35 @@ func getRewriteInfo(bugType helper.ResultType, codes map[string]string, index st
 //
 // Returns:
 //   - string: Actual, Possible, Leak or Pos Leak
-func getRewriteType(bugCode helper.ResultType) string {
+func getRewriteType(bugCode buginfo.ResultType) BugClass {
 	switch string(bugCode)[:1] {
 	case "A":
-		return consts.Actual
+		return Actual
 	case "P":
-		return consts.Possible
+		return Potential
 	case "L":
-		res := consts.Leak
-		if bugCode == "L01" || bugCode == "L03" || bugCode == "L06" ||
-			bugCode == "L08" || bugCode == "L09" || bugCode == "L10" {
-			res += "Pos"
-		}
-		return res
+		return Actual
 	}
-	return ""
+	return UnknownBugClass
 }
 
 // Get the output codes from the output.log file
 //
-// Returns: map[string]stringL exit codes
-func getOutputCodes() map[string]string {
+// Returns:
+//
+//			map[string]stringL exit codes
+//	     []string: waiting elements
+func getOutputInfo() (map[string]string, bool) {
 	if _, err := os.Stat(paths.ResultOutput); os.IsNotExist(err) {
 		res := "No replay info available. Output.log does not exist."
-		return map[string]string{"AdvocateFailExplanationInfo": res, "AdvocateFailResplaySucInfo": "information not available"}
+		return map[string]string{"AdvocateFailExplanationInfo": res, "AdvocateFailResplaySucInfo": "information not available"}, false
 	}
 
 	// read the output file
 	content, err := os.ReadFile(paths.ResultOutput)
 	if err != nil {
 		res := "No replay info available. Could not read output.log file"
-		return map[string]string{"AdvocateFailExplanationInfo": res, "AdvocateFailResplaySucInfo": "information not available"}
+		return map[string]string{"AdvocateFailExplanationInfo": res, "AdvocateFailResplaySucInfo": "information not available"}, false
 	}
 
 	lines := strings.Split(string(content), "\n")
@@ -116,11 +103,13 @@ func getOutputCodes() map[string]string {
 	replayPos := make(map[string]bool)
 	replayCode := make(map[string]string)
 	bugrepPrefix := "Bugreport info: "
-	replayReadPrefix := "Reading trace from rewrittenTrace_"
+	replayReadPrefix := "Reading trace from " + paths.NameRewrittenConsts + "_"
 	exitCodePrefix := "Exit Replay with code"
+	waitingPrefix := "WAITING"
 
 	lastReplayIndex := ""
 	lastReplayIndexInfoFound := true
+	blockedByReplay := false
 
 	for _, line := range lines {
 		if strings.HasPrefix(line, bugrepPrefix) {
@@ -154,10 +143,13 @@ func getOutputCodes() map[string]string {
 			line = strings.TrimSpace(line)
 			replayCode[lastReplayIndex] = strings.Split(line, " ")[0]
 			lastReplayIndexInfoFound = true
+		} else if strings.HasPrefix(line, waitingPrefix) {
+			line = strings.TrimPrefix(line, waitingPrefix)
+			blockedByReplay = true
 		}
 	}
 
-	return replayCode
+	return replayCode, blockedByReplay
 }
 
 // Get the text for the replay info for the explanation

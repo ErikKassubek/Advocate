@@ -44,9 +44,9 @@ func InitFuzzing(tracePath string, timeout int, init bool) {
 	prefSel := make(map[string][]int)
 	prefFlow := make(map[string][]int)
 
-	InitTracing(0, init) // timeout will be done in startReplay
+	InitTracing(timeout, init)
 
-	if tracePath == "" { // GoFuzz and Flow
+	if tracePath == "" { // GoFuzz
 		fuzzingSelectPath := "fuzzingData.log"
 		var err error
 		prefSel, prefFlow, err = readFuzzingSelectFile(fuzzingSelectPath)
@@ -54,11 +54,10 @@ func InitFuzzing(tracePath string, timeout int, init bool) {
 			println("Error in reading ", fuzzingSelectPath, ": ", err.Error())
 			panic(err)
 		}
-		runtime.InitFuzzingDelay(prefSel, prefFlow, FinishFuzzing)
-	} else { // GoPie
+		runtime.InitFuzzingSelect(prefSel, prefFlow, FinishFuzzing)
+	} else { // Constraints
 		runtime.InitFuzzingReplay(FinishFuzzing)
 		tracePathRewritten = tracePath
-		runtime.SetReplayAtomic(true)
 		startReplay(timeout)
 	}
 }
@@ -73,8 +72,8 @@ func FinishFuzzing() {
 	}
 
 	// give program time to finish running
-	runtime.ReleaseAllWaiting()
-	runtime.SleepBusy(3)
+	runtime.ReleaseAllBlocked()
+	// runtime.SleepBusy(3)
 
 	finishFuzzingStarted = true
 	runtime.WaitForReplayFinish()

@@ -58,7 +58,6 @@ func (this *componentTraceViewer) AddCell(rout, row int, content string, noBox, 
 	this.cells[key(rout, row)] = this.buildCell(content, noBox, removeTop, request)
 }
 
-// TODO: color/fix text
 func (this *componentTraceViewer) buildCell(text string, noBox, removeTop, request bool) fyne.CanvasObject {
 	return container.NewPadded(createBoxedLabel(text, noBox, removeTop, request))
 }

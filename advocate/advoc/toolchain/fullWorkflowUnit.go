@@ -12,6 +12,7 @@ package toolchain
 
 import (
 	"advocate/analysis/a_base"
+	"advocate/fuzzing/f_base"
 	"advocate/utils/command"
 	"advocate/utils/control"
 	"advocate/utils/flags"
@@ -71,14 +72,9 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 	}
 
 	if firstRun && !flags.Continue {
-		if !flags.SkipExisting {
-			os.RemoveAll("advocateResult")
-		}
-
-		if info, _ := os.Stat("advocateResult"); info == nil {
-			if err := os.MkdirAll("advocateResult", os.ModePerm); err != nil {
-				return 0, 0, fmt.Errorf("Failed to create advocateResult directory: %v", err)
-			}
+		err := createResultFolder()
+		if err != nil {
+			return 0, 0, err
 		}
 
 		// Remove possibly leftover traces from unexpected aborts that could interfere with replay
@@ -126,7 +122,7 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 				time.Sleep(6 * time.Second)
 			}
 
-			a_base.Clear()
+			a_base.Clear(true)
 			// f_base.Clear()
 
 			if !isFuzzing {
@@ -179,10 +175,10 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 
 			// Move logs and results to the appropriate directory
 			total := fuzzing != -1
-			collect(paths.Prog, packagePath, paths.CurrentResult, total)
+			collect(paths.Prog, packagePath, paths.CurrentResult, total, true)
 
 			if err != nil {
-				log.Errorf(err.Error())
+				log.Error(err.Error())
 				skippedTests++
 			}
 
@@ -222,7 +218,7 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 
 	// Check for untriggered selects
 	if flags.NotExecuted && flags.ExecName != "" {
-		err := complete.Check(filepath.Join(paths.Prog, "advocateResult"), paths.Prog)
+		err := complete.Check(filepath.Join(paths.Prog, paths.NameResult), paths.Prog)
 		if err != nil {
 			log.Error("Could not run check for untriggered select and not executed progs: ", err.Error())
 		}
@@ -302,7 +298,7 @@ func FindTestFiles(dir string, cont bool) ([]string, int, int, error) {
 func getFilesInResult(dir string) (map[string]struct{}, int, error) {
 	res := make(map[string]struct{})
 
-	path := filepath.Join(dir, "advocateResult")
+	path := filepath.Join(dir, paths.NameResult)
 
 	patternPrefix := `file\([0-9]+\)-test\([0-9]+\)-`
 	patternFileNum := `^file\((\d+)\)-test\(\d+\)-.+$`
@@ -469,7 +465,7 @@ func unitTestFullWorkflow(
 
 	if runAnalysis {
 		pkgPath := filepath.Join(paths.Prog, pkg)
-		err = unitTestAnalyzer(pkgPath, "advocateTrace", fuzzing, file, testName)
+		err = unitTestAnalyzer(pkgPath, paths.NameTrace, fuzzing, file, testName, false)
 		if err != nil {
 			return 0, false, err
 		}
@@ -481,7 +477,12 @@ func unitTestFullWorkflow(
 
 	numberReplay := 0
 	if runReplay {
-		numberReplay = unitTestReplay(paths.Prog, pkg, file, testName, paths.NameOutput, runAnalysis, origStdout, origStderr)
+		a_base.Clear(false)
+
+		numberReplay, err = unitTestReplay(paths.Prog, pkg, file, testName, paths.NameOutput, runAnalysis, origStdout, origStderr)
+		if err != nil {
+			return 0, false, err
+		}
 	}
 
 	return numberReplay, runAnalysis, nil
@@ -509,9 +510,9 @@ func unitTestRun(pkg, file, testName string, origStdout, origStderr *os.File) er
 	var err error
 	if flags.Timeout != -1 {
 		timeoutRecString := fmt.Sprintf("%ds", flags.Timeout)
-		err = command.RunCommand(origStdout, origStderr, command.NoTimeout, "go", "test", "-v", "-timeout", timeoutRecString, "-count=1", "-run="+testName, packagePath)
+		err = command.RunCommand(origStdout, origStderr, command.NoTimeout, paths.Go, "test", "-v", "-timeout", timeoutRecString, "-count=1", "-run="+testName, packagePath)
 	} else {
-		err = command.RunCommand(origStdout, origStderr, command.NoTimeout, "go", "test", "-v", "-count=1", "-run="+testName, packagePath)
+		err = command.RunCommand(origStdout, origStderr, command.NoTimeout, paths.Go, "test", "-v", "-count=1", "-run="+testName, packagePath)
 	}
 
 	return err
@@ -538,7 +539,6 @@ func unitTestRecord(pkg, file, testName string,
 
 	isFuzzing := (fuzzing > 0)
 
-	// Add header
 	buildFlags, err := buildArgsUnit(file, testName, false, fuzzing, fuzzingPath, false)
 	if err != nil {
 		return fmt.Errorf("Error in adding header: %v", err)
@@ -550,7 +550,7 @@ func unitTestRecord(pkg, file, testName string,
 	// Set GOROOT
 	os.Setenv("GOROOT", paths.GoPatch)
 
-	command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "version")
+	// command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "version")
 
 	pkgPath := paths.MakePathLocal(pkg)
 	err = command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "test", buildFlags, "-v", "-count=1", "-run="+testName, pkgPath)
@@ -565,12 +565,12 @@ func unitTestRecord(pkg, file, testName string,
 			}
 		}
 	}
-	log.Info("Text executed")
+	log.Info("Test executed")
 
 	err = os.Unsetenv("GOROOT")
 
 	if err != nil {
-		log.Errorf("Failed to unset GOROOT: ", err.Error())
+		log.Error("Failed to unset GOROOT: ", err.Error())
 	}
 
 	return err
@@ -584,20 +584,26 @@ func unitTestRecord(pkg, file, testName string,
 //   - fuzzing int: number of fuzzing run. If not fuzzing, or first fuzzing run without guidance set to 0
 //   - testFile string: name of the analzed test file
 //   - testName string: name of the analzed test, "main" if main
+//   - replay bool: true for replay to prevent additional rewrite
 //
 // Returns:
 //   - error
 //
 // The trace is expected to be at dir/pkg/traceName
-func unitTestAnalyzer(pkgPath, traceName string, fuzzing int, testFile, testName string) error {
+func unitTestAnalyzer(pkgPath, traceName string, fuzzing int, testFile, testName string, replay bool) error {
 	tracePath := filepath.Join(pkgPath, traceName)
 
 	log.Infof("Run the analyzer for %s", tracePath)
 
 	outM := filepath.Join(pkgPath, paths.NameResultMachine)
 	outR := filepath.Join(pkgPath, paths.NameResultReadable)
-	outT := filepath.Join(pkgPath, "rewrittenTrace")
-	err := runAnalyzer(tracePath, outR, outM, outT, fuzzing, testFile, testName)
+	outT := filepath.Join(pkgPath, paths.NameRewrittenConsts)
+
+	if replay {
+		outT = ""
+	}
+
+	err := runAnalyzer(tracePath, outR, outM, outT, fuzzing, testFile, testName, replay)
 
 	if err != nil {
 		return err
@@ -624,28 +630,37 @@ func unitTestAnalyzer(pkgPath, traceName string, fuzzing int, testFile, testName
 // Returns:
 //   - int: number of executed replays
 func unitTestReplay(dir, pkg, file,
-	testName, output string, fromAnalysis bool, osOut, osErr *os.File) int {
+	testName, output string, fromAnalysis bool, osOut, osErr *os.File) (int, error) {
 	timer.Start(timer.Replay)
 	defer timer.Stop(timer.Replay)
 
-	log.Info("Start guided execution")
+	log.Info("Start replay")
 
 	pathPkg := filepath.Join(dir, pkg)
 
-	rewrittenTraces := make([]string, 0)
+	rewrittenConstraints := make([]string, 0)
 
 	if fromAnalysis {
-		rewrittenTraces, _ = filepath.Glob(filepath.Join(pathPkg, "rewrittenTrace_*"))
+		rewrittenConstraints, _ = filepath.Glob(filepath.Join(pathPkg, paths.NameRewrittenConsts+"_*"))
 	} else {
-		rewrittenTraces = append(rewrittenTraces, flags.TracePath)
+		rewrittenConstraints = append(rewrittenConstraints, flags.TracePath)
 	}
 
-	log.Infof("Found %d rewritten traces", len(rewrittenTraces))
+	log.Infof("Found %d traces to replay", len(rewrittenConstraints))
 
-	for i, trace := range rewrittenTraces {
+	for i, trace := range rewrittenConstraints {
 		traceNum, bugString := extractTraceNumber(trace)
 		// record := getRerecord(trace)
-		record := false
+		record := true
+
+		traceNumInt, err := strconv.Atoi(traceNum)
+		if err != nil {
+			continue
+		}
+		if traceNumInt <= f_base.MaxRewriteExec {
+			continue
+		}
+		f_base.MaxRewriteExec = traceNumInt
 
 		// we do not need to replay a bug that has already been replayed by
 		// another replay
@@ -655,21 +670,22 @@ func unitTestReplay(dir, pkg, file,
 
 		buildFlags, _ := buildArgsUnit(file, testName, true, -1, traceNum, record)
 
+		collect(paths.Prog, pathPkg, paths.CurrentResult, false, false)
+
 		os.Setenv("GOROOT", paths.GoPatch)
 
-		log.Infof("Run guided execution %d/%d", i+1, len(rewrittenTraces))
+		log.Infof("Run Program for Replay %d/%d", i+1, len(rewrittenConstraints))
 		pkgPath := paths.MakePathLocal(pkg)
 		command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "test", buildFlags, "-v", "-count=1", "-run="+testName, pkgPath)
-		log.Infof("Finished  guided execution %d/%d", i+1, len(rewrittenTraces))
-
-		if wasReplaySuc(output) {
-			results.AddBug(bugString, true)
-		} else {
-			results.AddBug(bugString, false)
-		}
+		log.Infof("Finish Replay %d/%d", i+1, len(rewrittenConstraints))
 
 		os.Unsetenv("GOROOT")
+
+		err = unitTestAnalyzer(pkgPath, paths.NameTrace, -1, file, testName, true)
+		if err != nil {
+			return len(rewrittenConstraints), err
+		}
 	}
 
-	return len(rewrittenTraces)
+	return len(rewrittenConstraints), nil
 }

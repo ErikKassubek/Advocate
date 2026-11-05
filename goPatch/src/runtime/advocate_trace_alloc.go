@@ -49,9 +49,9 @@ func AdvocateAlloc(objType string, qSize int) uint64 {
 
 	id := GetAdvocateObjectID()
 
-	if AdvocateIgnore(file) {
-		return id
-	}
+	// if AdvocateIgnore(file) {
+	// 	return id
+	// }
 
 	op := OperationNone
 	switch objType {
@@ -65,6 +65,8 @@ func AdvocateAlloc(objType string, qSize int) uint64 {
 		op = OperationAllocWg
 	case "O":
 		op = OperationAllocOnce
+	case "A":
+		op = OperationAllocAtomic
 	}
 
 	res := AdvocateTraceResource{id: id, addr: nil}
@@ -99,19 +101,33 @@ func (self AdvocateTraceAlloc) toString() string {
 		operationType = "D"
 	case OperationAllocWg:
 		operationType = "W"
+	case OperationAllocOnce:
+		operationType = "O"
+	case OperationAllocAtomic:
+		operationType = "A"
 	}
 
-	return buildTraceElemString("N", self.t, self.res.id, operationType, self.qSize, posToString(self.file, self.line))
+	return buildTraceElemString("N", self.t, self.res.id, operationType, self.qSize, posToString(self.file, self.line), "-")
 }
 
 // Get the string representation for the primitive type
-// For now always return "NC"
 //
 // Returns:
 //   - string representation of the primitive type
-func (self AdvocateTraceAlloc) getOpStr() string {
-	return "NC"
-}
+// func (self AdvocateTraceAlloc) getOpStr() string {
+// 	switch self.op {
+// 	case OperationAllocChan:
+// 		return "NC"
+// 	case OperationAllocMutex:
+// 		return "NM"
+// 	case OperationAllocCond:
+// 		return "ND"
+// 	case OperationAllocWg:
+// 		return "NW"
+// 	}
+
+// 	return "NX"
+// }
 
 // getOperation is a getter for the operation
 //
@@ -136,3 +152,5 @@ func (self AdvocateTraceAlloc) hasCommit() bool {
 func (self AdvocateTraceAlloc) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{self.res}
 }
+
+func (self AdvocateTraceAlloc) causedPanic() traceElem { return self }

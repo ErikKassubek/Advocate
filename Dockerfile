@@ -6,10 +6,10 @@ RUN apt-get update && apt-get install -y bash build-essential curl git
 # Install bootstrap Go compiler for building custom runtime
 ENV GOROOT_BOOTSTRAP=/usr/local/go
 
-RUN curl -fsSL https://go.dev/dl/go1.25.7.linux-amd64.tar.gz | tar -C /usr/local -xzf -
+RUN curl -fsSL https://go.dev/dl/go1.27.3.linux-amd64.tar.gz | tar -C /usr/local -xzf -
 
-COPY goPatch /ADVOCATE/goPatch
-WORKDIR /ADVOCATE/goPatch/src
+COPY goPatch /Advocate/goPatch
+WORKDIR /Advocate/goPatch/src
 RUN bash make.bash
 
 # Stage 2: Build the Go app using the standard Go runtime
@@ -24,13 +24,13 @@ RUN go build -o app .
 # Stage 3: Final runtime image
 FROM debian:bookworm-slim
 
-WORKDIR /ADVOCATE
+WORKDIR /Advocate
 
-COPY --from=goruntime-builder /ADVOCATE/goPatch ./goPatch
-COPY --from=app-builder /ADVOCATE/advocate/app ./advocate/app
+COPY --from=goruntime-builder /Advocate/goPatch ./goPatch
+COPY --from=app-builder /Advocate/advocate/app ./advocate/app
 
 WORKDIR /prog
 
-WORKDIR /ADVOCATE/advocate
+WORKDIR /Advocate/advocate
 
 ENTRYPOINT ["./app"]

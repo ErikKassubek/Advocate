@@ -65,7 +65,7 @@ func (this *window) openTraceViewer() {
 }
 
 func (this *traceViewer) updateTrace(dir string) {
-	routs, _, err := this.readTrace(dir)
+	_, routs, _, err := this.readTrace(dir)
 	if err != nil {
 		win.writeErr("Could not read trace: ", err)
 		return
@@ -148,6 +148,6 @@ func (this *traceViewer) rebuild() {
 	this.traceViewer.rebuild()
 }
 
-func (this *traceViewer) readTrace(dir string) (cols int, rows int, err error) {
-	return io.CreateTraceFromFiles(dir)
+func (this *traceViewer) readTrace(dir string) (trace *trace.Trace, cols int, rows int, err error) {
+	return io.CreateTraceFromFiles(dir, true)
 }

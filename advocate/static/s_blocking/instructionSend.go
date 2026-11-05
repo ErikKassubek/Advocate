@@ -10,7 +10,7 @@
 package s_blocking
 
 import (
-	"advocate/static/static/code"
+	"advocate/static/static/s_code"
 	"advocate/static/static/s_ssa"
 	"advocate/trace"
 	"advocate/utils/log"
@@ -44,7 +44,7 @@ func instInfoSend(inst *s_ssa.InstructionSend, rout int, elem trace.Element, for
 		for resSend := range iwiSender.GetResources() {
 			// chan type contains concurrency primitive
 			pos := resSend.Alloc().Pos()
-			l, err := code.GetLineContent(pos)
+			l, err := s_code.GetLineContent(pos)
 			if err != nil {
 				log.Error(err)
 				continue

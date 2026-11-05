@@ -21,8 +21,8 @@ import (
 //   - wa *trace.TraceElementWait: the wait group operation
 func UpdateHBWait(wa *trace.ElementWait) {
 	routine := wa.RoutineID()
-	wa.Vc(a_clock.Strong, CurrentVC[routine])
-	wa.Vc(a_clock.Weak, CurrentWVC[routine])
+	wa.SetVc(a_clock.Strong, CurrentVC[routine])
+	wa.SetVc(a_clock.Weak, CurrentWVC[routine])
 
 	switch wa.Type(true) {
 	case trace.WaitAdd, trace.WaitDone:
@@ -45,7 +45,7 @@ func Change(wa *trace.ElementWait) {
 
 	lw := a_base.LastChangeWG[id]
 	if lw != nil {
-		wa.GetVC(a_clock.Strong).Sync(lw.GetVC(a_clock.Strong))
+		wa.VC(a_clock.Strong).Sync(lw.VC(a_clock.Strong))
 	}
 	a_base.LastChangeWG[id] = wa
 
@@ -64,7 +64,7 @@ func Wait(wa *trace.ElementWait) {
 	if wa.Committed() {
 		lc := a_base.LastChangeWG[id]
 		if lc != nil {
-			CurrentVC[routine].Sync(lc.GetVC(a_clock.Strong))
+			CurrentVC[routine].Sync(lc.VC(a_clock.Strong))
 		}
 	}
 

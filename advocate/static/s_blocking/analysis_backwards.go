@@ -66,7 +66,7 @@ func determineResouceToSSAAtTermination() {
 		}
 
 		switch elem.(type) {
-		case *trace.ElementReplay, *trace.ElementRoutineEnd:
+		case *trace.ElementRoutineEnd:
 			continue
 		case *trace.ElementFork:
 			lastWasFork[elem.ResourceID()] = true
@@ -156,8 +156,6 @@ func printInstr(rout int, inst s_ssa.Instruction, elem trace.Element, info *inst
 	} else {
 		log.Debugf("%2d | %-80.80s | %-25s |", rout, inst.StringInfo(), infoStr)
 	}
-
-	log.Debug2(info)
 }
 
 func parseNonTraceInstructions(inst s_ssa.Instruction, rout int) s_ssa.Instruction {

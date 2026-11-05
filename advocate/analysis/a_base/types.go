@@ -145,7 +145,17 @@ type LockID struct {
 }
 
 // Lockset implements a lockset
-type Lockset map[LockID]struct{}
+type Lockset map[LockID]trace.Element
+
+func (this Lockset) Elements() []trace.Element {
+	values := make([]trace.Element, 0, len(this))
+
+	for _, value := range this {
+		values = append(values, value)
+	}
+
+	return values
+}
 
 // Lock Dependency methods.
 
@@ -260,8 +270,8 @@ func (this Lockset) Empty() bool {
 //
 // Parameter:
 //   - x LockID: the lock id to add
-func (this Lockset) Add(x LockID) {
-	this[x] = struct{}{}
+func (this Lockset) Add(x LockID, event trace.Element) {
+	this[x] = event
 }
 
 // Remove removes a lock id from a lockset

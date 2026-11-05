@@ -14,10 +14,10 @@ import (
 	"advocate/utils/consts"
 	"advocate/utils/control"
 	"advocate/utils/flags"
-	"advocate/utils/helper"
 	"advocate/utils/log"
 	"advocate/utils/paths"
 	"advocate/utils/results/benign"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/types"
 	"fmt"
 	"os"
@@ -35,38 +35,6 @@ const (
 	WARNING
 	INFORMATION
 )
-
-var resultTypeMap = map[helper.ResultType]string{
-	helper.ASendOnClosed:           "Actual Send on Closed Channel",
-	helper.ARecvOnClosed:           "Actual Receive on Closed Channel",
-	helper.ACloseOnClosed:          "Actual Close on Closed Channel",
-	helper.AConcurrentRecv:         "Concurrent Receive",
-	helper.ACloseOnNilChannel:      "Actual close on nil channel",
-	helper.ABlocking:               "Actual Non-Cyclic Blocking Bug",
-	helper.ADeadlock:               "Actual Cyclic Deadlock",
-	helper.ANegWG:                  "Actual negative Wait Group",
-	helper.AUnlockOfNotLockedMutex: "Actual unlock of not locked mutex",
-
-	helper.PSendOnClosed:     "Possible send on closed channel",
-	helper.PRecvOnClosed:     "Possible receive on closed channel",
-	helper.PNegWG:            "Possible negative waitgroup counter",
-	helper.PUnlockBeforeLock: "Possible unlock of a not locked mutex",
-	helper.PCyclicDeadlock:   "Possible cyclic deadlock",
-	helper.PMixedDeadlock:    "Possible Mixed Deadlock",
-
-	helper.LUnknown:   "Leak on routine or unknown element",
-	helper.LChan:      "Leak on channel",
-	helper.LNilChan:   "Leak on nil channel",
-	helper.LSelect:    "Leak on select w",
-	helper.LMutex:     "Leak on mutex",
-	helper.LWaitGroup: "Leak on wait group",
-	helper.LCond:      "Leak on conditional variable",
-
-	helper.RUnknownPanic: "Unknown Panic",
-	helper.RTimeout:      "Timeout",
-
-	// SNotExecutedWithPartner: "Not executed select with potential partner",
-}
 
 var (
 	outputReadableFile       string
@@ -167,14 +135,14 @@ func (this TraceElementResult) isInvalid() bool {
 // Parameter:
 //   - level resultLevel: level of the message (critical, warning, ...)
 //   - resType ResultType: type of bug that was found
-//   - argType1 string: description of the type of elements in arg1
 //   - arg1 []ResultElem]: elements directly involved in the bug (e.g. in send on closed the send)
-//   - argType2 string: description of the type of elements in arg2
-//   - arg2 []ResultElem]: elements indirectly involved in the bug (e.g. in send on closed the close)
-func Result(level resultLevel, resType helper.ResultType, argType1 string, arg1 []ResultElem, argType2 string, arg2 []ResultElem) {
+//   - arg2 []ResultElem]: elements indirectly involved in the bug (e.g. in send on closed the close), set to nil if no elem
+func Result(level resultLevel, resType buginfo.ResultType, arg1 []ResultElem, arg2 []ResultElem) {
 	if filterInvalidResults(resType, arg1) {
 		return
 	}
+
+	argType1, argType2 := resType.Args()
 
 	// if flags.FuzzingMode == "Guided" && !resType.IsActual() {
 	// 	return
@@ -182,7 +150,7 @@ func Result(level resultLevel, resType helper.ResultType, argType1 string, arg1 
 
 	foundBug = true
 
-	if resType == helper.ABlocking {
+	if resType == buginfo.ABlocking {
 		for _, a := range arg1 {
 			file := a.getFile()
 			if _, ok := blockedGC[file]; !ok {
@@ -204,7 +172,7 @@ func Result(level resultLevel, resType helper.ResultType, argType1 string, arg1 
 		}
 	}
 
-	resultReadable := resultTypeMap[resType] + ":" + falsePos + ":\n\t" + argType1 + ": "
+	resultReadable := buginfo.ResultTypeMap[resType] + ":" + falsePos + ":\n\t" + argType1 + ": "
 	resultMachine := string(resType) + "," + falsePos + ","
 	resultMachineShort := string(resType)
 
@@ -222,7 +190,7 @@ func Result(level resultLevel, resType helper.ResultType, argType1 string, arg1 
 	}
 
 	resultReadable += "\n"
-	if len(arg2) > 0 {
+	if arg2 != nil || len(arg2) == 0 {
 		resultReadable += "\t" + argType2 + ": "
 		resultMachine += ","
 		for i, arg := range arg2 {
@@ -295,8 +263,8 @@ func AddContext(file string, line, id int) {
 //
 // Returns:
 //   - bool: true if the result is invalid and should be ignored, false otherwise
-func filterInvalidResults(resType helper.ResultType, arg1 []ResultElem) bool {
-	if resType != helper.RUnknownPanic && resType != helper.RTimeout && len(arg1) == 0 {
+func filterInvalidResults(resType buginfo.ResultType, arg1 []ResultElem) bool {
+	if resType != buginfo.RUnknownPanic && resType != buginfo.RTimeout && len(arg1) == 0 {
 		return true
 	}
 
@@ -304,7 +272,7 @@ func filterInvalidResults(resType helper.ResultType, arg1 []ResultElem) bool {
 		return true
 	}
 
-	if resType == helper.ABlocking && len(arg1) == 1 && strings.HasSuffix(arg1[0].getFile(), paths.Join(true, false, "src", "testing", "testing.go")) {
+	if resType == buginfo.ABlocking && len(arg1) == 1 && strings.HasSuffix(arg1[0].getFile(), paths.Join(true, false, "src", "testing", "testing.go")) {
 		return true
 	}
 

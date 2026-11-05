@@ -13,8 +13,8 @@ import (
 	"advocate/analysis/a_hb"
 	"advocate/analysis/hb/a_clock"
 	"advocate/trace"
-	"advocate/utils/helper"
 	"advocate/utils/log"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/timer"
 	"fmt"
@@ -126,7 +126,7 @@ func HandleMutexEventForMixedDeadlock(element *trace.ElementMutex) {
 	// --------- WRITE LOCK ---------
 	case trace.MutexLock, trace.MutexTryLock:
 		mdPushRD(t, tid, lockID, element, element)
-		t.CurrentLockset.Add(lockID)
+		t.CurrentLockset.Add(lockID, element)
 		t.LockDepth++
 		t.WriteDepth++
 
@@ -139,7 +139,7 @@ func HandleMutexEventForMixedDeadlock(element *trace.ElementMutex) {
 
 		if t.ReadLockCount[lockID] == 1 {
 			mdPushRD(t, tid, lockID, element, element)
-			t.CurrentLockset.Add(lockID)
+			t.CurrentLockset.Add(lockID, element)
 			t.LockDepth++
 		}
 		t.ReadDepth++
@@ -382,14 +382,14 @@ func mdLockAcqAreConcurrent(rdA, rdB *mdRDNode) bool {
 		return false
 	}
 	for _, reqA := range rdA.Requests {
-		if reqA.GetVC(a_clock.Strong) == nil {
+		if reqA.VC(a_clock.Strong) == nil {
 			continue
 		}
 		for _, reqB := range rdB.Requests {
-			if reqB.GetVC(a_clock.Strong) == nil {
+			if reqB.VC(a_clock.Strong) == nil {
 				continue
 			}
-			if a_clock.GetHappensBefore(reqA.GetVC(a_clock.Strong), reqB.GetVC(a_clock.Strong)) == a_hb.Concurrent {
+			if a_clock.GetHappensBefore(reqA.VC(a_clock.Strong), reqB.VC(a_clock.Strong)) == a_hb.Concurrent {
 				return true
 			}
 		}
@@ -431,8 +431,8 @@ func mdDetermineRoles(
 
 	// Both CS with same depth VC order
 	if len(refA.RD.Requests) > 0 && len(refB.RD.Requests) > 0 {
-		vcA := refA.RD.Requests[0].GetVC(a_clock.Strong)
-		vcB := refB.RD.Requests[0].GetVC(a_clock.Strong)
+		vcA := refA.RD.Requests[0].VC(a_clock.Strong)
+		vcB := refB.RD.Requests[0].VC(a_clock.Strong)
 		if vcA != nil && vcB != nil {
 			switch a_clock.GetHappensBefore(vcA, vcB) {
 			case a_hb.Before:
@@ -524,9 +524,8 @@ func mdReportCandidate(
 
 	results.Result(
 		results.CRITICAL,
-		helper.PMixedDeadlock,
-		"stuck", []results.ResultElem{stuckElement},
-		"cycle", cycleElements,
+		buginfo.PMixedDeadlock,
+		[]results.ResultElem{stuckElement}, cycleElements,
 	)
 }
 

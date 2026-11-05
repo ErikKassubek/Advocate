@@ -19,16 +19,21 @@ import (
 
 type Routine struct {
 	id        int
+	fork      *ElementFork
 	elems     []Element
 	resources []Resource // for resource aware blocking bug detection
 }
 
 func NewRoutine(id int) *Routine {
-	return &Routine{id, make([]Element, 0), make([]Resource, 0)}
+	return &Routine{id, nil, make([]Element, 0), make([]Resource, 0)}
 }
 
 func (this *Routine) addElement(elem Element) {
 	this.elems = append(this.elems, elem)
+}
+
+func (this *Routine) setFork(fork *ElementFork) {
+	this.fork = fork
 }
 
 // ========================================================
@@ -79,6 +84,10 @@ func (this *Routine) IsTerminated() bool {
 // ========================================================
 // Elements
 // ========================================================
+
+func (this *Routine) Fork() *ElementFork {
+	return this.fork
+}
 
 func (this *Routine) Elems() []Element {
 	return this.elems

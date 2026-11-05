@@ -13,6 +13,7 @@ import (
 	"advocate/fuzzing/f_base"
 	"advocate/utils/flags"
 	"advocate/utils/helper"
+	"advocate/utils/log"
 	"flag"
 	"os"
 	"strings"
@@ -38,8 +39,8 @@ func CommandLine() bool {
 
 	flag.StringVar(&flags.TracePath, "trace", "", "Path to the trace folder to replay")
 
-	flag.IntVar(&flags.Timeout, "timeoutRec", 180, "Set the timeout in seconds for the recording. Default: 600s. To disable set to -1")
-	flag.IntVar(&flags.TimeoutFuzzing, "timeoutFuz", 420, "Timeout of fuzzing per test/program in seconds. Default: 7min. To Disable, set to -1")
+	flag.IntVar(&flags.Timeout, "timeoutRun", 180, "Set the timeout in seconds for one recording/replay. Default: 180s. To disable set to -1")
+	flag.IntVar(&flags.TimeoutFuzzing, "timeoutFuz", 420, "Timeout of fuzzing per test/program in seconds. Default: 420s. To Disable, set to -1")
 	flag.IntVar(&flags.MaxFuzzingRun, "maxFuzzingRuns", -1, "Maximum number of fuzzing runs per test/prog. Default: -1. To Disable, set to -1")
 	flag.IntVar(&flags.MaxNumberElements, "maxNumberElements", 10000000, "Set the maximum number of elements in a trace. Traces with more elements will be skipped. To disable set -1. Default: 10000000")
 
@@ -68,6 +69,10 @@ func CommandLine() bool {
 	flag.BoolVar(&flags.AlwaysPanic, "panic", false, "Panic if the analysis panics")
 	flag.BoolVar(&flags.NoMemorySupervisor, "noMemorySupervisor", false, "Disable the memory supervisor")
 
+	flag.BoolVar(&flags.ShowFile, "showFile", false, "Show the file name. Only used for 'show' mode. Otherwise only the line number is used.")
+
+	flag.StringVar(&flags.Experiment, "experiment", "", "Name of the experiment, only in experiment mode.")
+
 	flag.StringVar(&flags.Scenarios, "scen", "", "Select which analysis scenario to run, e.g. -scen srd for the option s, r and d."+
 		"If not set, all scenarios are run.\n"+
 		"Options:\n"+
@@ -94,8 +99,15 @@ func CommandLine() bool {
 	// for experiments
 	flag.BoolVar(&f_base.FinishIfBugFound, "finishIfBugFound", false, "Finish fuzzing as soon as a bug was found")
 	flag.BoolVar(&flags.CancelTestIfBugFound, "cancelTestIfBugFound", false, "Skip further fuzzing runs of a test if one bug has been found")
+	flag.StringVar(&flags.ClosureType, "closure", "scpc", "Closure type. Possible values: scpc, chb, order, replay. Default: scpc.")
 
 	flag.Parse()
+
+	return check()
+}
+
+func check() bool {
+	log.Info("Run CL Checks")
 
 	if len(os.Args) >= 2 && !strings.HasPrefix(os.Args[1], "-") {
 		flags.Mode = os.Args[1]
@@ -113,6 +125,65 @@ func CommandLine() bool {
 		return false
 	}
 
-	return true
+	if !checkMode() {
+		return false
+	}
+	if !checkClosure() {
+		return false
+	}
+	if flags.Mode != "show" {
+		CheckProg()
+	}
 
+	log.Info("Passed CL Checks")
+
+	return true
+}
+
+func checkMode() bool {
+	flags.Mode = strings.ToLower(flags.Mode)
+
+	switch flags.Mode {
+	case "analysis":
+		flags.Mode = flags.ModeAnalysis
+	case "fuzzing":
+		flags.Mode = flags.ModeFuzzing
+	case "record", "recording", "trace":
+		flags.Mode = flags.ModeRecord
+	case "replay":
+		flags.Mode = flags.ModeReplay
+	case "experiment", "experiments":
+		flags.Mode = flags.ModeExperiments
+	case "show":
+		flags.Mode = flags.ModeShow
+	default:
+		log.Error("Unknown mode: ", flags.Mode)
+		log.ErrorInfo("Possible Values: ")
+		log.ErrorInfof("\t%s", flags.ModeAnalysis)
+		log.ErrorInfof("\t%s", flags.ModeFuzzing)
+		log.ErrorInfof("\t%s", flags.ModeRecord)
+		log.ErrorInfof("\t%s", flags.ModeReplay)
+		log.ErrorInfof("\t%s", flags.ModeExperiments)
+		log.ErrorInfof("\t%s", flags.ModeShow)
+		return false
+	}
+
+	return true
+}
+
+func checkClosure() bool {
+	flags.ClosureType = strings.ToLower(flags.ClosureType)
+
+	switch flags.ClosureType {
+	case flags.ClosureOrder, flags.ClosureHB, flags.ClosureSCPC, flags.ClosureReplay:
+		return true
+	default:
+		log.Error("Unknown closure type: ", flags.Mode)
+		log.ErrorInfo("Possible Values: ")
+		log.ErrorInfof("\t%s", flags.ClosureOrder)
+		log.ErrorInfof("\t%s", flags.ClosureHB)
+		log.ErrorInfof("\t%s", flags.ClosureSCPC)
+		log.ErrorInfof("\t%s", flags.ClosureReplay)
+		return false
+	}
 }

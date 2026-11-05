@@ -9,7 +9,9 @@
 
 package f_por
 
-import "advocate/fuzzing/f_base"
+import (
+	"advocate/fuzzing/f_constraints"
+)
 
 // Return, if the constraint has a previous, equivalent constraint.
 // If not, the constraint is added to alreadyRunROC
@@ -19,7 +21,7 @@ import "advocate/fuzzing/f_base"
 //
 // Returns:
 //   - bool: true if the is a previous, equivalent constraint, false otherwise
-func HasEquivalent(constraint f_base.Constraint) bool {
+func HasEquivalent(constraint f_constraints.Constraint) bool {
 	for _, constraint2 := range alreadyRunROC {
 		if isEquiv := isEquivalent(constraint, constraint2); isEquiv {
 			alreadyRunROC = append(alreadyRunROC, constraint)
@@ -38,7 +40,7 @@ func HasEquivalent(constraint f_base.Constraint) bool {
 //
 // Returns:
 //   - bool: true if the constraints are equivalent, false if not
-func isEquivalent(constraint1, constraint2 f_base.Constraint) bool {
+func isEquivalent(constraint1, constraint2 f_constraints.Constraint) bool {
 	ok, c1, c2 := isSubset(constraint1, constraint2)
 	if !ok {
 		return false
@@ -56,7 +58,7 @@ func isEquivalent(constraint1, constraint2 f_base.Constraint) bool {
 //   - bool: true if one roc is a subset of the other or if the sets (unordered) are equal. False otherwise.
 //   - baseF.Constraint: constraint1 with only the events in both constraints
 //   - baseF.Constraint: constraint2 with only the events in both constraints
-func isSubset(constraint1, constraint2 f_base.Constraint) (bool, f_base.Constraint, f_base.Constraint) {
+func isSubset(constraint1, constraint2 f_constraints.Constraint) (bool, f_constraints.Constraint, f_constraints.Constraint) {
 	// if the constraints are of equal length, constraint1 should be the longer one
 	if constraint1.Len() < constraint2.Len() {
 		constraint1, constraint2 = constraint2, constraint1
@@ -78,7 +80,7 @@ func isSubset(constraint1, constraint2 f_base.Constraint) (bool, f_base.Constrai
 //
 // Returns:
 //   - baseF.Constraint: copy of c1 containing only the values tha are in c1
-func removeDifferrence(c1, c2 f_base.Constraint) f_base.Constraint {
+func removeDifferrence(c1, c2 f_constraints.Constraint) f_constraints.Constraint {
 	return c1
 }
 
@@ -91,7 +93,7 @@ func removeDifferrence(c1, c2 f_base.Constraint) f_base.Constraint {
 //
 // Returns:
 //   - bool: true constraint1 can be reordered to be constraint2, false otherwise
-func canBeReordered(constraint1, constraint2 f_base.Constraint) bool {
+func canBeReordered(constraint1, constraint2 f_constraints.Constraint) bool {
 	return false
 }
 
@@ -103,6 +105,6 @@ func canBeReordered(constraint1, constraint2 f_base.Constraint) bool {
 //
 // Returns:
 //   - bool: true if the events are considered equal, false otherwise
-func IsEqualPOR(first, second f_base.Constraint) bool {
+func IsEqualPOR(first, second f_constraints.Constraint) bool {
 	return false
 }

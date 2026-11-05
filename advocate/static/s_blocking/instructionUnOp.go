@@ -12,7 +12,6 @@ package s_blocking
 import (
 	"advocate/static/static/s_ssa"
 	"advocate/trace"
-	"advocate/utils/log"
 	"go/token"
 )
 
@@ -22,11 +21,7 @@ func instInfoPointerDereference(inst *s_ssa.InstructionUnOp, rout int) *instruct
 	term := inst.Term()
 	iwi := getDecOfSSAVar(rout, term)
 
-	log.Debug2("A: ", iwi)
-
 	iwi_new := newIwiFromIwi(inst, iwi)
-
-	log.Debug2("B: ", iwi)
 
 	return addPathInstr(rout, iwi_new)
 }

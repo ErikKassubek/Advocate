@@ -124,11 +124,11 @@ func (this *VectorClock) GetClock() map[uint32]uint32 {
 	return this.clock
 }
 
-// ToString returns a string representation of the vector clock
+// String returns a string representation of the vector clock
 //
 // Returns:
 //   - string: The string representation of the vector clock
-func (this *VectorClock) ToString() string {
+func (this *VectorClock) String() string {
 	str := "["
 	for i := 1; i <= this.size; i++ {
 		str += fmt.Sprint(this.GetValue(i))

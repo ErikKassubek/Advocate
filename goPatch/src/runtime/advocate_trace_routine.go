@@ -68,6 +68,11 @@ func AdvocatRoutineExit() {
 		return
 	}
 
+	rout := currentGoRoutineInfo()
+	if rout.ignored || rout.hasPanicked {
+		return
+	}
+
 	timer := GetNextTimeStep()
 	elem := AdvocateTraceRoutineExit{
 		tPost: timer,
@@ -82,7 +87,7 @@ func AdvocatRoutineExit() {
 //   - string: the string representation of the form
 //     G,[tPost],[newID],[file],[line]
 func (self AdvocateTraceSpawn) toString() string {
-	return buildTraceElemString("G", self.t, self.newID, posToString(self.file, self.line))
+	return buildTraceElemString("G", self.t, self.newID, posToString(self.file, self.line), "-")
 }
 
 // Get a string representation of the routine element
@@ -91,7 +96,7 @@ func (self AdvocateTraceSpawn) toString() string {
 //   - string: the string representation of the form
 //     E,[tPost]
 func (elem AdvocateTraceRoutineExit) toString() string {
-	return buildTraceElemString("E", elem.tPost)
+	return buildTraceElemString("E", elem.tPost, "-")
 }
 
 // getOperation is a getter for the spawn element
@@ -157,3 +162,6 @@ func (self AdvocateTraceSpawn) resource() []AdvocateTraceResource {
 func (self AdvocateTraceRoutineExit) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{}
 }
+
+func (self AdvocateTraceSpawn) causedPanic() traceElem       { return self }
+func (self AdvocateTraceRoutineExit) causedPanic() traceElem { return self }

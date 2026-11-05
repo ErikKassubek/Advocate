@@ -64,13 +64,7 @@ func InitTracing(timeout int, init bool) {
 		}
 	}
 
-	if timeout > 0 {
-		// start time timeout
-		go func() {
-			time.Sleep(time.Duration(timeout) * time.Second)
-			panic("Timeout")
-		}()
-	}
+	startTimeout(timeout)
 
 	// DetectBlockingGC(1000)
 
@@ -196,22 +190,31 @@ func writeToTraceFileInfo(numberRoutines int) {
 	defer file.Close()
 
 	reachedActive := 0
-	if runtime.NumberActiveReleased > 0 || runtime.NumberActive == 0 {
+
+	// TODO: make this work again
+
+	numberReleased := runtime.GetReplayIndex()
+
+	if numberReleased >= runtime.NumberElemClosure {
 		reachedActive = 1
 	}
 	allActiveReleased := 0
-	if runtime.NumberActiveReleased == runtime.NumberActive {
+	if numberReleased >= runtime.NumberElemConstraint+runtime.NumberElemClosure {
 		allActiveReleased = 1
 	}
 
 	exitCode, exitPos := runtime.GetExitCode()
-	replayOldest, replayDisabled, replayAck := runtime.GetReplayStatus()
+	replayOldest, replayDisabled, replayAck, maxWaitingSize := runtime.GetReplayInfo()
+
+	// exitCode, exitPos := 0, ""
+	// replayOldest, replayDisabled, replayAck := 0, 0, 0
 
 	file.WriteString(fmt.Sprintf("ExitCode!%d\n", exitCode))
 	file.WriteString(fmt.Sprintf("ExitPosition!%s\n", exitPos))
-	file.WriteString(fmt.Sprintf("ReplayTimeout!%d\n", replayOldest))
-	file.WriteString(fmt.Sprintf("ReplayDisabled!%d\n", replayDisabled))
-	file.WriteString(fmt.Sprintf("ReplayAck!%d\n", replayAck))
+	file.WriteString(fmt.Sprintf("ReplayTimeout!%d\n", boolToInt(replayOldest)))
+	file.WriteString(fmt.Sprintf("ReplayDisabled!%d\n", boolToInt(replayDisabled)))
+	file.WriteString(fmt.Sprintf("ReplayAck!%d\n", boolToInt(replayAck)))
+	file.WriteString(fmt.Sprintf("ReplayMaxWaiting!%d\n", maxWaitingSize))
 	file.WriteString(fmt.Sprintf("NumberRoutines!%d\n", numberRoutines))
 	file.WriteString(fmt.Sprintf("ActiveReached!%d\n", reachedActive))
 	file.WriteString(fmt.Sprintf("AllActiveReleased!%d\n", allActiveReleased))
@@ -249,3 +252,15 @@ func writeToTraceFileInfo(numberRoutines int) {
 // 	}
 
 // }
+
+func boolToInt(b bool) int {
+	// The compiler currently only optimizes this form.
+	// See issue 6011.
+	var i int
+	if b {
+		i = 1
+	} else {
+		i = 0
+	}
+	return i
+}

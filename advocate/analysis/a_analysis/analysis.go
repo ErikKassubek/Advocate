@@ -49,7 +49,7 @@ func RunAnalysis(fuzzing bool) {
 	timer.Start(timer.Analysis)
 	defer timer.Stop(timer.Analysis)
 
-	a_scenarios.RunAnalysisOnExitCodes(true)
+	a_scenarios.RunAnalysisOnExitCodes(flags.OnlyAPanicAndLeak)
 
 	if !fuzzing || f_base.UseHBInfoFuzzing {
 		RunHBAnalysis(fuzzing)
@@ -127,7 +127,7 @@ func RunHBAnalysis(fuzzing bool) {
 		// count how many operations where executed on the underlying structure
 		// do not count for operations that do not have an underlying structure
 		switch e := elem.(type) {
-		case *trace.ElementFork, *trace.ElementAlloc, *trace.ElementReplay, *trace.ElementRoutineEnd:
+		case *trace.ElementFork, *trace.ElementAlloc, *trace.ElementRoutineEnd:
 		default:
 			a_base.AddOpsPerID(e.ResourceID())
 		}

@@ -30,12 +30,14 @@ import (
 //
 // Parameter:
 //   - filePath string: The path to the folder
+//   - asMain bool: if true, set as main trace
 //
 // Returns:
+//   - *trace.Trace: the trace
 //   - int: The number of routines
 //   - int: The number of elements
 //   - error: An error if the trace could not be created
-func CreateTraceFromFiles(folderPath string) (int, int, error) {
+func CreateTraceFromFiles(folderPath string, asMain bool) (*trace.Trace, int, int, error) {
 	timer.Start(timer.Io)
 	defer timer.Stop(timer.Io)
 
@@ -43,56 +45,61 @@ func CreateTraceFromFiles(folderPath string) (int, int, error) {
 	// traverse all files in the folder
 	files, err := os.ReadDir(folderPath)
 	if err != nil {
-		return 0, 0, err
+		return nil, 0, 0, err
 	}
 
 	tr := trace.NewTrace()
 
-	if err != nil {
-		log.Error(err)
-	}
-
 	elemCounter := 0
 	for _, file := range files {
+		name := file.Name()
+
 		if file.IsDir() {
 			continue
 		}
 
-		if file.Name() == paths.NameTimes {
+		if name == paths.NameTimes {
 			continue
 		}
 
-		filePath := filepath.Join(folderPath, file.Name())
+		filePath := filepath.Join(folderPath, name)
 
-		if file.Name() == paths.NameTraceInfo {
+		if name == paths.NameTraceInfo {
 			getTraceInfoFromFile(filePath)
 		}
 
-		routine, err := getRoutineFromFileName(file.Name())
+		routine, err := getRoutineFromFileName(name)
 		if err != nil {
+			if name != paths.NameTraceInfo && name != paths.NameReplayConstraints && name != paths.NameReplayForkTree {
+				log.Error("Could not get routine from file name ", name)
+			}
 			continue
 		}
 
 		numberElems, err := createTraceFromFile(&tr, filePath, routine)
+
 		if err != nil {
-			return 0, elemCounter, err
+			return nil, 0, elemCounter, err
 		}
 		elemCounter += numberElems
 		numberRoutines++
 
 		if elemCounter > flags.MaxNumberElements {
-			return numberRoutines, elemCounter, fmt.Errorf("Too many elements")
+			return &tr, numberRoutines, elemCounter, fmt.Errorf("Too many elements")
 		}
 
 		if control.WasCanceled() {
-			return numberRoutines, elemCounter, fmt.Errorf("Canceled by memory")
+			return &tr, numberRoutines, elemCounter, fmt.Errorf("Canceled by memory")
 		}
 	}
 
 	tr.Sort()
-	a_base.SetMainTrace(&tr)
 
-	return numberRoutines, elemCounter, nil
+	if asMain {
+		a_base.SetMainTrace(&tr)
+	}
+
+	return &tr, numberRoutines, elemCounter, nil
 }
 
 // getTraceInfoFromFile reads in the information from a the trace_info.log file
@@ -197,7 +204,7 @@ func createTraceFromFile(tr *trace.Trace, filePath string, routine int) (int, er
 		line := scanner.Text()
 		err := processElement(tr, line, routine)
 		if err != nil {
-			log.Error("Error in processing trace element %s: ", line, err)
+			log.Errorf("Error in processing trace element %s: %s", line, err.Error())
 		}
 		counter++
 
@@ -231,70 +238,70 @@ func processElement(tr *trace.Trace, element string, routine int) error {
 		}
 		err = tr.AddTraceElementAtomic(routine, fields[1], fields[2], fields[3], fields[4])
 	case "C":
-		if len(fields) != 10 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 10", element, len(fields))
+		if len(fields) != 11 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 11", element, len(fields))
 		}
 		err = tr.AddTraceElementChannel(routine, fields[1], fields[2],
-			fields[3], fields[4], fields[5], fields[6], fields[7], fields[8], fields[9])
+			fields[3], fields[4], fields[5], fields[6], fields[7], fields[8], fields[9], fields[10])
 	case "M":
-		if len(fields) != 8 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 8", element, len(fields))
+		if len(fields) != 9 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 9", element, len(fields))
 		}
 		err = tr.AddTraceElementMutex(routine, fields[1], fields[2],
-			fields[3], fields[4], fields[5], fields[6], fields[7])
+			fields[3], fields[4], fields[5], fields[6], fields[7], fields[8])
 	case "G":
-		if len(fields) != 4 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 4", element, len(fields))
+		if len(fields) != 5 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 5", element, len(fields))
 		}
 		err = tr.AddTraceElementFork(routine, fields[1], fields[2], fields[3])
 	case "S":
-		if len(fields) != 7 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 7", element, len(fields))
+		if len(fields) != 8 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 6", element, len(fields))
 		}
 		err = tr.AddTraceElementSelect(routine, fields[1], fields[2], fields[3],
-			fields[4], fields[5], fields[6])
+			fields[4], fields[5], fields[6], fields[7])
 	case "W":
-		if len(fields) != 8 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 8", element, len(fields))
+		if len(fields) != 9 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 7", element, len(fields))
 		}
 		err = tr.AddTraceElementWait(routine, fields[1], fields[2], fields[3],
-			fields[4], fields[5], fields[6], fields[7])
+			fields[4], fields[5], fields[6], fields[7], fields[8])
 	case "O":
-		if len(fields) != 6 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 6", element, len(fields))
+		if len(fields) != 7 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 7", element, len(fields))
 		}
 		err = tr.AddTraceElementOnce(routine, fields[1], fields[2], fields[3],
 			fields[4], fields[5])
 	case "D":
-		if len(fields) != 6 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 6", element, len(fields))
+		if len(fields) != 7 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 7", element, len(fields))
 		}
 		err = tr.AddTraceElementCond(routine, fields[1], fields[2], fields[3],
 			fields[4], fields[5])
 	case "N":
-		if len(fields) != 6 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 6", element, len(fields))
+		if len(fields) != 7 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 7", element, len(fields))
 		}
 		err = tr.AddTraceElementAlloc(routine, fields[1], fields[2], fields[3],
 			fields[4], fields[5])
 	case "E":
-		if len(fields) != 2 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 2", element, len(fields))
+		if len(fields) != 3 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 3", element, len(fields))
 		}
 		err = tr.AddTraceElementRoutineEnd(routine, fields[1])
 	case "F":
-		if len(fields) != 5 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 4", element, len(fields))
+		if len(fields) != 6 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 6", element, len(fields))
 		}
 		err = tr.AddTaceElementFunc(routine, fields[1], fields[2], fields[3], fields[4])
 	case "R":
-		if len(fields) != 2 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 4", element, len(fields))
+		if len(fields) != 3 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 3", element, len(fields))
 		}
 		err = tr.AddTaceElementReturn(routine, fields[1])
 	case "I":
-		if len(fields) != 6 {
-			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 6", element, len(fields))
+		if len(fields) != 7 {
+			return fmt.Errorf("Invalid element: %s. Len: %d. Expected len: 7", element, len(fields))
 		}
 		err = tr.AddTraceElementControllFlow(routine, fields[1], fields[2], fields[3], fields[4], fields[5])
 	case "OAT":

@@ -13,6 +13,7 @@ import (
 	"advocate/analysis/hb/a_clock"
 	"advocate/utils/consts"
 	"advocate/utils/flags"
+	"advocate/utils/paths"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -47,6 +48,8 @@ type Element interface {
 	IsEqual(elem Element) bool
 	IsSameElement(elem Element) bool
 
+	Pan() bool
+
 	Trace() *Trace
 	setTrace(trace *Trace)
 
@@ -55,14 +58,15 @@ type Element interface {
 	SetRequest(req bool)
 
 	String() string
+	StringMin() string
 	StringLocal() string
 	StringDebug() string
 	StringGui() string
 
 	Function() *ElementFunc
 
-	Vc(weak a_clock.VcType, vc *a_clock.VectorClock)
-	GetVC(weak a_clock.VcType) *a_clock.VectorClock
+	SetVc(weak a_clock.VcType, vc *a_clock.VectorClock)
+	VC(weak a_clock.VcType) *a_clock.VectorClock
 
 	NumberConcurrent(weak, sameElem bool) int
 	SetNumberConcurrent(c int, weak, sameElem bool)
@@ -74,11 +78,13 @@ type Element interface {
 	IsValid() bool
 
 	InInit() bool
+
+	Replayable() bool
 }
 
 func IsOp(elem Element) bool {
 	switch elem.(type) {
-	case *ElementAlloc, *ElementReplay, *ElementRoutineEnd:
+	case *ElementAlloc, *ElementRoutineEnd:
 		return false
 	}
 
@@ -206,11 +212,9 @@ const (
 	CondSignal    OperationType = "DS"
 	CondBroadcast OperationType = "DB"
 
-	Fork   OperationType = "G"
-	ForkOp OperationType = "GG"
-
-	End        OperationType = "E"
-	EndRoutine OperationType = "EG"
+	Rout      OperationType = "G"
+	RoutSpawn OperationType = "GG"
+	RoutEnd   OperationType = "GE"
 
 	Mutex         OperationType = "M"
 	MutexLock     OperationType = "ML"
@@ -270,10 +274,8 @@ func GetElemTypeFromObjectType(ob OperationType) OperationType {
 		return Channel
 	case Cond, CondWait, CondSignal, CondBroadcast:
 		return Cond
-	case Fork, ForkOp:
-		return Fork
-	case End, EndRoutine:
-		return End
+	case Rout, RoutSpawn, RoutEnd:
+		return Rout
 	case Mutex, MutexLock, MutexRLock, MutexTryLock, MutexUnlock, MutexRUnlock:
 		return Mutex
 	case Once, OnceSuc, OnceFail:
@@ -341,10 +343,10 @@ func (this *concInfo) getVC(weak a_clock.VcType) *a_clock.VectorClock {
 
 func (this *concInfo) setVC(weak a_clock.VcType, vc *a_clock.VectorClock) {
 	if weak == a_clock.Weak {
-		this.wVc = vc
+		this.wVc = vc.Copy()
 		return
 	}
-	this.vc = vc
+	this.vc = vc.Copy()
 }
 
 func (this *concInfo) GetNumberConcurrent(weak, sameElem bool) int {
@@ -408,8 +410,13 @@ func (this Position) String() string {
 }
 
 func (this Position) Short() string {
-	pp := filepath.Dir(flags.ProgPath)
-	if strings.HasSuffix(flags.ProgPath, ".go") {
+	pathPre := flags.ProgPath
+	if pathPre == "" {
+		pathPre = strings.Split(flags.TracePath, fmt.Sprintf("/%s/", paths.NameResult))[0]
+	}
+
+	pp := filepath.Dir(pathPre)
+	if strings.HasSuffix(pathPre, ".go") {
 		pp = filepath.Dir(pp)
 	}
 	shortFile := strings.TrimPrefix(this.file, pp)

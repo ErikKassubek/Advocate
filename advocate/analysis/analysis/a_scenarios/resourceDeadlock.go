@@ -16,8 +16,7 @@ import (
 	"advocate/analysis/a_hb"
 	"advocate/analysis/hb/a_clock"
 	"advocate/trace"
-	"advocate/utils/helper"
-	"advocate/utils/log"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/timer"
 )
@@ -67,7 +66,7 @@ func acquire(s *a_base.State, readLock bool, event trace.Element) {
 	if lockID.IsRead() {
 		lockID.AddReader(s.Routines[event.RoutineID()])
 	}
-	s.Routines[event.RoutineID()].CurrentLockset.Add(lockID)
+	s.Routines[event.RoutineID()].CurrentLockset.Add(lockID, event)
 }
 
 func release(s *a_base.State, readLock bool, event trace.Element) {
@@ -249,7 +248,7 @@ func checkAndFilterConcurrentRequests(cycle *a_base.Cycle) bool {
 		requestsWithPrev := []trace.Element{}
 		for _, req := range (*cycle)[i].Requests {
 			for _, prevReq := range (*cycle)[(len(*cycle)+i-1)%len(*cycle)].Requests {
-				if a_clock.GetHappensBefore(req.GetVC(a_clock.Strong), prevReq.GetVC(a_clock.Strong)) == a_hb.Concurrent {
+				if a_clock.GetHappensBefore(req.VC(a_clock.Weak), prevReq.VC(a_clock.Weak)) == a_hb.Concurrent {
 					requestsWithPrev = append(requestsWithPrev, req)
 					break
 				}
@@ -259,7 +258,7 @@ func checkAndFilterConcurrentRequests(cycle *a_base.Cycle) bool {
 		requestsWithBoth := []trace.Element{}
 		for _, req := range requestsWithPrev {
 			for _, nextReq := range (*cycle)[(i+1)%len(*cycle)].Requests {
-				if a_clock.GetHappensBefore(req.GetVC(a_clock.Strong), nextReq.GetVC(a_clock.Strong)) == a_hb.Concurrent {
+				if a_clock.GetHappensBefore(req.VC(a_clock.Weak), nextReq.VC(a_clock.Weak)) == a_hb.Concurrent {
 					requestsWithBoth = append(requestsWithBoth, req)
 					break
 				}
@@ -333,45 +332,53 @@ func CheckForResourceDeadlock() {
 
 	// debugLog("Found", len(baseA.CurrentState.cycles), "cycles")
 
-	for _, cycle := range a_base.CurrentState.Cycles {
-		var cycleElements []results.ResultElem
-		var request = findEarliestRequest(cycle)
+	for _, cycles := range a_base.CurrentState.Cycles {
+		var stuckElements []results.ResultElem
+		var acquiredElements []results.ResultElem
+		stuckIds := make(map[int]bool)
+		var request = findEarliestRequest(cycles)
 
 		// debugLog("Found cycle with the following entries:", cycle)
-		for i := 0; i < len(cycle); i++ {
-			// 	debugLog("Entry in routine", cycle[i].thread, ":")
-			// 	debugLog("\tLockset:", cycle[i].lockset)
-			// 	debugLog("\tAmount of different lock requests that might block it:", len(cycle[i].requests))
-			// 	for i, r := range cycle[i].requests {
-			// 		debugLog("\t\tLock request", i, ":", r)
-			// 	}
-
-			for _, r := range cycle[i].Requests {
-				if a_clock.GetHappensBefore(request.GetVC(a_clock.Strong), r.GetVC(a_clock.Strong)) == a_hb.Concurrent {
+		for _, cycle := range cycles {
+			for _, r := range cycle.Requests {
+				if a_clock.GetHappensBefore(request.VC(a_clock.Weak), r.VC(a_clock.Weak)) == a_hb.Concurrent {
 					request = r
 					break
 				}
 			}
 
-			if request.RoutineID() != cycle[i].Thread {
-				log.Error("Request thread id ", request.RoutineID(), "does not match entry thread id", cycle[i].Thread, ". Ignoring circle!")
-				break
-			}
-
-			cycleElements = append(cycleElements, results.TraceElementResult{
+			stuckElements = append(stuckElements, results.TraceElementResult{
 				RoutineID:  request.RoutineID(),
 				ResourceID: request.ResourceID(),
 				TRequest:   request.T(trace.Request),
-				ObjType:    "DC",
+				ObjType:    request.Type(true),
 				File:       request.File(),
 				Line:       request.Line(),
 			})
+			stuckIds[request.ResourceID()] = true
+
 		}
 
-		var stuckElement = cycleElements[len(cycleElements)-1].(results.TraceElementResult)
-		stuckElement.ObjType = "DH"
+		for _, cycle := range cycles {
+			for _, elem := range cycle.Lockset {
+				if _, ok := stuckIds[elem.ResourceID()]; ok {
+					acquiredElements = append(acquiredElements, results.TraceElementResult{
+						RoutineID:  elem.RoutineID(),
+						ResourceID: elem.ResourceID(),
+						TRequest:   elem.T(trace.Request),
+						ObjType:    elem.Type(true),
+						File:       elem.File(),
+						Line:       elem.Line(),
+					})
+				}
+			}
+		}
 
-		results.Result(results.CRITICAL, helper.PCyclicDeadlock, "stuck", []results.ResultElem{stuckElement}, "cycle", cycleElements)
+		if len(stuckElements) == 0 {
+			return
+		}
+
+		results.Result(results.CRITICAL, buginfo.PCyclicDeadlock, stuckElements, acquiredElements)
 	}
 }
 

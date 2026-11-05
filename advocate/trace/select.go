@@ -11,6 +11,7 @@ package trace
 
 import (
 	"advocate/analysis/hb/a_clock"
+	"advocate/utils/flags"
 	"errors"
 	"fmt"
 	"math"
@@ -35,6 +36,7 @@ import (
 //   - containsDefault bool: Whether the select statement contains a default case
 //   - chosenDefault bool: if the default case was chosen
 //   - function *ElementFunc: the function the operation is in
+//   - pan bool: Caused a panic
 type ElementSelect struct {
 	ElementBase
 
@@ -50,6 +52,7 @@ type ElementSelect struct {
 	chosenDefault       bool
 	casesWithPosPartner []int
 	function            *ElementFunc
+	pan                 bool
 }
 
 // ========================================================
@@ -66,8 +69,9 @@ type ElementSelect struct {
 //   - cases string: The cases of the select statement
 //   - chosenIndex string: The internal index of chosen case
 //   - pos string: The position of the select statement in the code
-func (this *Trace) AddTraceElementSelect(routine int, tReq string,
-	tCom string, id string, cases string, chosenIndex string, pos string) error {
+//   - pan string: Caused a panic
+func (this *Trace) AddTraceElementSelect(routine int, tReq,
+	tCom, id, cases, chosenIndex, pos, pan string) error {
 
 	tReqInt, err := strconv.Atoi(tReq)
 	if err != nil {
@@ -94,6 +98,11 @@ func (this *Trace) AddTraceElementSelect(routine int, tReq string,
 		return err
 	}
 
+	panBool := false
+	if pan == "P" {
+		panBool = true
+	}
+
 	elem := ElementSelect{
 		ElementBase:         this.newElementBase(this, routine),
 		tPre:                tReqInt,
@@ -104,6 +113,7 @@ func (this *Trace) AddTraceElementSelect(routine int, tReq string,
 		ci:                  newConcInfo(),
 		casesWithPosPartner: make([]int, 0),
 		function:            getLastCall(routine),
+		pan:                 panBool,
 	}
 
 	cs := strings.Split(cases, "~")
@@ -433,6 +443,14 @@ func (this *ElementSelect) Types() []OperationType {
 }
 
 // ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementSelect) Pan() bool {
+	return this.pan
+}
+
+// ========================================================
 // MARK: Equal
 // ========================================================
 
@@ -536,7 +554,13 @@ func (this *ElementSelect) StringDebug() string {
 	if this.ElementBase.init {
 		routine = "   *"
 	}
-	return fmt.Sprintf("%s@%s", routine, this.String())
+	res := fmt.Sprintf("%s@%s", routine, this.String())
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
+
 }
 
 // StringGui returns the gui string representation of the element
@@ -569,6 +593,38 @@ func (this *ElementSelect) StringGui() string {
 	}
 	res += "," + strconv.Itoa(this.chosenIndex)
 	res += "\n" + this.Pos().Short()
+
+	if this.pan {
+		res += ",🗲"
+	}
+
+	return res
+}
+
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementSelect) StringMin() string {
+	pos := this.Pos().Short()
+	if !flags.ShowFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+
+	if this.chosenDefault {
+		return fmt.Sprintf("%s,D,%s", SelectOp, pos)
+	}
+
+	if this.chosenCase == nil {
+		return fmt.Sprintf("%s,-,%s", SelectOp, pos)
+	}
+
+	res := fmt.Sprintf("%s,%d,%s", SelectOp, this.chosenCase.Resource().shortID, pos)
+
+	if this.pan {
+		res += ",🗲"
+	}
+
 	return res
 }
 
@@ -584,26 +640,26 @@ func (this *ElementSelect) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-// Vc sets the vector clock
+// SetVc sets the vector clock
 //
 // Parameter:
 //   - weak bool
 //   - vc *clock.VectorClock: the vector clock
-func (this *ElementSelect) Vc(weak a_clock.VcType, vc *a_clock.VectorClock) {
+func (this *ElementSelect) SetVc(weak a_clock.VcType, vc *a_clock.VectorClock) {
 	this.ci.setVC(weak, vc)
 	if this.chosenCase != nil {
-		this.chosenCase.Vc(weak, vc)
+		this.chosenCase.SetVc(weak, vc)
 	}
 }
 
-// GetVC returns the vector clock of the element
+// VC returns the vector clock of the element
 //
 // Parameter:
 //   - weak bool
 //
 // Returns:
 //   - VectorClock: The vector clock of the element
-func (this *ElementSelect) GetVC(weak a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementSelect) VC(weak a_clock.VcType) *a_clock.VectorClock {
 	return this.ci.getVC(weak)
 }
 
@@ -646,6 +702,11 @@ func (this *ElementSelect) ReplayID() string {
 	return fmt.Sprintf("%d:%s#%d", this.routineId, this.pos.file, this.pos.line)
 }
 
+// Replayable returns if element can be part of replay
+func (this *ElementSelect) Replayable() bool {
+	return true
+}
+
 // ========================================================
 // MARK: Copy
 // ========================================================
@@ -679,6 +740,7 @@ func (this *ElementSelect) Copy(trace *Trace, mapping map[int]Element, keep bool
 			pos:             this.pos.copy(),
 			ci:              newConcInfo(),
 			function:        this.function.CopyFunc(trace, mapping, keep),
+			pan:             this.pan,
 		}
 
 		mapping[id] = elem
@@ -710,6 +772,7 @@ func (this *ElementSelect) Copy(trace *Trace, mapping map[int]Element, keep bool
 		pos:             this.pos.copy(),
 		ci:              this.ci.copy(),
 		function:        this.function.CopyFunc(trace, mapping, keep),
+		pan:             this.pan,
 	}
 
 	mapping[id] = elem
@@ -922,6 +985,17 @@ func (this *ElementSelect) HasCommonChannel(s *ElementSelect) bool {
 
 	for _, v := range s.GetCases() {
 		if _, ok := seen[v.objId]; ok {
+			return true
+		}
+	}
+
+	return false
+}
+
+// HasTimer checks if at least one of the the channels is a time channel
+func (this *ElementSelect) HasTimer() bool {
+	for _, c := range this.cases {
+		if c.IsTimer() {
 			return true
 		}
 	}

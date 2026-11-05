@@ -12,7 +12,7 @@
 package runtime
 
 import "unsafe"
-
+ 
 // Struct to store an operation on an atomic variable
 //
 // Fields
@@ -20,7 +20,7 @@ import "unsafe"
 //   - res AdvocateTraceResource: the resource the op is applied to
 //   - op Operation: operation type
 //   - file string: file where the operation occurred
-//   - line int: line where the operation occurred
+//   - line int: line where the operation occurred 
 type AdvocateTraceAtomic struct {
 	t    int64
 	res  AdvocateTraceResource
@@ -42,7 +42,7 @@ func AdvocateAtomic[T int32 | int64 | uint32 | uint64 | uintptr | unsafe.Pointer
 	timer := GetNextTimeStep()
 
 	_, file, line, _ := Caller(skip)
-
+	
 	if AdvocateIgnore(file) {
 		return
 	}
@@ -88,7 +88,7 @@ func (self AdvocateTraceAtomic) toString() string {
 		opStr = "O"
 	}
 
-	return buildTraceElemString("A", self.t, self.res.id, opStr, posToString(self.file, self.line))
+	return buildTraceElemString("A", self.t, self.res.id, opStr, posToString(self.file, self.line), "-")
 }
 
 // getOperation is a getter for the operation
@@ -114,3 +114,5 @@ func (self AdvocateTraceAtomic) hasCommit() bool {
 func (self AdvocateTraceAtomic) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{self.res}
 }
+
+func (self AdvocateTraceAtomic) causedPanic() traceElem { return self }

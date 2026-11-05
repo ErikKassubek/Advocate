@@ -11,6 +11,9 @@
 package toolchain
 
 import (
+	"advocate/analysis/a_base"
+	"advocate/experiments"
+	"advocate/fuzzing/f_base"
 	"advocate/utils/command"
 	"advocate/utils/flags"
 	"advocate/utils/log"
@@ -22,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 )
 
 // Run ADVOCATE on a program with a main function
@@ -57,9 +61,9 @@ func runWorkflowMain(
 	}
 
 	if firstRun {
-		os.RemoveAll("advocateResult")
-		if err := os.MkdirAll("advocateResult", os.ModePerm); err != nil {
-			return 0, 0, fmt.Errorf("Failed to create advocateResult directory: %v", err)
+		err := createResultFolder()
+		if err != nil {
+			return 0, 0, fmt.Errorf("Could not create Result Folder")
 		}
 
 		// Remove possibly leftover traces from unexpected aborts that could interfere with replay
@@ -110,8 +114,8 @@ func runWorkflowMain(
 			timer.Stop(timer.Run)
 		}
 
-		// Add header
-		buildFlags, err := buildArgsMain(paths.Prog, false, "1", flags.Timeout, false, fuzzing, fuzzingTrace, false)
+		// Build args
+		buildFlags, err := buildArgsMain(paths.Prog, false, "1", false, fuzzing, false)
 		if err != nil {
 			return 0, 0, fmt.Errorf("Error in adding header: %v", err)
 		}
@@ -126,30 +130,36 @@ func runWorkflowMain(
 		log.Info("Run program for execution")
 		timer.Start(timer.Recording)
 		execPath := paths.MakePathLocal(flags.ExecName)
-		if err := command.RunCommand(origStdout, origStderr, command.NoTimeout, execPath); err != nil {
-			log.Error("Error in Run Recording: ", err.Error())
-		}
+		command.RunCommand(origStdout, origStderr, command.NoTimeout, execPath)
+
 		timer.Stop(timer.Recording)
 	}
 
 	// Apply analyzer
 	if runAnalysis {
-		analyzerOutput := filepath.Join(paths.ProgDir, "advocateTrace")
+		analyzerOutput := filepath.Join(paths.ProgDir, paths.NameTrace)
 
 		err = runAnalyzer(analyzerOutput, paths.NameResultReadable, paths.NameResultMachine,
-			"rewrittenTrace", fuzzing, "", "main")
+			paths.NameRewrittenConsts, fuzzing, "", "main", false)
 
 		if err != nil {
 			return 0, 0, err
 		}
 	}
 
+	if flags.Mode == flags.ModeExperiments && flags.Experiment == experiments.IndexingEx {
+		return 0, 0, err
+	}
+
 	rewrittenTraces := make([]string, 0)
+	total := fuzzing != -1
 	if runReplay {
 		log.Info("Run replay")
+		a_base.Clear(false)
+
 		// Find rewrittenTrace directories
 		if runAnalysis {
-			rewrittenTraces, err = filepath.Glob(filepath.Join(paths.ProgDir, "rewrittenTrace*"))
+			rewrittenTraces, err = filepath.Glob(filepath.Join(paths.ProgDir, paths.NameRewrittenConsts+"*"))
 			if err != nil {
 				return 0, 0, fmt.Errorf("Error finding rewritten traces: %v", err)
 			}
@@ -159,11 +169,22 @@ func runWorkflowMain(
 			}
 		}
 
+		collect(paths.ProgDir, paths.ProgDir, paths.Result, total, false)
+
 		timer.Start(timer.Replay)
 		for _, trace := range rewrittenTraces {
 			traceNum := extractTraceNum(trace)
-			fmt.Printf("Apply replay header for file f %s and trace %s\n", paths.Prog, traceNum)
-			buildFlags, err := buildArgsMain(paths.Prog, true, traceNum, flags.Timeout, false, fuzzing, fuzzingTrace, false)
+
+			traceNumInt, err := strconv.Atoi(traceNum)
+			if err != nil {
+				continue
+			}
+			if traceNumInt <= f_base.MaxRewriteExec {
+				continue
+			}
+			f_base.MaxRewriteExec = traceNumInt
+
+			buildFlags, err := buildArgsMain(paths.Prog, true, traceNum, true, fuzzing, false)
 			if err != nil {
 				return 0, 0, err
 			}
@@ -180,7 +201,14 @@ func runWorkflowMain(
 			execPath := paths.MakePathLocal(flags.ExecName)
 			command.RunCommand(origStdout, origStderr, command.NoTimeout, execPath)
 
-			fmt.Printf("Remove replay header from %s\n", paths.Prog)
+			analyzerOutput := filepath.Join(paths.ProgDir, paths.NameTrace)
+
+			err = runAnalyzer(analyzerOutput, paths.NameResultReadable, paths.NameResultMachine,
+				"", fuzzing, "", "main", true)
+
+			if err != nil {
+				return 0, 0, err
+			}
 		}
 		timer.Stop(timer.Replay)
 	}
@@ -189,8 +217,7 @@ func runWorkflowMain(
 		RemoveTraces(paths.Prog)
 	}
 
-	total := fuzzing != -1
-	collect(paths.ProgDir, paths.ProgDir, paths.Result, total)
+	collect(paths.ProgDir, paths.ProgDir, paths.Result, total, true)
 
 	// Generate Bug Reports
 	var numberResults int

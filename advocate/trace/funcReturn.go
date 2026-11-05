@@ -126,6 +126,14 @@ func (this *ElementReturn) Type(operation bool) OperationType {
 }
 
 // ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementReturn) Pan() bool {
+	return false
+}
+
+// ========================================================
 // MARK: Equal
 // ========================================================
 
@@ -171,17 +179,25 @@ func (this *ElementReturn) StringDebug() string {
 }
 
 func (this *ElementReturn) StringGui() string {
-	return fmt.Sprintf("R")
+	return string(FuncReturn)
+}
+
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementReturn) StringMin() string {
+	return fmt.Sprintf(string(FuncReturn))
 }
 
 // ========================================================
 // MARK: VC
 // ========================================================
 
-func (this *ElementReturn) Vc(_ a_clock.VcType, _ *a_clock.VectorClock) {
+func (this *ElementReturn) SetVc(_ a_clock.VcType, _ *a_clock.VectorClock) {
 }
 
-func (this *ElementReturn) GetVC(_ a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementReturn) VC(_ a_clock.VcType) *a_clock.VectorClock {
 	return nil
 }
 
@@ -210,6 +226,11 @@ func (this *ElementReturn) SetNumberConcurrent(_ int, _, _ bool) {
 
 func (this *ElementReturn) ReplayID() string {
 	return fmt.Sprintf("%d:%s:%d", this.routineId, "", -1)
+}
+
+// Replayable returns if element can be part of replay
+func (this *ElementReturn) Replayable() bool {
+	return false
 }
 
 // ========================================================

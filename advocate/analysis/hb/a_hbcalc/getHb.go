@@ -11,6 +11,7 @@ package a_hbcalc
 
 import (
 	"advocate/analysis/a_hb"
+	"advocate/analysis/hb/a_clock"
 	"advocate/analysis/hb/a_cssts"
 	"advocate/analysis/hb/a_pog"
 	"advocate/analysis/hb/a_vc"
@@ -22,21 +23,21 @@ import (
 // Parameter:
 //   - t1 trace.Element: the trace element
 //   - t2 trace.Element: the second element
-//   - weak bool: get based on weak happens before
+//   - vcType a_clock.VcType: weak or strong
 //
 // Returns:
 //   - happensBefore: The happens before relation between the elements
-func GetHappensBefore(e1, e2 trace.Element, weak bool) a_hb.HappensBefore {
+func GetHappensBefore(e1, e2 trace.Element, vcType a_clock.VcType) a_hb.HappensBefore {
 	if CalcVC {
-		return a_vc.GetHappensBefore(e1, e2, weak)
+		return a_vc.GetHappensBefore(e1, e2, vcType)
 	}
 
 	if CalcPog {
-		return a_pog.GetHappensBefore(e1, e2, weak)
+		return a_pog.GetHappensBefore(e1, e2, vcType)
 	}
 
 	if CalcCssts {
-		return a_cssts.GetHappensBefore(e1, e2, weak)
+		return a_cssts.GetHappensBefore(e1, e2, vcType)
 	}
 
 	return a_hb.None

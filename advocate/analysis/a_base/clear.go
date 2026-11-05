@@ -17,10 +17,12 @@ import (
 )
 
 // Clear the data structures used for the analysis
-func Clear() {
+func Clear(total bool) {
 	ClearTrace()
 	ClearData()
-	results.Reset()
+	if total {
+		results.Reset()
+	}
 }
 
 // ClearData resets all data structures used in th analysis

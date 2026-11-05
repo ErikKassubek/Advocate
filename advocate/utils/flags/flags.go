@@ -74,6 +74,12 @@ var (
 	Settings string
 
 	Scenarios string
+
+	ShowFile bool
+
+	Experiment string
+
+	ClosureType string
 )
 
 // execution control
@@ -83,4 +89,9 @@ var (
 	NoRewrite     bool
 	NoSkipRewrite bool
 	DeleteTraces  bool
+)
+
+// contains gui
+var (
+	ContainsGui bool
 )

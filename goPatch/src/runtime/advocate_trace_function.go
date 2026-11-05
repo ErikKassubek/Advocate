@@ -149,7 +149,7 @@ func (elem AdvocateTraceFunctionStart) toString() string {
 // Returns:
 //   - string: the string representation
 func (self AdvocateTraceFunctionReturn) toString() string {
-	return buildTraceElemString("R", self.t)
+	return buildTraceElemString("R", self.t, "-")
 }
 
 // getOperation is a getter for the operation
@@ -199,3 +199,6 @@ func (self AdvocateTraceFunctionStart) resource() []AdvocateTraceResource {
 func (self AdvocateTraceFunctionReturn) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{}
 }
+
+func (self AdvocateTraceFunctionStart) causedPanic() traceElem  { return self }
+func (self AdvocateTraceFunctionReturn) causedPanic() traceElem { return self }

@@ -135,7 +135,6 @@ type CmdFlags struct {
 	AdvocateFuzzing    bool   "help:\"run fuzzing using the advocate mechanism\""
 	AdvocatePath       string "help:\"set the advocate replay path\""
 	AdvocateTimeout    int    "help:\"set the advocate tinmeout in s\""
-	AdvocateAtomics    bool   "help:\"set if advocate should use atomics\""
 	AdvocateMain       bool   "help:\"set if advocate is used on main\""
 	AdvocateRecordPlus bool   "help:\"record function calls and returns and controll flow operations\""
 	// ADVOCATE-END

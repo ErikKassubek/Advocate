@@ -21,8 +21,8 @@ import (
 func UpdateHBOnce(on *trace.ElementOnce) {
 	routine := on.RoutineID()
 
-	on.Vc(a_clock.Strong, CurrentVC[routine])
-	on.Vc(a_clock.Weak, CurrentVC[routine])
+	on.SetVc(a_clock.Strong, CurrentVC[routine])
+	on.SetVc(a_clock.Weak, CurrentVC[routine])
 
 	if on.GetSuc() {
 		DoSuc(on)
@@ -53,7 +53,7 @@ func DoFail(on *trace.ElementOnce) {
 	suc := a_base.OSuc[id]
 
 	if suc != nil {
-		CurrentVC[routine].Sync(suc.GetVC(a_clock.Strong))
+		CurrentVC[routine].Sync(suc.VC(a_clock.Strong))
 	}
 	CurrentVC[routine].Inc(routine)
 	CurrentWVC[routine].Inc(routine)

@@ -309,7 +309,6 @@ func (self *instructionWithInfo) sameResource(inst *instructionWithInfo) bool {
 
 }
 
-// TODO: fix
 func (self *instructionWithInfo) addReferenceIndex(iwi *instructionWithInfo, index1, index2 int) {
 	if _, ok := self.Reference[index1]; !ok {
 		self.Reference[index1] = make(map[*instructionWithInfo]map[int]bool)
@@ -347,7 +346,6 @@ func (self *instructionWithInfo) addReferenceIndex(iwi *instructionWithInfo, ind
 	}
 }
 
-// TODO: fix
 func (self *instructionWithInfo) addReferenceAll(iwi *instructionWithInfo) {
 	indices := make(map[int]bool)
 
@@ -378,7 +376,7 @@ func (self *instructionWithInfo) addReferenceAll(iwi *instructionWithInfo) {
 				continue
 			}
 			if index == 1 {
-				log.Debug2("MAKE: ", ref.Inst)
+				log.Debug("MAKE: ", ref.Inst)
 			}
 			if _, ok := self.Reference[index][ref]; !ok {
 				self.Reference[index][ref] = make(map[int]bool)
@@ -392,7 +390,7 @@ func (self *instructionWithInfo) addReferenceAll(iwi *instructionWithInfo) {
 				continue
 			}
 			if index == 1 {
-				log.Debug2("MAKE: ", ref.Inst)
+				log.Debug("MAKE: ", ref.Inst)
 			}
 			if _, ok := iwi.Reference[index][ref]; !ok {
 				iwi.Reference[index][ref] = make(map[int]bool)

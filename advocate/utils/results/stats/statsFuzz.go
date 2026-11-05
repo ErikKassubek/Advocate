@@ -11,7 +11,7 @@ package stats
 
 import (
 	"advocate/analysis/a_base"
-	"advocate/fuzzing/f_gopie"
+	"advocate/fuzzing/modes/f_gopie"
 )
 
 var fuzzStats = []statsType{

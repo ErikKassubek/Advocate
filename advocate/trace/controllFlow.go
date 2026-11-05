@@ -222,6 +222,14 @@ func (this *ElementControllFlow) Line() int {
 }
 
 // ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementControllFlow) Pan() bool {
+	return false
+}
+
+// ========================================================
 // MARK: Equal
 // ========================================================
 
@@ -317,6 +325,15 @@ func (this *ElementControllFlow) StringDebug() string {
 	return fmt.Sprintf("%s@%s", routine, this.String())
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementControllFlow) StringMin() string {
+
+	return fmt.Sprintf("%s,-,%s", string(this.op), this.Pos().Short())
+}
+
 // ========================================================
 // MARK: Function
 // ========================================================
@@ -329,22 +346,22 @@ func (this *ElementControllFlow) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-// Vc sets the vector clock
+// SetVc sets the vector clock
 //
 // Parameter:
 //   - weak bool: set the weak wv
 //   - cl *clock.allocVectorClock: the vector clock
-func (this *ElementControllFlow) Vc(_ a_clock.VcType, _ *a_clock.VectorClock) {
+func (this *ElementControllFlow) SetVc(_ a_clock.VcType, _ *a_clock.VectorClock) {
 }
 
-// GetVC returns the vector clock of the element
+// VC returns the vector clock of the element
 //
 // Parameter:
 //   - weak bool: get the weak
 //
 // Returns:
 //   - VectorClock: The vector clock of the element
-func (this *ElementControllFlow) GetVC(weak a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementControllFlow) VC(weak a_clock.VcType) *a_clock.VectorClock {
 	return &a_clock.VectorClock{}
 }
 
@@ -381,6 +398,11 @@ func (this *ElementControllFlow) SetNumberConcurrent(_ int, _, _ bool) {
 //   - int: The replayId of the element
 func (this *ElementControllFlow) ReplayID() string {
 	return ""
+}
+
+// Replayable returns if element can be part of replay
+func (this *ElementControllFlow) Replayable() bool {
+	return false
 }
 
 // ========================================================

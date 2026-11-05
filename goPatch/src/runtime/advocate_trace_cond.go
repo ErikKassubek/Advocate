@@ -21,7 +21,8 @@ import "unsafe"
 //   - res AdvocateTraceResource: the resource the op is applied to
 //   - op Operation: operation type
 //   - file string: file where the operation occurred
-//   - line int: line where the operation occurred
+//   - line int: line where the operation occurred.
+//   - pan bool: true if cause panic
 type AdvocateTraceCond struct {
 	tReq int64
 	tCom int64
@@ -100,7 +101,7 @@ func (self AdvocateTraceCond) toString() string {
 		opC = "B"
 	}
 
-	return buildTraceElemString("D", self.tReq, self.tCom, self.res.id, opC, posToString(self.file, self.line))
+	return buildTraceElemString("D", self.tReq, self.tCom, self.res.id, opC, posToString(self.file, self.line), "-")
 }
 
 // getOperation is a getter for the operation
@@ -126,3 +127,5 @@ func (self AdvocateTraceCond) hasCommit() bool {
 func (self AdvocateTraceCond) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{self.res}
 }
+
+func (self AdvocateTraceCond) causedPanic() traceElem { return self }

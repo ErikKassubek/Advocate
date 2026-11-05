@@ -86,7 +86,7 @@ func (self AdvocateTraceControllFlow) toString() string {
 		panic("Invalid controll flow type: " + string(self.ct))
 	}
 
-	return buildTraceElemString("I", self.t, ctString, self.numCases, self.chosenCase, posToString(self.file, self.line))
+	return buildTraceElemString("I", self.t, ctString, self.numCases, self.chosenCase, posToString(self.file, self.line), "-")
 }
 
 // getOperation is a getter for the operation
@@ -111,4 +111,8 @@ func (self AdvocateTraceControllFlow) hasCommit() bool {
 //   - []AdvocateTraceResource: recources
 func (self AdvocateTraceControllFlow) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{}
+}
+
+func (self AdvocateTraceControllFlow) causedPanic() traceElem {
+	return self
 }

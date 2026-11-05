@@ -51,6 +51,8 @@ func RunCommand(osOut, osErr *os.File, timeout int, name string, args ...string)
 
 	cmd := exec.CommandContext(ctx, name, args...)
 
+	log.Command(cmd.String())
+
 	if flags.Output {
 		if osOut != nil {
 			multiOut := io.MultiWriter(os.Stdout, osOut)
@@ -77,7 +79,10 @@ func RunGoModTidy() {
 	if err == nil {
 		defer os.Unsetenv("GOROOT")
 	}
-	RunCommand(nil, nil, NoTimeout, "go", "mod", "tidy")
+	err = RunCommand(nil, nil, NoTimeout, paths.Go, "mod", "tidy")
+	if err != nil {
+		log.Error("Failed to run go mod tidy: ", err.Error())
+	}
 }
 
 // func runCommandWithOutput(name, outputFile string, args ...string) (string, error) {

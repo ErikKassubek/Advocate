@@ -11,6 +11,7 @@ package trace
 
 import (
 	"advocate/analysis/hb/a_clock"
+	"advocate/utils/flags"
 	"advocate/utils/log"
 	"errors"
 	"fmt"
@@ -212,6 +213,14 @@ func (this *ElementAtomic) Line() int {
 }
 
 // ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementAtomic) Pan() bool {
+	return false
+}
+
+// ========================================================
 // MARK: Equal
 // ========================================================
 
@@ -255,7 +264,7 @@ func (this *ElementAtomic) String() string {
 func (this *ElementAtomic) StringLocal() string {
 	opString := string(string(this.op)[1])
 
-	return fmt.Sprintf("A,%d,%d,%s,%s", this.t, this.objId, opString, this.Pos().Short)
+	return fmt.Sprintf("A,%d,%d,%s,%s", this.t, this.objId, opString, this.Pos().Short())
 }
 
 // String returns the simple string representation of the element with leading routine
@@ -280,6 +289,19 @@ func (this *ElementAtomic) StringGui() string {
 	return fmt.Sprintf("A,%d,%s\n%s", this.objId, opString, this.Pos().Short())
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementAtomic) StringMin() string {
+	pos := this.Pos().Short()
+	if !flags.ShowFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+	return fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, pos)
+
+}
+
 // ========================================================
 // MARK: Function
 // ========================================================
@@ -292,23 +314,23 @@ func (this *ElementAtomic) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-// Vc sets the vector clock
+// SetVc sets the vector clock
 //
 // Parameter:
 //   - weak bool: set the weak wv
 //   - cl *clock.VectorClock: the vector clock
-func (this *ElementAtomic) Vc(weak a_clock.VcType, cl *a_clock.VectorClock) {
+func (this *ElementAtomic) SetVc(weak a_clock.VcType, cl *a_clock.VectorClock) {
 	this.ci.setVC(weak, cl)
 }
 
-// GetVC returns the vector clock of the element
+// VC returns the vector clock of the element
 //
 // Parameter:
 //   - weak bool: get the weak
 //
 // Returns:
 //   - VectorClock: The vector clock of the element
-func (this *ElementAtomic) GetVC(weak a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementAtomic) VC(weak a_clock.VcType) *a_clock.VectorClock {
 	return this.ci.getVC(weak)
 }
 
@@ -345,6 +367,11 @@ func (this *ElementAtomic) SetNumberConcurrent(c int, weak, sameElem bool) {
 //   - The replay id
 func (this *ElementAtomic) ReplayID() string {
 	return fmt.Sprintf("%d:%s:%d", this.routineId, this.pos.file, this.pos.line)
+}
+
+// Replayable returns if element can be part of replay
+func (this *ElementAtomic) Replayable() bool {
+	return true
 }
 
 // ========================================================

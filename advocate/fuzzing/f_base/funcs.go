@@ -11,6 +11,7 @@ package f_base
 
 import (
 	"advocate/trace"
+	"strings"
 )
 
 // AddMutToQueue adds a mutation to the queue. If a maximum number of mutation runs in set,
@@ -42,5 +43,5 @@ func AddMutToQueue(mut Mutation, force bool) bool {
 //   - True if the element is of one of those types, false otherwise
 func IgnoreFuzzing(elem trace.Element, ignoreNew bool) bool {
 	t := elem.Type(false)
-	return (ignoreNew && t == trace.New) || t == trace.Replay || t == trace.End
+	return (ignoreNew && t == trace.New) || t == trace.Replay || elem.Type(true) == trace.RoutEnd || strings.Contains(elem.File(), "goPatch/src/")
 }

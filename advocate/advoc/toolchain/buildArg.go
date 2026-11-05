@@ -11,7 +11,12 @@
 package toolchain
 
 import (
+	"advocate/analysis/a_base"
+	"advocate/fuzzing/f_base"
+	"advocate/fuzzing/f_constraints"
 	"advocate/utils/flags"
+	"advocate/utils/io"
+	"advocate/utils/paths"
 	"bufio"
 	"errors"
 	"fmt"
@@ -21,24 +26,19 @@ import (
 	"strings"
 )
 
-func getBuildArg(fileName string, replay bool, tracePath string,
-	replayTimeout int, record bool, fuzzing int, fuzzingTrace string, isMain bool) (buildArg string) {
+func getBuildArg(replay bool, tracePath string,
+	replayTimeout int, record bool, fuzzing int, isMain bool) (buildArg string) {
 
 	buildArg = buildFlagsDefault + " "
-
-	atomicReplayStr := "true"
-	if flags.IgnoreAtomics {
-		atomicReplayStr = "false"
-	}
 
 	if replay { // replay
 		if record {
 			buildArg += fmt.Sprintf("-advocatefuzzing -advocatepath=%s -advocatetimeout=%d", tracePath, flags.Timeout)
 		} else {
-			buildArg += fmt.Sprintf("-advocatereplay -advocatepath=%s -advocatetimeout=%d -advocateatomics=%s", tracePath, replayTimeout, atomicReplayStr)
+			buildArg += fmt.Sprintf("-advocatereplay -advocatepath=%s -advocatetimeout=%d", tracePath, replayTimeout)
 		}
 	} else if fuzzing > 0 {
-		buildArg += fmt.Sprintf("-advocatefuzzing -advocatepath=%s -advocatetimeout=%d", fuzzingTrace, replayTimeout)
+		buildArg += fmt.Sprintf("-advocatefuzzing -advocatepath=%s -advocatetimeout=%d", tracePath, replayTimeout)
 	} else { // recording
 		buildArg += fmt.Sprintf("-advocatetrace  -advocatetimeout=%d", replayTimeout)
 	}
@@ -69,14 +69,13 @@ func getBuildArg(fileName string, replay bool, tracePath string,
 //   - replayTimeout int: replay for timeout
 //   - record bool: if both replay and record are set, the replay is rerecorded
 //   - fuzzing int: fuzzing run, if no fuzzing: -1, for initial run: 0
-//   - fuzzingTrace string: path to the fuzzing trace path. If not used path (GFuzz or Flow), opr not fuzzing, set to empty string
 //   - static bool: set true for static dummy
 //
 // Returns:
 //   - string: build parameters
 //   - error
 func buildArgsMain(fileName string, replay bool, replayNumber string,
-	replayTimeout int, record bool, fuzzing int, fuzzingTrace string, static bool) (string, error) {
+	record bool, fuzzing int, static bool) (string, error) {
 	if fileName == "" {
 		return "", errors.New("Please provide a file  name")
 	}
@@ -104,15 +103,26 @@ func buildArgsMain(fileName string, replay bool, replayNumber string,
 	fmt.Println("TestName: Main")
 
 	replayPath := ""
-	if replayNumber != "" {
-		replayPath = "rewrittenTrace_" + replayNumber
-	} else if flags.TracePath != "" {
-		replayPath = filepath.Base(flags.TracePath)
-	} else {
-		replayPath = "advocateTrace"
+	if replay || fuzzing > 0 {
+		if replayNumber != "" {
+			if fuzzing <= 0 {
+				replayPath = paths.NameRewrittenConsts + "_" + replayNumber
+			} else {
+				replayPath = filepath.Join(paths.FuzzingTraces, fmt.Sprintf("%s_%d", paths.NameFuzzingTraces, fuzzing))
+			}
+		} else if flags.TracePath != "" {
+			replayPath = flags.TracePath
+		} else {
+			replayPath = paths.NameRewrittenConsts
+		}
+
+		if flags.Mode == flags.ModeReplay {
+			trConst := f_constraints.TraceToConstraint(&a_base.MainTrace)
+			f_base.WriteConstraint(replayPath, &a_base.MainTrace, trConst, nil)
+		}
 	}
 
-	return getBuildArg(fileName, replay, replayPath, flags.Timeout, record, fuzzing, fuzzingTrace, true), nil
+	return getBuildArg(replay, replayPath, flags.Timeout, record, fuzzing, true), nil
 }
 
 // Check if there is a main function in the given file
@@ -186,15 +196,27 @@ func buildArgsUnit(fileName, testName string, replay bool, fuzzing int, replayIn
 	fmt.Println("TestName: ", testName)
 
 	replayPath := ""
-	if replayInfo != "" {
-		replayPath = "rewrittenTrace_" + replayInfo
-	} else if flags.TracePath != "" {
-		replayPath = filepath.Base(flags.TracePath)
-	} else {
-		replayPath = "advocateTrace"
+	if replay || fuzzing > 0 {
+		if replayInfo != "" {
+			if fuzzing <= 0 {
+				replayPath = paths.NameRewrittenConsts + "_" + replayInfo
+			} else {
+				replayPath = filepath.Join(paths.FuzzingTraces, fmt.Sprintf("%s_%d", paths.NameFuzzingTraces, fuzzing))
+			}
+		} else if flags.TracePath != "" {
+			replayPath = flags.TracePath
+		} else {
+			replayPath = paths.NameRewrittenConsts
+		}
+
+		if flags.Mode == flags.ModeReplay {
+			tr, _, _, _ := io.CreateTraceFromFiles(replayPath, false)
+			trConst := f_constraints.TraceToConstraint(tr)
+			f_base.WriteConstraint(replayPath, tr, nil, trConst)
+		}
 	}
 
-	return getBuildArg(fileName, replay, replayPath, flags.Timeout, record, fuzzing, replayInfo, false), nil
+	return getBuildArg(replay, replayPath, flags.Timeout, record, fuzzing, false), nil
 }
 
 // Check if a test exists

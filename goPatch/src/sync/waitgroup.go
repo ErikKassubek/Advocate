@@ -104,10 +104,9 @@ func (wg *WaitGroup) Add(delta int) {
 	if delta > 0 {
 		skip = runtime.CallerSkipWaitGroupAddWait
 	}
-	wait, ch, chAck, _ := runtime.WaitForReplay(runtime.OperationWaitgroupAddDone, skip, true)
-	if wait {
-		defer func() { chAck <- struct{}{} }()
-		<-ch
+	key, chWait := runtime.WaitForReplay(runtime.OperationWaitgroupAddDone, skip)
+	if chWait != nil {
+		<-chWait
 	}
 	// ADVOCATE-END
 
@@ -119,6 +118,13 @@ func (wg *WaitGroup) Add(delta int) {
 		race.Disable()
 		defer race.Enable()
 	}
+
+	// ADVOCATE-START
+	if chWait != nil {
+		runtime.AckReplay(key)
+	}
+	// ADVOCATE-END
+
 	bubbled := false
 	if synctest.IsInBubble() {
 		// If Add is called from within a bubble, then all Add calls must be made
@@ -215,14 +221,9 @@ func (wg *WaitGroup) Done() {
 // Wait blocks until the [WaitGroup] task counter is zero.
 func (wg *WaitGroup) Wait() {
 	// ADVOCATE-START
-	wait, ch, chAck, _ := runtime.WaitForReplay(runtime.OperationWaitgroupWait, 2, true)
-	if wait {
-		defer func() { chAck <- struct{}{} }()
-		replayElem := <-ch
-		if replayElem.Blocked {
-			_ = runtime.AdvocateWaitGroupWaitReq(unsafe.Pointer(wg), wg.id)
-			runtime.BlockForever()
-		}
+	key, chWait := runtime.WaitForReplay(runtime.OperationWaitgroupWait, runtime.CallerSkipWaitGroupAddWait)
+	if chWait != nil {
+		<-chWait
 	}
 
 	// Record the wait of a wait group in the routine's trace.
@@ -235,6 +236,13 @@ func (wg *WaitGroup) Wait() {
 	if race.Enabled {
 		race.Disable()
 	}
+
+	// ADVOCATE-START
+	if chWait != nil {
+		runtime.AckReplay(key)
+	}
+	// ADVOCATE-END
+
 	for {
 		state := wg.state.Load()
 		v := int32(state >> 32)

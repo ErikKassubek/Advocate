@@ -30,9 +30,9 @@ var (
 	GoPieW1          = 1.0
 	GoPieW2          = 1.0
 	GoPieMaxSCLength = 9
-	ChainMutabound   = 128
+	ChainMutabound   = 10
 
-	GoPieSCStart = 24
+	GoPieSCStart = 10
 
 	SameElementTypeInSC = false
 	WithoutReplay       = false

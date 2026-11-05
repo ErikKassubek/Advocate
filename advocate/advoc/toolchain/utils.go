@@ -11,8 +11,8 @@
 package toolchain
 
 import (
-	"advocate/utils/helper"
 	"advocate/utils/paths"
+	"advocate/utils/results/buginfo"
 	"bufio"
 	"io"
 	"os"
@@ -36,7 +36,7 @@ func extractTraceNumber(trace string) (string, string) {
 	bugString := ""
 
 	// read trace number
-	parts := strings.Split(trace, "rewrittenTrace_")
+	parts := strings.Split(trace, paths.NameRewrittenConsts+"_")
 	if len(parts) > 1 {
 		traceNumber = parts[1]
 	}
@@ -116,7 +116,7 @@ func wasReplaySuc(output string) bool {
 				return false
 			}
 
-			return exitCode >= helper.MinExitCodeSuc
+			return exitCode >= buginfo.MinExitCodeSuc
 		}
 	}
 

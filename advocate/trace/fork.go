@@ -11,6 +11,7 @@ package trace
 
 import (
 	"advocate/analysis/hb/a_clock"
+	"advocate/utils/flags"
 	"advocate/utils/types"
 	"errors"
 	"fmt"
@@ -78,6 +79,11 @@ func (this *Trace) AddTraceElementFork(routine int, tPost string, id string, pos
 		lastCall[idInt] = types.NewStack[*ElementFunc]()
 	}
 	lastCall[idInt].Push(getLastCall(routine))
+
+	// add element to created routine
+	newRoutine := this.GetRoutine(elem.objId)
+
+	newRoutine.setFork(&elem)
 
 	this.AddElement(&elem)
 	return nil
@@ -183,9 +189,17 @@ func (this *ElementFork) Line() int {
 //   - ObjectType: the object type
 func (this *ElementFork) Type(operation bool) OperationType {
 	if !operation {
-		return Fork
+		return Rout
 	}
-	return ForkOp
+	return RoutSpawn
+}
+
+// ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementFork) Pan() bool {
+	return false
 }
 
 // ========================================================
@@ -213,7 +227,7 @@ func (this *ElementFork) IsEqual(elem Element) bool {
 // Returns:
 //   - bool: true if at and elem are operations on the same channel
 func (this *ElementFork) IsSameElement(elem Element) bool {
-	return elem.Type(false) == Fork
+	return elem.Type(false) == Rout
 }
 
 // ========================================================
@@ -255,6 +269,19 @@ func (this *ElementFork) StringGui() string {
 		"\n" + this.Pos().Short()
 }
 
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementFork) StringMin() string {
+	pos := this.Pos().Short()
+	if !flags.ShowFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+
+	return fmt.Sprintf("%s,%d,%s", RoutSpawn, this.objId, pos)
+}
+
 // ========================================================
 // MARK: Function
 // ========================================================
@@ -267,23 +294,23 @@ func (this *ElementFork) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-// Vc sets the vector clock
+// SetVc sets the vector clock
 //
 // Parameter:
 //   - weak bool: set the weak wv
 //   - cl *clock.VectorClock: the vector clock
-func (this *ElementFork) Vc(weak a_clock.VcType, cl *a_clock.VectorClock) {
+func (this *ElementFork) SetVc(weak a_clock.VcType, cl *a_clock.VectorClock) {
 	this.ci.setVC(weak, cl)
 }
 
-// GetVC returns the vector clock of the element
+// VC returns the vector clock of the element
 //
 // Parameter:
 //   - weak bool: get the weak
 //
 // Returns:
 //   - VectorClock: The vector clock of the element
-func (this *ElementFork) GetVC(weak a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementFork) VC(weak a_clock.VcType) *a_clock.VectorClock {
 	return this.ci.getVC(weak)
 }
 
@@ -320,6 +347,11 @@ func (this *ElementFork) SetNumberConcurrent(c int, weak, sameElem bool) {
 //   - The replay id
 func (this *ElementFork) ReplayID() string {
 	return fmt.Sprintf("%d:%s:%d", this.routineId, this.pos.file, this.pos.line)
+}
+
+// Replayable returns if element can be part of replay
+func (this *ElementFork) Replayable() bool {
+	return true
 }
 
 // ========================================================

@@ -13,13 +13,24 @@ package trace
 // MARK: Resource
 // ========================================================
 
+var shortIDs = make(map[int]int) // long ID -> short ID
+var minShortID int = 1
+
 type Resource struct {
-	id    int
-	alloc *ElementAlloc
+	id      int
+	shortID int
+	alloc   *ElementAlloc
 }
 
 func NewResource(id int, alloc *ElementAlloc) Resource {
-	return Resource{id: id, alloc: alloc}
+	if short, ok := shortIDs[id]; ok {
+		return Resource{id: id, shortID: short, alloc: alloc}
+	}
+
+	shortIDs[id] = minShortID
+	minShortID++
+
+	return Resource{id: id, shortID: minShortID, alloc: alloc}
 }
 
 func (this *Resource) Id() int {

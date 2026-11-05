@@ -32,6 +32,7 @@ var unbufferedChannelComRecvMutex mutex
 //   - file string: file where the operation occurred
 //   - line int: line where the operation occurred
 //   - isNil bool: true if the channel is nil
+//   - pan bool: true if it caused a panic
 type AdvocateTraceChannel struct {
 	tReq   int64
 	tCom   int64
@@ -44,6 +45,7 @@ type AdvocateTraceChannel struct {
 	file   string
 	line   int
 	isNil  bool
+	pan    bool
 }
 
 // AdvocateChanReq adds a channel send/receive to the trace.
@@ -229,7 +231,12 @@ func (self AdvocateTraceChannel) toString() string {
 		idStr = uint64ToString(self.res.id)
 	}
 
-	return buildTraceElemString("C", self.tReq, self.tCom, idStr, opStr, self.cl, self.oId, self.qSize, self.qCount, posToString(self.file, self.line))
+	panStr := "-"
+	if self.pan {
+		panStr = "P"
+	}
+
+	return buildTraceElemString("C", self.tReq, self.tCom, idStr, opStr, self.cl, self.oId, self.qSize, self.qCount, posToString(self.file, self.line), panStr)
 }
 
 // Get a string representation for the channel if it is used as a select case
@@ -278,4 +285,9 @@ func (self AdvocateTraceChannel) hasCommit() bool {
 //   - []AdvocateTraceResource: recources
 func (self AdvocateTraceChannel) resource() []AdvocateTraceResource {
 	return []AdvocateTraceResource{self.res}
+}
+
+func (self AdvocateTraceChannel) causedPanic() traceElem {
+	self.pan = true
+	return self
 }

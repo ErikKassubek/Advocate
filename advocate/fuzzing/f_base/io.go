@@ -10,78 +10,49 @@
 package f_base
 
 import (
-	"advocate/analysis/a_base"
+	"advocate/fuzzing/f_constraints"
 	"advocate/trace"
-	"advocate/utils/flags"
 	"advocate/utils/io"
 	"advocate/utils/log"
 	"advocate/utils/paths"
-	"advocate/utils/settings"
 	"advocate/utils/timer"
 	"fmt"
 	"os"
 	"path/filepath"
 )
 
-// WriteMutConstraint writes a chain based mutation the mutation to file and add it to the queue
+// WriteMutConstraint writes a constratin based mutation the mutation to file and add it to the queue
 //
 // Parameter:
-//   - mut Chain: the mutation to write
-//   - first bool: set to true, if it is the first mutation for a given test/prog
+//   - tr *trace.Trace: the trace the constraint is build on
+//   - mut Constratin: the constratin to write
 //
 // Returns:
-//   - bool: true if max number muts in reached
+//   - bool: true if max fuzzing number is reached
 //   - error
-func WriteMutConstraint(mut Constraint, first bool) (bool, error) {
+func WriteMutConstraint(tr *trace.Trace, mut *f_constraints.Constraint) (bool, error) {
 	if MaxNumberRuns != -1 && NumberWrittenMutations > MaxNumberRuns {
 		return true, nil
 	}
-	NumberWrittenMutations++
 
-	traceCopy, err := a_base.CopyMainTrace()
+	if NumberWrittenFuzzing == 0 {
+		AddFuzzingTraceFolder(paths.FuzzingTraces)
+	}
+
+	NumberWrittenMutations++
+	NumberWrittenFuzzing++
+
+	fuzzingTracePath := filepath.Join(paths.FuzzingTraces, fmt.Sprintf("%s_%d", paths.NameFuzzingTraces, NumberWrittenFuzzing))
+	ChainFiles[NumberWrittenMutations] = *mut
+
+	err := io.CreateTraceFolder(fuzzingTracePath)
 	if err != nil {
 		return false, err
 	}
 
-	t1 := -1
-	for _, elem := range mut.Elems {
-		tPost := elem.T(trace.Commit)
-		if t1 == -1 || tPost < t1 {
-			t1 = tPost
-		}
-	}
+	closure := f_constraints.CalcuateClosure(mut)
 
-	// remove all elements after the first elem in the chain
-	traceCopy.ShortenTrace(t1, false)
-
-	// add in all the elements in the chain
-	mapping := make(map[int]trace.Element)
-	for i, elem := range mut.Elems {
-		c := elem.Copy(&traceCopy, mapping, true)
-		c.SetT(trace.Sorting, t1+i*2)
-		traceCopy.AddElement(c)
-	}
-
-	if first {
-		AddFuzzingTraceFolder(paths.FuzzingTraces)
-	}
-
-	fuzzingTracePath := filepath.Join(paths.FuzzingTraces, fmt.Sprintf("fuzzingTrace_%d", NumberWrittenMutations))
-	ChainFiles[NumberWrittenMutations] = mut
-
-	err = io.WriteTrace(&traceCopy, fuzzingTracePath, true, false)
-	if err != nil {
-		return false, fmt.Errorf("Could not create mutation: %s", err.Error())
-	}
-
-	// write the active map to a "replay_active.log"
-	if flags.FuzzingMode == GoPie || settings.WithoutReplay {
-		WriteMutActive(fuzzingTracePath, &traceCopy, &mut, 0)
-	} else {
-		WriteMutActive(fuzzingTracePath, &traceCopy, &mut, mut.ElemWithSmallestTPost().T(trace.Commit))
-	}
-
-	traceCopy.Clear()
+	WriteConstraint(fuzzingTracePath, tr, mut, closure)
 
 	muta := Mutation{MutType: MutPiType, MutPie: NumberWrittenMutations}
 
@@ -181,53 +152,123 @@ func GetPath(path string) string {
 	return filepath.Dir(path)
 }
 
-// WriteMutActive writes the element in the chain into a rewriteActive.log
+// WriteConstraints writes the element in the chain into a rewriteActive.log
 // file for use in GoPie and Guided
 //
 // Parameter
 //   - fuzzingTracePath string: path to the trace folder
-//   - tr *trace.Trace: the trace to write
 //   - mut *chain: chain to write
-//   - partTime int: if 0, the replay will partial replay from the beginning
-//     otherwise it will switch to partial replay when the element with this
-//     time is the next element to be replayed
-func WriteMutActive(fuzzingTracePath string, tr *trace.Trace, mut *Constraint, partTime int) {
-	activePath := filepath.Join(fuzzingTracePath, paths.NameReplayActive)
+//   - mutLen int: number of elements in mutation (without closure)
+//   - closureLen int: number of elements in closure
+func writeConstraintOrder(fuzzingTracePath string, tr *trace.Trace, mut *f_constraints.Constraint, mutLen, closureLen int) error {
+	constraintPath := filepath.Join(fuzzingTracePath, paths.NameReplayConstraints)
 
-	f, err := os.Create(activePath)
+	f, err := os.Create(constraintPath)
 	if err != nil {
-		return
+		log.Error("Failed to create constraint file: ", err.Error())
+		return err
 	}
 
 	defer f.Close()
 
-	f.WriteString(fmt.Sprintf("%d\n", partTime))
+	f.WriteString(fmt.Sprintf("%d:%d\n", mutLen, closureLen))
 
 	// find the counter for all elements in the mut
-	mutCounter := make(map[string]int)
+	mutCounter := make(map[trace.Element]int)
 	posCounter := make(map[string]int)
-	mutTime := make(map[string]int)
 	for _, elem := range mut.Elems {
-		mutCounter[getRoutPos(elem)] = 0
+		mutCounter[elem] = 0
 	}
 
 	traceIter := tr.AsIterator()
 
 	for elem := traceIter.Next(); elem != nil; elem = traceIter.Next() {
+		// if alloc is not recorded, it has the same position as the first operation
+		// At the moment we do not use alloc in replay, we can therefore just skip it
+		if _, ok := elem.(*trace.ElementAlloc); ok {
+			continue
+		}
 		routPos := getRoutPos(elem)
 		posCounter[routPos]++
-		if _, ok := mutCounter[routPos]; ok { // is in chain
-			mutCounter[routPos] = posCounter[routPos]
-			mutTime[routPos] = elem.T(trace.Sorting)
+		if _, ok := mutCounter[elem]; ok { // is in chain
+			mutCounter[elem] = posCounter[routPos]
 		}
 	}
 
 	for _, elem := range mut.Elems {
-		routPos := getRoutPos(elem)
+		info := "0"
+		switch e := elem.(type) {
+		case *trace.ElementSelect:
+			info = fmt.Sprintf("%d", e.GetChosenIndex())
+		}
+
+		if elem.Pos().File() == "" {
+			continue
+		}
+
 		// key := fmt.Sprintf("%d:%s,%d,%d\n", elem.GetRoutine(), elem.GetPos(), mutTPre[traceID], mutCounter[traceID])
-		key := fmt.Sprintf("%d:%s,%d,%d\n", elem.RoutineID(), elem.Pos(), mutTime[routPos], mutCounter[routPos])
+		key := fmt.Sprintf("%d:%s:%d:%s\n", elem.RoutineID(), elem.Pos(), mutCounter[elem], info)
 		f.WriteString(key)
 	}
+
+	return nil
+}
+
+func writeForkMap(fuzzingTracePath string, tr *trace.Trace) error {
+	tree := tr.ForkTree()
+
+	activePath := filepath.Join(fuzzingTracePath, paths.NameReplayForkTree)
+
+	f, err := os.Create(activePath)
+	if err != nil {
+		log.Error("Failed to create fuzzing trace folder: ", err.Error())
+		return err
+	}
+
+	defer f.Close()
+
+	for old, new := range tree {
+		newStr := ""
+		for i, n := range new {
+			if i != 0 {
+				newStr += ","
+			}
+			newStr += fmt.Sprintf("%d", n)
+		}
+		key := fmt.Sprintf("%d#%s\n", old, newStr)
+		f.WriteString(key)
+	}
+
+	return nil
+}
+
+func WriteConstraint(tracePath string, tr *trace.Trace, constr, closure *f_constraints.Constraint) error {
+	mutLen := constr.Len()
+	closureLen := closure.Len()
+	var fullConstr *f_constraints.Constraint
+
+	var err error
+	if closure != nil {
+		closure.Len()
+		fullConstr, err = f_constraints.MergeClosureConstraint(closure, constr)
+		if err != nil {
+			log.Info("Rewrite not possible")
+			return err
+		}
+	}
+
+	err = os.MkdirAll(tracePath, 0755)
+	if err != nil {
+		log.Error("Failed to create constraint folder: ", err.Error())
+		return err
+	}
+
+	err = writeConstraintOrder(tracePath, tr, fullConstr, mutLen, closureLen)
+	if err != nil {
+		return err
+	}
+	err = writeForkMap(tracePath, tr)
+	return err
 }
 
 func getRoutPos(elem trace.Element) string {

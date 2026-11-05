@@ -15,14 +15,14 @@ const (
 	GFuzz       = "GFuzz"       // only GFuzz
 	GFuzzHB     = "GFuzzHB"     // GFuzz with use of hb info
 	GFuzzHBFlow = "GFuzzHBFlow" // GFuzz with use of hb info and flow mutation
-	Flow        = "Flow"        // only flow mutation
 	GoPie       = "GoPie"       // only goPie
 	GoCR        = "GoCR"        // improved goPie without predictive analysis
-	GoCRHB      = "GoCRHB"      // improved goPie with predictive analysis
+	Full        = "Full"        // improved goPie with predictive analysis
 	Guided      = "Guided"      // hb guided fuzzing
+
 )
 
-var Modes = []string{GFuzz, GFuzzHB, GFuzzHBFlow, Flow, GoPie, GoCR, GoCRHB, Guided}
+var Modes = []string{GFuzz, GFuzzHB, GFuzzHBFlow, GoPie, GoCR, Full, Guided}
 
 // Possible mut types
 const (

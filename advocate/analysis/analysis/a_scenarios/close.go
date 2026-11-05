@@ -15,7 +15,7 @@ import (
 	"advocate/analysis/hb/a_clock"
 	"advocate/trace"
 	"advocate/utils/flags"
-	"advocate/utils/helper"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/timer"
 )
@@ -35,7 +35,7 @@ func CheckForCommunicationOnClosedChannel(ch *trace.ElementChannel) {
 	// check if there is an earlier send, that could happen concurrently to close
 	if a_base.AnalysisCasesMap[flags.SendOnClosed] && a_base.HasSend[id] {
 		for routine, mrs := range a_base.MostRecentSend {
-			happensBefore := a_clock.GetHappensBefore(mrs[id].Vc, a_base.CloseData[id].GetVC(a_clock.Strong))
+			happensBefore := a_clock.GetHappensBefore(mrs[id].Vc, a_base.CloseData[id].VC(a_clock.Strong))
 
 			elem := mrs[id].Elem
 
@@ -59,8 +59,7 @@ func CheckForCommunicationOnClosedChannel(ch *trace.ElementChannel) {
 					Line:       ch.Line(),
 				}
 
-				results.Result(results.CRITICAL, helper.PSendOnClosed,
-					"send", []results.ResultElem{arg1}, "close", []results.ResultElem{arg2})
+				results.Result(results.CRITICAL, buginfo.PSendOnClosed, []results.ResultElem{arg1}, []results.ResultElem{arg2})
 			}
 		}
 	}
@@ -109,11 +108,11 @@ func FoundSendOnClosedChannel(elem trace.Element, actual bool) {
 	}
 
 	if actual {
-		results.Result(results.CRITICAL, helper.ASendOnClosed,
-			"send", []results.ResultElem{arg1}, "close", []results.ResultElem{arg2})
+		results.Result(results.CRITICAL, buginfo.ASendOnClosed,
+			[]results.ResultElem{arg1}, []results.ResultElem{arg2})
 	} else {
-		results.Result(results.CRITICAL, helper.PSendOnClosed,
-			"send", []results.ResultElem{arg1}, "close", []results.ResultElem{arg2})
+		results.Result(results.CRITICAL, buginfo.PSendOnClosed,
+			[]results.ResultElem{arg1}, []results.ResultElem{arg2})
 	}
 
 }
@@ -152,7 +151,7 @@ func CheckForClosedOnClosed(ch *trace.ElementChannel) {
 			Line:       ch.Line(),
 		}
 
-		results.Result(results.CRITICAL, helper.ACloseOnClosed,
-			"close", []results.ResultElem{arg1}, "close", []results.ResultElem{arg2})
+		results.Result(results.CRITICAL, buginfo.ACloseOnClosed,
+			[]results.ResultElem{arg1}, []results.ResultElem{arg2})
 	}
 }

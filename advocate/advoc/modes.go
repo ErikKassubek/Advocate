@@ -11,11 +11,14 @@ package advoc
 
 import (
 	"advocate/advoc/toolchain"
+	"advocate/experiments"
 	"advocate/fuzzing/f_fuzzing"
 	"advocate/utils/flags"
+	"advocate/utils/io"
 	"advocate/utils/log"
 	"advocate/utils/paths"
 	"advocate/utils/results/stats"
+	"fmt"
 )
 
 // modeFuzzing starts the fuzzing
@@ -44,7 +47,7 @@ func modeFuzzing() error {
 //
 // Note:
 //   - If recording is false, but analysis or replay is set, -trace must be set
-func modeToolchain(mode string, record bool, analysis bool, replay bool) (err error) {
+func modeToolchain(record bool, analysis bool, replay bool) (err error) {
 	if !record && (analysis || replay) {
 		flags.TracePath, err = paths.CheckPath(flags.TracePath)
 		if err != nil {
@@ -53,14 +56,14 @@ func modeToolchain(mode string, record bool, analysis bool, replay bool) (err er
 		}
 	}
 
-	if mode == "test" && !record && replay && flags.ExecName == "" {
+	if !flags.ModeMain && !record && replay && flags.ExecName == "" {
 		log.Error("When running replay of test without recording, -exec [TestName] must be set")
 		panic("When running replay of test without recording, -exec [TestName] must be set")
 	}
 
 	firstRun := true
 	fileNumber, testNumber := 1, 0
-	_, _, err = toolchain.Run(mode, "", record, analysis,
+	_, _, err = toolchain.Run("", record, analysis,
 		replay, -1, "", firstRun, fileNumber, testNumber)
 	if err != nil {
 		return err
@@ -74,4 +77,45 @@ func modeToolchain(mode string, record bool, analysis bool, replay bool) (err er
 	}
 
 	return nil
+}
+
+// Mode to read a trace and show it in a tabular format
+func modeShowTrace() error {
+	tr, _, _, err := io.CreateTraceFromFiles(flags.TracePath, true)
+	if err != nil {
+		log.Error(err)
+		return err
+	}
+
+	tr.PrintAsTab()
+
+	return nil
+}
+
+func modeExperiments() error {
+	if flags.Experiment == "" {
+		return fmt.Errorf("No experiment selected. Select with `-experiment [name]`")
+	}
+
+	switch flags.ExecName {
+	case experiments.IndexingEx:
+		experimentIndexing()
+	default:
+		return fmt.Errorf("Unknown experiment: %s", flags.ExecName)
+	}
+
+	return nil
+}
+
+func experimentIndexing() error {
+	firstRun := true
+	fileNumber, testNumber := 1, 0
+	_, _, err := toolchain.Run("", record, analysis,
+		!replay, -1, "", firstRun, fileNumber, testNumber)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

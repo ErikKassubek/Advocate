@@ -34,14 +34,13 @@ const (
 	OperationRWMutexTryRLock Operation = "rwmutexTryrlock"
 
 	OperationOnceDo    Operation = "onceDo"
-	OperationAllocOnce Operation = "allocOnce"
 
 	OperationWaitgroupAddDone Operation = "wgAdddone"
 	OperationWaitgroupWait    Operation = "wgWait"
 
-	OperationSelect        Operation = "wgSelect"
-	OperationSelectCase    Operation = "wgSelectcase"
-	OperationSelectDefault Operation = "wgSelectdefault"
+	OperationSelect        Operation = "select"
+	OperationSelectCase    Operation = "selectCase"
+	OperationSelectDefault Operation = "selectDefault"
 
 	OperationCondSignal    Operation = "condSignal"
 	OperationCondBroadcast Operation = "condBroadcast"
@@ -59,6 +58,9 @@ const (
 	OperationAllocMutex Operation = "allocMutex"
 	OperationAllocCond  Operation = "allocCond"
 	OperationAllocWg    Operation = "allocWg"
+	OperationAllocOnce Operation = "allocOnce"
+	OperationAllocAtomic Operation = "allocAtomic"
+
 
 	OperationFunctionCall   Operation = "funcCall"
 	OperationFunctionReturn Operation = "funcReturn"
@@ -148,6 +150,7 @@ type traceElem interface {
 	getOperation() Operation
 	hasCommit() bool
 	resource() []AdvocateTraceResource
+	causedPanic() traceElem
 }
 
 // Return a string representation of the trace of the current go routine
@@ -320,12 +323,11 @@ func DeleteTrace() {
 //   - bool: true if the operation should be ignored, false otherwise
 func AdvocateIgnore(file string) bool {
 	return (containsStr(file, "goPatch/src/") || containsStr(file, "go/pkg/mod")) &&
-		!containsStr(file, "goPatch/src/time/tick.go") &&
-		!containsStr(file, "goPatch/src/context/context.go")
+		!containsStr(file, "goPatch/src/time/tick.go")
 }
 
 func AdvocateIgnoreRoutine(file string) bool {
-	return containsStr(file, "goPatch/src/runtime/advocate_trace.go") || containsStr(file, "goPatch/src/runtime/advocate_replay.go")
+	return containsStr(file, "goPatch/src/runtime/advocate_trace.go") || containsStr(file, "goPatch/src/runtime/advocate_replay.go") || containsStr(file, "goPatch/src/runtime/advocatego/")
 }
 
 func RemoveActive(id uint64) {

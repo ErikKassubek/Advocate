@@ -14,8 +14,8 @@ import (
 	"advocate/analysis/a_hb"
 	"advocate/analysis/hb/a_clock"
 	"advocate/trace"
-	"advocate/utils/helper"
 	"advocate/utils/log"
+	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/timer"
 	"advocate/utils/types"
@@ -98,7 +98,7 @@ func CheckForUnlockBeforeLock() {
 			for i := 0; i < len(locks); {
 				removed := false
 				for j := 0; j < len(unlocks); {
-					if a_clock.GetHappensBefore(locks[i].GetVC(a_clock.Strong), unlocks[j].GetVC(a_clock.Strong)) == a_hb.Concurrent {
+					if a_clock.GetHappensBefore(locks[i].VC(a_clock.Strong), unlocks[j].VC(a_clock.Strong)) == a_hb.Concurrent {
 						locksSorted = append(locksSorted, locks[i])
 						unlockSorted = append(unlockSorted, unlocks[i])
 						locks = append(locks[:i], locks[i+1:]...)
@@ -147,8 +147,7 @@ func CheckForUnlockBeforeLock() {
 				})
 			}
 
-			results.Result(results.CRITICAL, helper.PUnlockBeforeLock, "unlock",
-				args1, "lock", args2)
+			results.Result(results.CRITICAL, buginfo.PUnlockBeforeLock, args1, args2)
 		}
 	}
 }

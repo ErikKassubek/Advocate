@@ -305,21 +305,19 @@ to analyze the test `TestOne` in the given path, only checking for cyclic (resou
 The analysis will try to find the following situations:
 
 - A01: "Actual Send on Closed Channel",
-- A02: "Actual Receive on Closed Channel",
-- A03: "Actual Close on Closed Channel",
-- A04: "Actual Close on Nil Channel",
-- A05: "Actual Negative Wait Group",
-- A06: "Actual Unlock of Not Locked Mutex",
-- A07: "Actual Non-Cyclic Blocking Bug",
-- A08: "Actual Cyclic Deadlock with Mutex",
-- A09: "Actual Concurrent Receive on Same Channel",
-- A10: "Actual Cyclic Deadlock with Mutex and Channel
+- A02: "Actual Close on Closed Channel",
+- A03: "Actual Close on Nil Channel",
+- A04: "Actual Negative Wait Group",
+- A05: "Actual Unlock of Not Locked Mutex",
+- A06: "Actual Non-Cyclic Blocking Bug",
+- A07: "Actual Cyclic Deadlock with Mutex",
+- A08: "Actual Concurrent Receive on Same Channel",
+- A09: "Actual Cyclic Deadlock with Mutex and Channel
 - P01: "Possible Send on Closed Channel",
-- P02: "Possible Receive on Closed Channel",
-- P03: "Possible Negative WaitGroup cCounter",
-- P04: "Possible unlock of not locked mutex",
-- P05: "Possible Cyclic Deadlock with Mutex",
-- P06: "Possible Cyclic Deadlock with Mutex and Channel", 
+- P02: "Possible Negative WaitGroup cCounter",
+- P03: "Possible unlock of not locked mutex",
+- P04: "Possible Cyclic Deadlock with Mutex",
+- P05: "Possible Cyclic Deadlock with Mutex and Channel", 
 - L..: "Leak" (Blocked but not necessarily finally blocked routine),
 
 Some of them are only considered warnings. To ignore them, you can set `-noWarning`.
@@ -358,6 +356,7 @@ To run the fuzzing as described [here](doc/fuzzing.md), the following command ca
 To use the fuzzing, you need to apply a fuzzing mode with `-fuzzingMode [mode]`.
 The available modes are:
 
+- `Full`: Run a combination of of GoPieHB and predictive analysis (Default)
 - `GFuzz`: Run the [GFuzz](doc/fuzzing/GFuzz.md) based fuzzing
 - `GFuzzHB`: Run the improved [GFuzz](doc/fuzzing/GFuzz.md#improvement-over-original-gfuzz) based fuzzing using happens-before information
 - `Flow`: Run the [Flow](doc/fuzzing/Flow.md) based fuzzing
@@ -378,6 +377,18 @@ An example command would therefore be
 ```
 ./advocate fuzzing -path ~/pathToProg/progDir/ -fuzzingMode GoPieHB -prog progName
 ```
+
+To select different closure algoritms, you can select them using 
+
+- `-closure [name]`
+
+with the following possible values:
+
+- `hb`: happens-before based closure
+- `scpc`: sync-preserving closure
+- `order`: routine-intern and fork closure
+- `replay`: full replay of prefix
+
 
 ## Additional Tags
 

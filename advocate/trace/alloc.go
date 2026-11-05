@@ -11,6 +11,7 @@ package trace
 
 import (
 	"advocate/analysis/hb/a_clock"
+	"advocate/utils/flags"
 	"errors"
 	"fmt"
 	"strconv"
@@ -87,6 +88,12 @@ func (this *Trace) AddTraceElementAlloc(routine int, t string, id string, elemTy
 		et = NewMutex
 	case "W":
 		et = NewWait
+	case "O":
+		et = NewOnce
+	case "A":
+		et = NewAtomic
+	default:
+		return fmt.Errorf("Unknown alloc type: %s", elemType)
 	}
 
 	elem := ElementAlloc{
@@ -109,15 +116,21 @@ func (this *Trace) AddTraceElementAlloc(routine int, t string, id string, elemTy
 
 func (this *Trace) AddTraceElementAllocFromElem(elem Element) {
 	var et OperationType
-	switch elem.Type(false) {
-	case "C":
+	switch elem.(type) {
+	case *ElementChannel:
 		et = NewChannel
-	case "D":
+	case *ElementCond:
 		et = NewCond
-	case "M":
+	case *ElementMutex:
 		et = NewMutex
-	case "W":
+	case *ElementWait:
 		et = NewWait
+	case *ElementOnce:
+		et = NewOnce
+	case *ElementAtomic:
+		et = NewAtomic
+	default:
+		return
 	}
 
 	rout := elem.RoutineID()
@@ -285,6 +298,14 @@ func (this *ElementAlloc) Line() int {
 }
 
 // ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementAlloc) Pan() bool {
+	return false
+}
+
+// ========================================================
 // MARK: Equal
 // ========================================================
 
@@ -344,7 +365,20 @@ func (this *ElementAlloc) StringDebug() string {
 // Returns:
 //   - string: The gui string representation of the element
 func (this *ElementAlloc) StringGui() string {
-	return fmt.Sprintf("N,%d,%s,%d\n%s", this.objId, string(this.elemType), this.num, this.Pos().Short())
+	return fmt.Sprintf("N,%d,%s,%d\n%s", this.objId, string(string(this.elemType)[1]), this.num, this.Pos().Short())
+}
+
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementAlloc) StringMin() string {
+	pos := this.Pos().Short()
+	if !flags.ShowFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+	return fmt.Sprintf("%s,%d,%s", string(this.elemType), this.Resource().shortID, pos)
+
 }
 
 // ========================================================
@@ -359,23 +393,23 @@ func (this *ElementAlloc) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-// Vc sets the vector clock
+// SetVc sets the vector clock
 //
 // Parameter:
 //   - weak bool: set the weak wv
 //   - cl *clock.allocVectorClock: the vector clock
-func (this *ElementAlloc) Vc(weak a_clock.VcType, cl *a_clock.VectorClock) {
+func (this *ElementAlloc) SetVc(weak a_clock.VcType, cl *a_clock.VectorClock) {
 	this.ci.setVC(weak, cl)
 }
 
-// GetVC returns the vector clock of the element
+// VC returns the vector clock of the element
 //
 // Parameter:
 //   - weak bool: get the weak
 //
 // Returns:
 //   - VectorClock: The vector clock of the element
-func (this *ElementAlloc) GetVC(weak a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementAlloc) VC(weak a_clock.VcType) *a_clock.VectorClock {
 	return this.ci.getVC(weak)
 }
 
@@ -412,6 +446,11 @@ func (this *ElementAlloc) SetNumberConcurrent(c int, weak, sameElem bool) {
 //   - int: The replayId of the element
 func (this *ElementAlloc) ReplayID() string {
 	return fmt.Sprintf("%d:%s:%d", this.routineId, this.pos.file, this.pos.line)
+}
+
+// Replayable returns if element can be part of replay
+func (this *ElementAlloc) Replayable() bool {
+	return false
 }
 
 // ========================================================
@@ -477,7 +516,6 @@ func (this *ElementAlloc) CanBeRequest() bool {
 // Argument:
 //   - bool: element is request
 func (this *ElementAlloc) SetRequest(_ bool) {
-	return
 }
 
 // SetRequest sets the routine id

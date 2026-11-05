@@ -27,6 +27,7 @@ import "unsafe"
 //   - hasDef bool: true if the select has a default case, false otherwise
 //   - file string: file where the operation occurred
 //   - line int: line where the operation occurred
+//   - pan bool: caused a panic
 type AdvocateTraceSelect struct {
 	tReq     int64
 	tCom     int64
@@ -36,6 +37,7 @@ type AdvocateTraceSelect struct {
 	hasDef   bool
 	file     string
 	line     int
+	pan      bool
 }
 
 // AdvocateSelectReq adds a select to the trace
@@ -279,7 +281,12 @@ func (self AdvocateTraceSelect) toString() string {
 		}
 	}
 
-	return buildTraceElemString(p1, cases, p2)
+	panStr := "-"
+	if self.pan {
+		panStr = "P"
+	}
+
+	return buildTraceElemString(p1, cases, p2, panStr)
 }
 
 // getOperation is a getter for the operation
@@ -315,4 +322,9 @@ func (self AdvocateTraceSelect) resource() []AdvocateTraceResource {
 	}
 
 	return mapToSlice(res)
+}
+
+func (self AdvocateTraceSelect) causedPanic() traceElem {
+	self.pan = true
+	return self
 }

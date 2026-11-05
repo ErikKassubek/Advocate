@@ -1,0 +1,380 @@
+// Copyright (c) 2026 Erik Kassubek
+//
+// File: constraint.go
+// Brief: Constraints
+//
+// Author: Erik Kassubek
+//
+// License: BSD-3-Clause
+
+package f_constraints
+
+import (
+	"advocate/analysis/a_hb"
+	"advocate/analysis/hb/a_clock"
+	"advocate/analysis/hb/a_hbcalc"
+	"advocate/trace"
+	"advocate/utils/flags"
+	"fmt"
+	"sort"
+)
+
+// Constraint is a representation of a scheduling Constraint
+// A Constraint is an ordered list of adjacent element from the trace,
+// where two neighboring elements must be from different routines
+type Constraint struct {
+	Elems []trace.Element
+}
+
+// NewConstraint create a new, empty chain
+//
+// Returns: chain: the new chain
+func NewConstraint() Constraint {
+	elems := make([]trace.Element, 0)
+	return Constraint{elems}
+}
+
+type ElemWithQual struct {
+	Elem    trace.Element
+	Quality float64
+}
+
+// Add a new element to the chain
+//
+// Parameter:
+//   - elems ...analysis.TraceElement: Elements to Add, in the order they are added
+func (this *Constraint) Add(elems ...trace.Element) {
+	if elems == nil {
+		return
+	}
+
+	for _, elem := range elems {
+		if elem == nil {
+			continue
+		}
+		this.Elems = append(this.Elems, elem)
+	}
+}
+
+// Get the element at a given index. Retrun nil if out of bounds
+func (this *Constraint) At(index int) trace.Element {
+	if index < 0 || index >= this.Len() {
+		return nil
+	}
+
+	return this.Elems[index]
+}
+
+// Replace replaces the element at a given index in a chain with another element
+//
+// Parameter:
+//   - index int: index to change at
+//   - elem analysis.TraceElement: element to set at index
+func (this *Constraint) Replace(index int, elem trace.Element) {
+	if elem == nil {
+		return
+	}
+
+	if index < 0 || index >= len(this.Elems) {
+		return
+	}
+	this.Elems[index] = elem
+}
+
+// Returns if the chain Contains a specific element
+//
+// Parameter:
+//   - elem analysis.TraceElement: the element to check for
+//
+// Returns:
+//   - bool: true if the chain Contains elem, false otherwise
+func (this *Constraint) Contains(elem trace.Element) bool {
+	if elem == nil {
+		return false
+	}
+
+	for _, c := range this.Elems {
+		if elem.IsEqual(c) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Remove the first element from the chain
+func (this *Constraint) RemoveHead() {
+	this.Elems = this.Elems[1:]
+}
+
+// Remove the last element from the chain
+func (this *Constraint) RemoveTail() {
+	this.Elems = this.Elems[:len(this.Elems)-1]
+}
+
+// Return the first element of a chain
+//
+// Returns:
+//   - analysis.TraceElement: the first element in the chain, or nil if chain is empty
+func (this *Constraint) ElemWithSmallestTPost() trace.Element {
+	if this.Len() == 0 {
+		return nil
+	}
+
+	var min trace.Element
+
+	for _, c := range this.Elems {
+		if min == nil || c.T(trace.Sorting) < min.T(trace.Sorting) {
+			min = c
+		}
+	}
+
+	return min
+}
+
+// Return the last element of a chain
+//
+// Returns:
+//   - analysis.TraceElement: the last element in the chain, or nil if chain is empty
+func (this *Constraint) LastElem() trace.Element {
+	if this.Len() == 0 {
+		return nil
+	}
+	return this.Elems[len(this.Elems)-1]
+}
+
+// Swap the two elements in the chain given by the indexes.
+// If at least on index is not in the chain, nothing is done
+//
+// Parameter:
+//   - i int: index of the first element
+//   - j int: index of the second element
+//
+// Return:
+//   - bool: true if Swap was possible, false otherwise
+func (this *Constraint) Swap(i, j int) bool {
+	if a_hbcalc.GetHappensBefore(this.Elems[i], this.Elems[j], a_clock.Weak) != a_hb.Concurrent {
+		return false
+	}
+	if i >= 0 && i < len(this.Elems) && j >= 0 && j < len(this.Elems) {
+		this.Elems[i], this.Elems[j] = this.Elems[j], this.Elems[i]
+	}
+	return true
+}
+
+// Create a Copy of the chain
+//
+// Returns:
+//   - chain: a Copy of the chain
+func (this *Constraint) Copy() Constraint {
+	newElems := make([]trace.Element, len(this.Elems))
+
+	copy(newElems, this.Elems)
+
+	newChain := Constraint{
+		Elems: newElems,
+	}
+	return newChain
+}
+
+// Len returns the number of elements in a scheduling chain
+//
+// Returns:
+//   - the number of elements in the chain
+func (this *Constraint) Len() int {
+	if this == nil {
+		return 0
+	}
+	return len(this.Elems)
+}
+
+// Get a string representation of a scheduling chain
+//
+// Returns:
+//   - A string representation of the chain
+func (this *Constraint) String() string {
+	res := ""
+	for _, e := range this.Elems {
+		res += fmt.Sprintf("%d:%s", e.RoutineID(), e.Pos())
+		switch f := e.(type) {
+		case *trace.ElementSelect:
+			res += fmt.Sprintf("%d", f.GetChosenIndex())
+		}
+		res += "&"
+	}
+	return res
+}
+
+// Get a string representation of a scheduling chain
+//
+// Returns:
+//   - A string representation of the chain
+func (this *Constraint) StringDebug() string {
+	res := ""
+	for _, e := range this.Elems {
+		res += e.StringDebug()
+		res += "\n"
+	}
+	return res
+}
+
+// Check if a chain is valid.
+// A chain is valid if it isn't violation the HB relation
+// If the analyzer did not run and therefore did not calculate the HB relation,
+// the function will always return true
+// Since HB relations are transitive, it is enough to check neighboring elements
+//
+// Returns:
+//   - bool: True if the mutation is valid, false otherwise
+func (this *Constraint) IsValid() bool {
+	for i := 0; i < len(this.Elems)-1; i++ {
+		for j := 1; j < len(this.Elems); j++ {
+			hbInfo := a_hbcalc.GetHappensBefore(this.Elems[i], this.Elems[j], a_clock.Weak)
+			if hbInfo == a_hb.After {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+// Get the map of all elements in the constraint
+//
+// Returns:
+//
+//	map[trace.Element]struct{}: map containing all elements in the constraint as keys
+func (this *Constraint) toMap() map[trace.Element]struct{} {
+	res := make(map[trace.Element]struct{})
+	for _, elem := range this.Elems {
+		res[elem] = struct{}{}
+	}
+	return res
+}
+
+// Sort the Elements by commit time
+func (this *Constraint) sort() {
+	sort.Slice(this.Elems, func(i, j int) bool {
+		return this.Elems[i].T(trace.Commit) < this.Elems[j].T(trace.Commit)
+	})
+}
+
+func MergeClosureConstraint(closure, constr *Constraint) (*Constraint, error) {
+	if flags.ClosureType == flags.ClosureReplay {
+		return mergeClosureConstraintSimple(closure, constr)
+	}
+	return mergeClosureConstraintInterlace(closure, constr)
+}
+
+func mergeClosureConstraintSimple(closure, constr *Constraint) (*Constraint, error) {
+	res := NewConstraint()
+
+	for _, e := range closure.Elems {
+		res.Add(e)
+	}
+
+	for _, e := range constr.Elems {
+		res.Add(e)
+	}
+
+	return &res, nil
+}
+
+func mergeClosureConstraintInterlace(closure, constr *Constraint) (*Constraint, error) {
+	n := len(closure.Elems) + len(constr.Elems)
+
+	elems := make([]trace.Element, n)
+	copy(elems, closure.Elems)
+	copy(elems[len(closure.Elems):], constr.Elems)
+
+	// 0 = closure, 1 = constr
+	source := make([]int, n)
+	for i := len(closure.Elems); i < n; i++ {
+		source[i] = 1
+	}
+
+	edges := make([]map[int]struct{}, n)
+	indegree := make([]int, n)
+
+	addEdge := func(from, to int) {
+		if edges[from] == nil {
+			edges[from] = make(map[int]struct{})
+		}
+
+		if _, exists := edges[from][to]; exists {
+			return
+		}
+
+		edges[from][to] = struct{}{}
+		indegree[to]++
+	}
+
+	// Preserve the original order within both constraints.
+	for i := 0; i+1 < len(closure.Elems); i++ {
+		addEdge(i, i+1)
+	}
+
+	offset := len(closure.Elems)
+	for i := 0; i+1 < len(constr.Elems); i++ {
+		addEdge(offset+i, offset+i+1)
+	}
+
+	// Add happens-before dependencies.
+	for i := 0; i < n; i++ {
+		for j := 0; j < n; j++ {
+			if i == j {
+				continue
+			}
+
+			if a_hbcalc.GetHappensBefore(
+				elems[i], elems[j], a_clock.Weak,
+			) == a_hb.Before {
+				addEdge(i, j)
+			}
+		}
+	}
+
+	// Priority-based topological sort.
+	result := NewConstraint()
+	emitted := make([]bool, n)
+
+	for result.Len() < n {
+		candidate := -1
+
+		for i := 0; i < n; i++ {
+			if emitted[i] || indegree[i] != 0 {
+				continue
+			}
+
+			// Prefer closure elements.
+			if candidate == -1 || source[i] < source[candidate] {
+				candidate = i
+			}
+		}
+
+		if candidate == -1 {
+			return nil, fmt.Errorf("cyclic happens-before dependencies")
+		}
+
+		emitted[candidate] = true
+		result.Add(elems[candidate])
+
+		for next := range edges[candidate] {
+			indegree[next]--
+		}
+	}
+
+	return &result, nil
+}
+
+func removeIndices(s []trace.Element, d []int) []trace.Element {
+	j := 0
+	for i := range s {
+		if j < len(d) && i == d[j] {
+			j++
+			continue
+		}
+		s[i-j] = s[i]
+	}
+	return s[:len(s)-len(d)]
+}

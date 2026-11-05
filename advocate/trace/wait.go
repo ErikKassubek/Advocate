@@ -11,6 +11,7 @@ package trace
 
 import (
 	"advocate/analysis/hb/a_clock"
+	"advocate/utils/flags"
 	"errors"
 	"fmt"
 	"math"
@@ -36,6 +37,7 @@ type OpWait int
 //   - delta int: The delta of the wait group
 //   - val int: The value of the wait group
 //   - function *ElementFunc: the function the operation is in
+//   - pan bool: caused a panic
 type ElementWait struct {
 	ElementBase
 
@@ -48,6 +50,7 @@ type ElementWait struct {
 	delta    int
 	val      int
 	function *ElementFunc
+	pan      bool
 }
 
 // ========================================================
@@ -65,8 +68,9 @@ type ElementWait struct {
 //   - delta string: The delta of the wait group
 //   - val string: The value of the wait group
 //   - pos string: The position of the wait group in the code
+//   - pan string: Caused a panic
 func (this *Trace) AddTraceElementWait(routine int, tPre,
-	tPost, id, opW, delta, val, pos string) error {
+	tPost, id, opW, delta, val, pos, pan string) error {
 	tPreInt, err := strconv.Atoi(tPre)
 	if err != nil {
 		return errors.New("tPre is not an integer")
@@ -106,6 +110,11 @@ func (this *Trace) AddTraceElementWait(routine int, tPre,
 		return err
 	}
 
+	panBool := false
+	if pan == "P" {
+		panBool = true
+	}
+
 	elem := ElementWait{
 		ElementBase: this.newElementBase(this, routine),
 		tPre:        tPreInt,
@@ -117,6 +126,7 @@ func (this *Trace) AddTraceElementWait(routine int, tPre,
 		pos:         NewPosition(file, line),
 		ci:          newConcInfo(),
 		function:    getLastCall(routine),
+		pan:         panBool,
 	}
 
 	this.AddElement(&elem)
@@ -293,6 +303,14 @@ func (this *ElementWait) CanBeRequest() bool {
 }
 
 // ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementWait) Pan() bool {
+	return this.pan
+}
+
+// ========================================================
 // MARK: Equal
 // ========================================================
 
@@ -370,7 +388,12 @@ func (this *ElementWait) StringDebug() string {
 	if this.ElementBase.init {
 		routine = "   *"
 	}
-	return fmt.Sprintf("%s@%s", routine, this.String())
+	res := fmt.Sprintf("%s@%s", routine, this.String())
+
+	if this.pan {
+		res += ",🗲"
+	}
+	return res
 }
 
 // StringGui returns the simple string representation of the element
@@ -389,6 +412,31 @@ func (this *ElementWait) StringGui() string {
 
 	res += strconv.Itoa(this.delta) + "," + strconv.Itoa(this.val)
 	res += "\n" + this.Pos().Short()
+
+	if this.pan {
+		res += ",🗲"
+	}
+	return res
+
+	return res
+}
+
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementWait) StringMin() string {
+	pos := this.Pos().Short()
+	if !flags.ShowFile {
+		pos = fmt.Sprintf("%d", this.Pos().Line())
+	}
+
+	res := fmt.Sprintf("%s,%d,%s", string(this.op), this.Resource().shortID, pos)
+
+	if this.pan {
+		res += ",🗲"
+	}
+
 	return res
 }
 
@@ -406,23 +454,23 @@ func (this *ElementWait) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-// Vc sets the vector clock
+// SetVc sets the vector clock
 //
 // Parameter:
 //   - weak bool: set the weak wv
 //   - cl *clock.VectorClock: the vector clock
-func (this *ElementWait) Vc(weak a_clock.VcType, cl *a_clock.VectorClock) {
+func (this *ElementWait) SetVc(weak a_clock.VcType, cl *a_clock.VectorClock) {
 	this.ci.setVC(weak, cl)
 }
 
-// GetVC returns the vector clock of the element
+// VC returns the vector clock of the element
 //
 // Parameter:
 //   - weak bool: get the weak
 //
 // Returns:
 //   - VectorClock: The vector clock of the element
-func (this *ElementWait) GetVC(weak a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementWait) VC(weak a_clock.VcType) *a_clock.VectorClock {
 	return this.ci.getVC(weak)
 }
 
@@ -461,6 +509,11 @@ func (this *ElementWait) ReplayID() string {
 	return fmt.Sprintf("%d:%s:%d", this.routineId, this.pos.file, this.pos.line)
 }
 
+// Replayable returns if element can be part of replay
+func (this *ElementWait) Replayable() bool {
+	return true
+}
+
 // ========================================================
 // MARK: Copy
 // ========================================================
@@ -486,6 +539,7 @@ func (this *ElementWait) Copy(trace *Trace, mapping map[int]Element, keep bool) 
 			pos:         this.pos.copy(),
 			ci:          newConcInfo(),
 			function:    this.function.CopyFunc(trace, mapping, keep),
+			pan:         this.pan,
 		}
 	}
 
@@ -500,6 +554,7 @@ func (this *ElementWait) Copy(trace *Trace, mapping map[int]Element, keep bool) 
 		pos:         this.pos.copy(),
 		ci:          this.ci.copy(),
 		function:    this.function.CopyFunc(trace, mapping, keep),
+		pan:         this.pan,
 	}
 }
 

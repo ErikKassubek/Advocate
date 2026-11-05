@@ -176,9 +176,17 @@ func (this *ElementRoutineEnd) Line() int {
 //   - string: the object type
 func (this *ElementRoutineEnd) Type(operation bool) OperationType {
 	if !operation {
-		return End
+		return Rout
 	}
-	return EndRoutine
+	return RoutEnd
+}
+
+// ========================================================
+// MARK: Panic
+// ========================================================
+
+func (this *ElementRoutineEnd) Pan() bool {
+	return false
 }
 
 // ========================================================
@@ -241,7 +249,15 @@ func (this *ElementRoutineEnd) StringDebug() string {
 // Returns:
 //   - string: The gui string representation of the element
 func (this *ElementRoutineEnd) StringGui() string {
-	return "E"
+	return string(RoutEnd)
+}
+
+// StringGui returns the gui string representation of the element
+//
+// Returns:
+//   - string: The minimal string representation of the element
+func (this *ElementRoutineEnd) StringMin() string {
+	return fmt.Sprintf("%s,-,-", RoutEnd)
 }
 
 // ========================================================
@@ -256,23 +272,23 @@ func (this *ElementRoutineEnd) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-// Vc sets the vector clock
+// SetVc sets the vector clock
 //
 // Parameter:
 //   - weak bool
 //   - vc *clock.VectorClock: the vector clock
-func (this *ElementRoutineEnd) Vc(weak a_clock.VcType, vc *a_clock.VectorClock) {
+func (this *ElementRoutineEnd) SetVc(weak a_clock.VcType, vc *a_clock.VectorClock) {
 	this.ci.setVC(weak, vc)
 }
 
-// GetVC returns the vector clock of the element
+// VC returns the vector clock of the element
 //
 // Parameter:
 //   - weak bool
 //
 // Returns:
 //   - VectorClock: The vector clock of the element
-func (this *ElementRoutineEnd) GetVC(weak a_clock.VcType) *a_clock.VectorClock {
+func (this *ElementRoutineEnd) VC(weak a_clock.VcType) *a_clock.VectorClock {
 	return this.ci.getVC(weak)
 }
 
@@ -304,6 +320,11 @@ func (this *ElementRoutineEnd) SetConcurrent(_ []Element, _, _ bool) {
 //   - string: empty string
 func (this *ElementRoutineEnd) ReplayID() string {
 	return ""
+}
+
+// Replayable returns if element can be part of replay
+func (this *ElementRoutineEnd) Replayable() bool {
+	return false
 }
 
 // ========================================================

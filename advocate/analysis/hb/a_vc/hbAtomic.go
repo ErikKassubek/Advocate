@@ -22,8 +22,8 @@ import (
 func UpdateHBAtomic(at *trace.ElementAtomic) {
 	routine := at.RoutineID()
 
-	at.Vc(a_clock.Strong, CurrentVC[routine])
-	at.Vc(a_clock.Weak, CurrentWVC[routine])
+	at.SetVc(a_clock.Strong, CurrentVC[routine])
+	at.SetVc(a_clock.Weak, CurrentWVC[routine])
 
 	switch at.Type(true) {
 	case trace.AtomicLoad:
@@ -58,8 +58,8 @@ func Read(at *trace.ElementAtomic, sync bool, routine int) {
 	id := at.ResourceID()
 
 	if sync && a_base.LastAtomicWriter[id] != nil {
-		CurrentVC[routine].Sync(a_base.LastAtomicWriter[id].GetVC(a_clock.Strong))
-		CurrentWVC[routine].Sync(a_base.LastAtomicWriter[id].GetVC(a_clock.Weak))
+		CurrentVC[routine].Sync(a_base.LastAtomicWriter[id].VC(a_clock.Strong))
+		CurrentWVC[routine].Sync(a_base.LastAtomicWriter[id].VC(a_clock.Weak))
 	}
 }
 
