@@ -356,6 +356,7 @@ To run the fuzzing as described [here](doc/fuzzing.md), the following command ca
 To use the fuzzing, you need to apply a fuzzing mode with `-fuzzingMode [mode]`.
 The available modes are:
 
+- `Full`: Run a combination of of GoPieHB and predictive analysis (Default)
 - `GFuzz`: Run the [GFuzz](doc/fuzzing/GFuzz.md) based fuzzing
 - `GFuzzHB`: Run the improved [GFuzz](doc/fuzzing/GFuzz.md#improvement-over-original-gfuzz) based fuzzing using happens-before information
 - `Flow`: Run the [Flow](doc/fuzzing/Flow.md) based fuzzing
@@ -376,6 +377,18 @@ An example command would therefore be
 ```
 ./advocate fuzzing -path ~/pathToProg/progDir/ -fuzzingMode GoPieHB -prog progName
 ```
+
+To select different closure algoritms, you can select them using 
+
+- `-closure [name]`
+
+with the following possible values:
+
+- `hb`: happens-before based closure
+- `scpc`: sync-preserving closure
+- `order`: routine-intern and fork closure
+- `replay`: full replay of prefix
+
 
 ## Additional Tags
 
