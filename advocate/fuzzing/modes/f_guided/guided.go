@@ -108,9 +108,9 @@ func startConstraint(num, length int) []f_constraints.Constraint {
 
 	for i := 0; i < 1000; i++ {
 		key := rand.Intn(len(routines)) + 1
-		rout := routines[key]
 
-		if rout == nil {
+		rout, ok := routines[key]
+		if !ok {
 			continue
 		}
 

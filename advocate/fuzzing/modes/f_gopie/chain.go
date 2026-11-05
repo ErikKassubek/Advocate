@@ -41,7 +41,12 @@ func startChains(num int) []f_constraints.Constraint {
 		for i := 0; i < 1000; i++ {
 			key := rand.Intn(len(routines)) + 1
 
-			routine := routines[key]
+			routine, ok := routines[key]
+
+			if !ok {
+				continue
+			}
+
 			if routine.Empty() {
 				continue
 			}
