@@ -78,6 +78,8 @@ var (
 	ShowFile bool
 
 	Experiment string
+
+	ClosureType string
 )
 
 // execution control

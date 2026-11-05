@@ -827,16 +827,21 @@ func (this *Trace) GetConcurrentEarliest(element Element) map[int]Element {
 	return concurrent
 }
 
-// RemoveLater removes all elements that have a later tPost that the given tPost
+// RemoveLater removes all elements that have a later tCom that the given tCom
+// Elements with the given TCom are removed.
 //
 // Parameter:
-//   - tPost int: Remove elements after tPost
-func (this *Trace) RemoveLater(tPost int) {
+//   - tCom int: Remove elements after and including tCom
+func (this *Trace) RemoveLater(tCom int) {
 	mapping := make(map[int]Element)
 	for routine, rout := range this.routines {
 		newElems := make([]Element, 0)
 		for _, elem := range rout.elems {
-			if elem.T(Commit) > tPost {
+			if !elem.Committed() {
+				continue
+			}
+
+			if elem.T(Commit) < tCom {
 				newElems = append(newElems, elem.Copy(this, mapping, true))
 			}
 		}

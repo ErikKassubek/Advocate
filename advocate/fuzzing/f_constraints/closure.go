@@ -14,17 +14,10 @@ import (
 	"advocate/analysis/a_hb"
 	"advocate/analysis/hb/a_clock"
 	"advocate/trace"
+	"advocate/utils/flags"
+	"advocate/utils/log"
 )
 
-type closureType int
-
-const (
-	order closureType = iota
-	hbc
-	scpc
-)
-
-const useHBClosure = scpc
 const mustHB = a_clock.Strong
 
 // The stable closure is calculated based on the following three rules.z
@@ -45,16 +38,19 @@ const mustHB = a_clock.Strong
 //
 // THe Stable closure CL is then CL_T(S) \ S
 func CalcuateClosure(s *Constraint) *Constraint {
-	switch useHBClosure {
-	case order:
+	switch flags.ClosureType {
+	case "order":
 		return calculateClosureOrder(s)
-	case hbc:
+	case "hbc":
 		return calculateClosureHB(s, mustHB)
-	case scpc:
+	case "scpc":
 		return calculateClosureSCPC(s, mustHB)
+	case "replay":
+		return calculateClosureReplay(s)
+	default:
+		panic("Unknown closure type " + flags.ClosureType)
 	}
 
-	return nil
 }
 
 func calculateClosureOrder(s *Constraint) *Constraint {
@@ -272,4 +268,36 @@ func calculateClosureSCPC(s *Constraint, vcType a_clock.VcType) *Constraint {
 	res.sort()
 
 	return res
+}
+
+func calculateClosureReplay(s *Constraint) *Constraint {
+	var firstTime = -1
+
+	for _, e := range s.Elems {
+		if firstTime == -1 {
+			firstTime = e.T(trace.Commit)
+			continue
+		}
+
+		eTime := e.T(trace.Commit)
+		if eTime < firstTime {
+			firstTime = eTime
+		}
+	}
+
+	closure := NewConstraint()
+
+	if firstTime == -1 {
+		return &closure
+	}
+
+	tr, err := a_base.MainTrace.Copy(false)
+	if err != nil {
+		log.Error(err.Error())
+		return &closure
+	}
+
+	tr.RemoveLater(firstTime)
+
+	return TraceToConstraint(&tr)
 }

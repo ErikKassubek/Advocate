@@ -98,6 +98,7 @@ func CommandLine() bool {
 	// for experiments
 	flag.BoolVar(&f_base.FinishIfBugFound, "finishIfBugFound", false, "Finish fuzzing as soon as a bug was found")
 	flag.BoolVar(&flags.CancelTestIfBugFound, "cancelTestIfBugFound", false, "Skip further fuzzing runs of a test if one bug has been found")
+	flag.StringVar(&flags.ClosureType, "closure", "scpc", "Closure type. Possible values: scpc, chb, order, replay. Default: scpc.")
 
 	flag.Parse()
 
@@ -118,5 +119,4 @@ func CommandLine() bool {
 	}
 
 	return true
-
 }
