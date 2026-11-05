@@ -244,7 +244,7 @@ func writeForkMap(fuzzingTracePath string, tr *trace.Trace) error {
 
 func WriteConstraint(tracePath string, tr *trace.Trace, constr, closure *f_constraints.Constraint) error {
 	mutLen := constr.Len()
-	closureLen := 0
+	closureLen := closure.Len()
 	var fullConstr *f_constraints.Constraint
 
 	var err error
@@ -252,7 +252,7 @@ func WriteConstraint(tracePath string, tr *trace.Trace, constr, closure *f_const
 		closure.Len()
 		fullConstr, err = f_constraints.MergeClosureConstraint(closure, constr)
 		if err != nil {
-			log.Error("Failed to merge constraints: ", err.Error())
+			log.Info("Rewrite not possible")
 			return err
 		}
 	}

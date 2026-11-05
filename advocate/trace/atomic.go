@@ -371,7 +371,7 @@ func (this *ElementAtomic) ReplayID() string {
 
 // Replayable returns if element can be part of replay
 func (this *ElementAtomic) Replayable() bool {
-	return false
+	return true
 }
 
 // ========================================================

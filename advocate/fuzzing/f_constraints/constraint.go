@@ -15,7 +15,6 @@ import (
 	"advocate/analysis/hb/a_hbcalc"
 	"advocate/trace"
 	"advocate/utils/flags"
-	"advocate/utils/log"
 	"fmt"
 	"sort"
 )
@@ -354,10 +353,6 @@ func mergeClosureConstraintInterlace(closure, constr *Constraint) (*Constraint, 
 		}
 
 		if candidate == -1 {
-			for _, e := range elems {
-				log.ErrorInfof("%s -> %s", e.StringMin(), e.VC(a_clock.Weak))
-			}
-			log.ErrorInfo()
 			return nil, fmt.Errorf("cyclic happens-before dependencies")
 		}
 
