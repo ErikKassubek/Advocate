@@ -9,14 +9,6 @@ const (
 	TheBugIsLikelyAFalsePositive                   = "The bug is likely a false positive"
 	TheAnalyzerHasTriedToRewriteTheTraceInSuchAWay = "The analyzer has tried to rewrite the trace in such a way"
 
-	ModeRecord     = "record"
-	ModeReplay     = "replay"
-	ModeFuzzing    = "fuzzing"
-	ModeAnalysis   = "analysis"
-	ModeGui        = "gui"
-	ModeShowTrace  = "show"
-	ModeExperiment = "experiment"
-
 	ConfirmedTheBug = "confirmed the bug"
 
 	PosSep = "#"

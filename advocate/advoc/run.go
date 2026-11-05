@@ -14,7 +14,6 @@ import (
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_fuzzing"
 	"advocate/utils/command"
-	"advocate/utils/consts"
 	"advocate/utils/control"
 	"advocate/utils/flags"
 	"advocate/utils/helper"
@@ -66,7 +65,7 @@ func Run() error {
 	}
 
 	// don't run any HB Analysis for direct GFuzz, GoPie and GoCR
-	if flags.Mode == consts.ModeFuzzing && (flags.FuzzingMode == f_base.GFuzz ||
+	if flags.Mode == flags.ModeFuzzing && (flags.FuzzingMode == f_base.GFuzz ||
 		flags.FuzzingMode == f_base.GoPie || flags.FuzzingMode == f_base.GoCR) {
 		flags.Scenarios = "-"
 		flags.OnlyAPanicAndLeak = true
@@ -93,24 +92,18 @@ func Run() error {
 	}
 
 	switch flags.Mode {
-	case "analysis":
-		flags.Mode = consts.ModeAnalysis
+	case flags.ModeAnalysis:
 		err = modeToolchain(record, analysis, replay)
-	case "fuzzing":
-		flags.Mode = consts.ModeFuzzing
+	case flags.ModeFuzzing:
 		err = modeFuzzing()
-	case "record", "recording", "trace":
-		flags.Mode = consts.ModeRecord
+	case flags.ModeRecord:
 		flags.DeleteTraces = false
 		err = modeToolchain(record, !analysis, !replay)
-	case "replay":
-		flags.Mode = consts.ModeReplay
+	case flags.ModeReplay:
 		err = modeToolchain(!record, !analysis, replay)
-	case "experiment", "experiments":
-		flags.Mode = consts.ModeExperiment
+	case flags.ModeExperiments:
 		err = modeExperiments()
-	case "show":
-		flags.Mode = consts.ModeShowTrace
+	case flags.ModeShow:
 		err = modeShowTrace()
 		return nil
 		// case "static": // TODO: only for testing, when working move into analysis
@@ -120,8 +113,6 @@ func Run() error {
 	// 	err = s_blocking.BuildStaticBlockingAnalysis()
 
 	default:
-		log.Errorf("Unknown mode %s\n", os.Args[1])
-		log.Error("Select one mode from  'analysis', 'fuzzing', 'replay', 'record', experiments or 'gui' (only if -tags gui is set)")
 		err = fmt.Errorf("Unknown mode %s", os.Args[1])
 		helper.PrintHelp()
 	}
@@ -141,7 +132,7 @@ func Run() error {
 	} else {
 		log.Errorf("%d internal replay timeouts occurred", numberTimeout)
 	}
-	if flags.Mode == consts.ModeAnalysis || flags.Mode == consts.ModeFuzzing {
+	if flags.Mode == flags.ModeAnalysis || flags.Mode == flags.ModeFuzzing {
 		if numberTestWithRes == 0 {
 			log.Info("No bugs have been found/indicated")
 		} else {

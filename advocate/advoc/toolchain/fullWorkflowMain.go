@@ -15,7 +15,6 @@ import (
 	"advocate/experiments"
 	"advocate/fuzzing/f_base"
 	"advocate/utils/command"
-	"advocate/utils/consts"
 	"advocate/utils/flags"
 	"advocate/utils/log"
 	"advocate/utils/paths"
@@ -148,7 +147,7 @@ func runWorkflowMain(
 		}
 	}
 
-	if flags.Mode == consts.ModeExperiment && flags.Experiment == experiments.IndexingEx {
+	if flags.Mode == flags.ModeExperiments && flags.Experiment == experiments.IndexingEx {
 		return 0, 0, err
 	}
 

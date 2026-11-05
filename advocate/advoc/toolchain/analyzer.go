@@ -84,7 +84,7 @@ func runAnalyzer(pathTrace string,
 
 	log.Infof("Read trace with %d elements in %d routines", numberElems, numberOfRoutines)
 
-	if flags.Mode == consts.ModeExperiment && flags.Experiment == experiments.IndexingEx {
+	if flags.Mode == flags.ModeExperiments && flags.Experiment == experiments.IndexingEx {
 		indexing.BuildExecutionIndexing()
 		indexing.CheckForEq()
 		return nil

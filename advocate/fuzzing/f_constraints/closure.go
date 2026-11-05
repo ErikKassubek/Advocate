@@ -39,13 +39,13 @@ const mustHB = a_clock.Strong
 // THe Stable closure CL is then CL_T(S) \ S
 func CalcuateClosure(s *Constraint) *Constraint {
 	switch flags.ClosureType {
-	case "order":
+	case flags.ClosureOrder:
 		return calculateClosureOrder(s)
-	case "hbc":
+	case flags.ClosureHB:
 		return calculateClosureHB(s, mustHB)
-	case "scpc":
+	case flags.ClosureSCPC:
 		return calculateClosureSCPC(s, mustHB)
-	case "replay":
+	case flags.ClosureReplay:
 		return calculateClosureReplay(s)
 	default:
 		panic("Unknown closure type " + flags.ClosureType)

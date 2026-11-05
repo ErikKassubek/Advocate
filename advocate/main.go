@@ -26,6 +26,7 @@ func main() {
 
 	cont := advoc.CommandLine()
 	if !cont {
+		log.Error("Failed CL Check. Cancel...")
 		return
 	}
 

@@ -42,6 +42,7 @@ func CheckBin() error {
 //
 // Returns:
 //   - string: exec name, or empty if not found
+//   - bool: true if passed, false if not
 func CheckProg() string {
 	var goModPath string
 

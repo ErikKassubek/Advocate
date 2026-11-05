@@ -13,6 +13,7 @@ import (
 	"advocate/fuzzing/f_base"
 	"advocate/utils/flags"
 	"advocate/utils/helper"
+	"advocate/utils/log"
 	"flag"
 	"os"
 	"strings"
@@ -102,6 +103,12 @@ func CommandLine() bool {
 
 	flag.Parse()
 
+	return check()
+}
+
+func check() bool {
+	log.Info("Run CL Checks")
+
 	if len(os.Args) >= 2 && !strings.HasPrefix(os.Args[1], "-") {
 		flags.Mode = os.Args[1]
 		flag.CommandLine.Parse(os.Args[2:])
@@ -118,5 +125,62 @@ func CommandLine() bool {
 		return false
 	}
 
+	if !checkMode() {
+		return false
+	}
+	if !checkClosure() {
+		return false
+	}
+
+	log.Info("Passed CL Checks")
+
 	return true
+}
+
+func checkMode() bool {
+	flags.Mode = strings.ToLower(flags.Mode)
+
+	switch flags.Mode {
+	case "analysis":
+		flags.Mode = flags.ModeAnalysis
+	case "fuzzing":
+		flags.Mode = flags.ModeFuzzing
+	case "record", "recording", "trace":
+		flags.Mode = flags.ModeRecord
+	case "replay":
+		flags.Mode = flags.ModeReplay
+	case "experiment", "experiments":
+		flags.Mode = flags.ModeExperiments
+	case "show":
+		flags.Mode = flags.ModeShow
+	default:
+		log.Error("Unknown mode: ", flags.Mode)
+		log.ErrorInfo("Possible Values: ")
+		log.ErrorInfof("\t%s", flags.ModeAnalysis)
+		log.ErrorInfof("\t%s", flags.ModeFuzzing)
+		log.ErrorInfof("\t%s", flags.ModeRecord)
+		log.ErrorInfof("\t%s", flags.ModeReplay)
+		log.ErrorInfof("\t%s", flags.ModeExperiments)
+		log.ErrorInfof("\t%s", flags.ModeShow)
+		return false
+	}
+
+	return true
+}
+
+func checkClosure() bool {
+	flags.ClosureType = strings.ToLower(flags.ClosureType)
+
+	switch flags.ClosureType {
+	case flags.ClosureOrder, flags.ClosureHB, flags.ClosureSCPC, flags.ClosureReplay:
+		return true
+	default:
+		log.Error("Unknown closure type: ", flags.Mode)
+		log.ErrorInfo("Possible Values: ")
+		log.ErrorInfof("\t%s", flags.ClosureOrder)
+		log.ErrorInfof("\t%s", flags.ClosureHB)
+		log.ErrorInfof("\t%s", flags.ClosureSCPC)
+		log.ErrorInfof("\t%s", flags.ClosureReplay)
+		return false
+	}
 }

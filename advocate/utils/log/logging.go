@@ -384,6 +384,35 @@ func Errorf(format string, v ...any) {
 	numberErr++
 }
 
+// Error logs an error to the terminal
+// Printed in red
+// Does not count number of error
+//
+// Parameter:
+//   - v ...any: the content of the log
+func ErrorInfo(v ...any) {
+	if guiChanSet {
+		guiChan <- GuiInfo{fmt.Sprint(v...), ErrorLv}
+	} else {
+		log.Print(Red, fmt.Sprint(v...), Reset, "\n")
+	}
+}
+
+// Errorf logs an error to the terminal
+// Printed in red
+// Does not count number of error
+//
+// Parameter:
+//   - format string: the format (e.g. "%s")
+//   - v ...any: the content of the log
+func ErrorInfof(format string, v ...any) {
+	if guiChanSet {
+		guiChan <- GuiInfo{fmt.Sprintf(format, v...), ErrorLv}
+	} else {
+		log.Printf(Red+format+Reset, v...)
+	}
+}
+
 // GetLoggingNumbers returns the number of results, errors and timeouts
 //
 // Returns:
