@@ -176,7 +176,7 @@ func rewriteGraph(bug bugs.Bug) (*f_constraints.Constraint, error) {
 	elements := types.MergeLists(bug.TraceElement1, bug.TraceElement2)
 	dec := types.SliceAsMap(bug.TraceElement1)
 	inc := types.SliceAsMap(bug.TraceElement2)
-	n := len(bug.TraceElement1) + len(bug.TraceElement2)
+	n := len(elements)
 
 	if n == 0 {
 		return nil, fmt.Errorf("No element in bug")
