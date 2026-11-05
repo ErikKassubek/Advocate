@@ -11,7 +11,6 @@ package advoc
 
 import (
 	"advocate/fuzzing/f_base"
-	"advocate/utils/command"
 	"advocate/utils/flags"
 	"advocate/utils/helper"
 	"advocate/utils/log"
@@ -134,7 +133,6 @@ func check() bool {
 	}
 	if flags.Mode != "show" {
 		CheckProg()
-		command.RunGoModTidy()
 	}
 
 	log.Info("Passed CL Checks")

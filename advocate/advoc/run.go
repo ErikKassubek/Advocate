@@ -82,7 +82,6 @@ func Run() error {
 	}
 
 	if flags.Mode != "show" {
-		CheckProg()
 		command.RunGoModTidy()
 	}
 

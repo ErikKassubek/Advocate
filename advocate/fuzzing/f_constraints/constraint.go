@@ -14,6 +14,8 @@ import (
 	"advocate/analysis/hb/a_clock"
 	"advocate/analysis/hb/a_hbcalc"
 	"advocate/trace"
+	"advocate/utils/flags"
+	"advocate/utils/log"
 	"fmt"
 	"sort"
 )
@@ -259,6 +261,27 @@ func (this *Constraint) sort() {
 }
 
 func MergeClosureConstraint(closure, constr *Constraint) (*Constraint, error) {
+	if flags.ClosureType == flags.ClosureReplay {
+		return mergeClosureConstraintSimple(closure, constr)
+	}
+	return mergeClosureConstraintInterlace(closure, constr)
+}
+
+func mergeClosureConstraintSimple(closure, constr *Constraint) (*Constraint, error) {
+	res := NewConstraint()
+
+	for _, e := range closure.Elems {
+		res.Add(e)
+	}
+
+	for _, e := range constr.Elems {
+		res.Add(e)
+	}
+
+	return &res, nil
+}
+
+func mergeClosureConstraintInterlace(closure, constr *Constraint) (*Constraint, error) {
 	n := len(closure.Elems) + len(constr.Elems)
 
 	elems := make([]trace.Element, n)
@@ -314,7 +337,6 @@ func MergeClosureConstraint(closure, constr *Constraint) (*Constraint, error) {
 
 	// Priority-based topological sort.
 	result := NewConstraint()
-	// result := make([]trace.Element, 0, n)
 	emitted := make([]bool, n)
 
 	for result.Len() < n {
@@ -332,6 +354,10 @@ func MergeClosureConstraint(closure, constr *Constraint) (*Constraint, error) {
 		}
 
 		if candidate == -1 {
+			for _, e := range elems {
+				log.ErrorInfof("%s -> %s", e.StringMin(), e.VC(a_clock.Weak))
+			}
+			log.ErrorInfo()
 			return nil, fmt.Errorf("cyclic happens-before dependencies")
 		}
 
