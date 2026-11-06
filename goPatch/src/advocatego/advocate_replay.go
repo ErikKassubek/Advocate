@@ -74,7 +74,7 @@ func startReplay(timeout int) {
 	readReplayConstraint(tracePathRewritten)
 	readSpawnTree(tracePathRewritten)
 
-	startTimeout(timeout)  // global max runtime
+	startTimeout(timeout) // global max runtime
 	go runtime.Timeout()  // max block for each operation
 
 	// DetectBlockingGC(0)
@@ -146,7 +146,8 @@ func readSpawnTree(tracePathRewritten string) {
 	}
 	defer file.Close()
 
-	spawns := make(map[int][]int)
+	spawnsRoutine := make(map[int][]int)
+	spawnsPosition := make(map[int][]string)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -155,7 +156,12 @@ func readSpawnTree(tracePathRewritten string) {
 			continue
 		}
 
-		fields := strings.Split(elem, "#")
+		if elem == "NoStableID" {
+			runtime.SetSpawns(nil, nil)
+			return
+		}
+
+		fields := strings.Split(elem, "@")
 		if len(fields) != 2 {
 			continue
 		}
@@ -164,19 +170,27 @@ func readSpawnTree(tracePathRewritten string) {
 		if err != nil {
 			println("Could not convert %d to int", fields[0])
 		}
-		spawns[parent] = make([]int, 0)
+		spawnsRoutine[parent] = make([]int, 0)
+		spawnsPosition[parent] = make([]string, 0)
 
 		children := strings.Split(fields[1], ",")
 		for _, child := range children {
-			childInt, err := strconv.Atoi(child)
+			childFields := strings.Split(child, "-")
+			if len(childFields) != 2 {
+				continue
+			}
+
+			childInt, err := strconv.Atoi(childFields[0])
 			if err != nil {
 				println("Could not convert %d to int", fields[0])
+				continue
 			}
-			spawns[parent] = append(spawns[parent], childInt)
+			spawnsRoutine[parent] = append(spawnsRoutine[parent], childInt)
+			spawnsPosition[parent] = append(spawnsPosition[parent], childFields[1])
 		}
 	}
 
-	runtime.SetSpawns(spawns)
+	runtime.SetSpawns(spawnsRoutine, spawnsPosition)
 }
 
 // Import the trace.

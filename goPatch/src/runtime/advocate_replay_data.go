@@ -15,8 +15,11 @@ var (
 	constraintMain Constraint
 	waiting        = newWaitingOps()
 
-	spawns  = make(map[int][]int)
-	selects = make(map[string][]int)
+	stableID = true
+	spawnsRout      = make(map[int][]int)
+	spawnsPos       = make(map[int][]string)
+	maxRoutineIndex = 0
+	selects         = make(map[string][]int)
 
 	replayEnabled = false
 	selectEnabled = false
@@ -44,18 +47,34 @@ const printDebug = false
 const experiments = true
 const withTimeout = true
 
-func SetSpawns(sp map[int][]int) {
+func SetSpawns(spRout map[int][]int, spPos map[int][]string) {
+	if spRout == nil {
+		stableID = false 
+		if printDebug {
+			println("NO STABLE ID")
+		}
+		return
+	}
+
+
 	if printDebug {
 		println("SET SPAWN")
-		for i, j := range sp {
+		for i, j := range spRout {
 			print(i, " -> ")
-			for _, e := range j {
-				print(e, ", ")
+			for k, e := range j {
+				print(e, "-", spPos[i][k], ", ")
 			}
 			println("")
 		}
 		println("SPAWN SET")
 	}
 
-	spawns = sp
+	for _, routs := range spRout {
+		for _, rout := range routs {
+			maxRoutineIndex = max(maxRoutineIndex, rout)
+		}
+	}
+
+	spawnsRout = spRout
+	spawnsPos = spPos
 }
