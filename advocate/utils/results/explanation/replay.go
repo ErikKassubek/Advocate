@@ -79,7 +79,7 @@ func getRewriteType(bugCode buginfo.ResultType) BugClass {
 	return UnknownBugClass
 }
 
-// Get the output codes from the output.log file
+// Get the output codes from the advocateOutput.log file
 //
 // Returns:
 //
@@ -87,14 +87,14 @@ func getRewriteType(bugCode buginfo.ResultType) BugClass {
 //	     []string: waiting elements
 func getOutputInfo() (map[string]string, bool) {
 	if _, err := os.Stat(paths.ResultOutput); os.IsNotExist(err) {
-		res := "No replay info available. Output.log does not exist."
+		res := "No replay info available. advocateOutput.log does not exist."
 		return map[string]string{"AdvocateFailExplanationInfo": res, "AdvocateFailResplaySucInfo": "information not available"}, false
 	}
 
 	// read the output file
 	content, err := os.ReadFile(paths.ResultOutput)
 	if err != nil {
-		res := "No replay info available. Could not read output.log file"
+		res := "No replay info available. Could not read advocateOutput.log file"
 		return map[string]string{"AdvocateFailExplanationInfo": res, "AdvocateFailResplaySucInfo": "information not available"}, false
 	}
 

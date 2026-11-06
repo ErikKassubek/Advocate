@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-// Read the program info from the output.log file
+// Read the program info from the advocateOutput.log file
 //
 // Returns:
 //   - map[bugKeys]string: information about the analyzed test, e.g. file/test name and header position info

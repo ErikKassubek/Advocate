@@ -64,7 +64,7 @@ func extractTraceNumber(trace string) (string, string) {
 // For a given run, check if it was terminated by a timeout
 //
 // Parameter:
-//   - output (string): path to the output.log file
+//   - output (string): path to the advocateOutput.log file
 //
 // Returns:
 //   - true if an timeout occurred, false otherwise

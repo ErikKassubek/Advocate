@@ -64,7 +64,7 @@ func CommandLine() bool {
 	flag.BoolVar(&flags.NoWarning, "noWarning", false, "Only show critical bugs")
 	flag.BoolVar(&flags.NoInfo, "noInfo", false, "Do not show infos in the terminal (will only show results, errors, important and progress)")
 	flag.BoolVar(&flags.NoProgress, "noProgress", false, "Do not show progress info")
-	flag.BoolVar(&flags.Output, "output", false, "Show the output of the executed programs in the terminal. Otherwise it is only in output.log file.")
+	flag.BoolVar(&flags.Output, "output", false, "Show the output of the executed programs in the terminal. Otherwise it is only in advocateOutput.log file.")
 
 	flag.BoolVar(&flags.AlwaysPanic, "panic", false, "Panic if the analysis panics")
 	flag.BoolVar(&flags.NoMemorySupervisor, "noMemorySupervisor", false, "Disable the memory supervisor")

@@ -141,10 +141,10 @@ func worker(path, prog string, closure string, stable bool, wg *sync.WaitGroup, 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	// err := cmd.Run()
-	// if err != nil {
-	// 	log(fmt.Sprintf("ERROR : %s %s", prog, err.Error()))
-	// }
+	err := cmd.Run()
+	if err != nil {
+		log(fmt.Sprintf("ERROR : %s %s", prog, err.Error()))
+	}
 
 	log(fmt.Sprintf("FINISH: %s", prog))
 

@@ -181,11 +181,11 @@ func getSubfolders(path string) ([]string, error) {
 	return subfolders, nil
 }
 
-// readCommandFile reads to output.log file to determine the position of the
+// readCommandFile reads to advocateOutput.log file to determine the position of the
 // inserted header.
 //
 // Parameter:
-//   - path string: path to the output.log file
+//   - path string: path to the advocateOutput.log file
 //
 // Returns:
 //   - string: path to the file containing the header

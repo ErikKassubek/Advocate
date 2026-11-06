@@ -62,7 +62,7 @@ var (
 	// logging and output
 	noInfo     = newFlagVal("noInfo", "false", "", "Do not show infos in the terminal (will only show results, errors, important and progress)")
 	noProgress = newFlagVal("noProgress", "false", "", "Do not show progress info")
-	output     = newFlagVal("output", "false", "", "Show the output of the executed programs in the terminal. Otherwise it is only in output.log file.")
+	output     = newFlagVal("output", "false", "", "Show the output of the executed programs in the terminal. Otherwise it is only in advocateOutput.log file.")
 
 	// continue
 	cont         = newFlagVal("cont", "false", "", "Continue a partial analysis of tests")

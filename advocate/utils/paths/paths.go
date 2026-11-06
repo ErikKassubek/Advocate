@@ -26,7 +26,7 @@ import (
 const (
 	NameTrace             = "advocateTrace"
 	NameResult            = "advocateResult"
-	NameOutput            = "output.log"
+	NameOutput            = "advocateOutput.log"
 	NameFuzzingData       = "fuzzingData.log"
 	NameFuzzingTraces     = "advocateFuzzingTraces"
 	NameReplayConstraints = "replay_constratins.log"
