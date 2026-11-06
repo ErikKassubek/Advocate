@@ -11,6 +11,7 @@ package f_gopie
 
 import (
 	"advocate/analysis/a_base"
+	"advocate/analysis/hb/a_clock"
 	"advocate/analysis/hb/a_concurrent"
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_constraints"
@@ -79,8 +80,6 @@ func CreateMutations(mutNumber int) error {
 
 	energy := getEnergy()
 
-	log.Infof("Mutate %d scheduling chains", len(SchedulingChains))
-
 	for _, sc := range SchedulingChains {
 		muts := f_base.Mutate(sc, energy, rel1, rel2)
 
@@ -105,16 +104,6 @@ func CreateMutations(mutNumber int) error {
 				NumberDoubleMuts++
 			}
 		}
-	}
-
-	if len(specMutations) > 0 {
-		log.Infof("Write %d special mutation to file", len(specMutations))
-	}
-
-	if f_base.MaxNumberRuns > 0 {
-		log.Infof("Write %d mutations to file", max(0, min(len(mutations)+len(specMutations), f_base.MaxNumberRuns-f_base.NumberWrittenMutations)))
-	} else {
-		log.Infof("Write %d mutations to file", max(0, len(mutations)+len(specMutations)))
 	}
 
 	for _, mut := range specMutations {
@@ -161,7 +150,7 @@ func getEnergy() int {
 	if f_base.UseHBInfoFuzzing {
 		for _, sc := range SchedulingChains {
 			for _, elem := range sc.Elems {
-				c := a_concurrent.GetNumberConcurrent(elem, sameElem, false, true)
+				c := a_concurrent.GetNumberConcurrent(elem, sameElem, false, a_clock.Weak)
 				score += c
 			}
 		}
@@ -189,7 +178,7 @@ func getSpecialMuts() map[string]f_constraints.Constraint {
 
 	// send on closed
 	for _, c := range a_base.CloseData {
-		conc := a_concurrent.GetConcurrent(c, true, false, true, false)
+		conc := a_concurrent.GetConcurrent(c, true, false, true, a_clock.Weak)
 		for _, s := range conc {
 			switch t := s.(type) {
 			case *trace.ElementSelect:

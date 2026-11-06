@@ -68,8 +68,8 @@ type Element interface {
 	SetVc(weak a_clock.VcType, vc *a_clock.VectorClock)
 	VC(weak a_clock.VcType) *a_clock.VectorClock
 
-	NumberConcurrent(weak, sameElem bool) int
-	SetNumberConcurrent(c int, weak, sameElem bool)
+	NumberConcurrent(vcType a_clock.VcType, sameElem bool) int
+	SetNumberConcurrent(c int, vcType a_clock.VcType, sameElem bool)
 
 	ReplayID() string
 
@@ -349,8 +349,8 @@ func (this *concInfo) setVC(weak a_clock.VcType, vc *a_clock.VectorClock) {
 	this.vc = vc.Copy()
 }
 
-func (this *concInfo) GetNumberConcurrent(weak, sameElem bool) int {
-	if weak {
+func (this *concInfo) GetNumberConcurrent(vcType a_clock.VcType, sameElem bool) int {
+	if vcType == a_clock.Weak {
 		if sameElem {
 			return this.numberConcurrentWeakSame
 		}
@@ -362,8 +362,8 @@ func (this *concInfo) GetNumberConcurrent(weak, sameElem bool) int {
 	return this.numberConcurrent
 }
 
-func (this *concInfo) SetNumberConcurrent(c int, weak, sameElem bool) {
-	if weak {
+func (this *concInfo) SetNumberConcurrent(c int, vcType a_clock.VcType, sameElem bool) {
+	if vcType == a_clock.Weak {
 		if sameElem {
 			this.numberConcurrentWeakSame = c
 		} else {

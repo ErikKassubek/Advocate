@@ -18,7 +18,6 @@ import (
 
 // Clear the data structures used for the analysis
 func Clear(total bool) {
-	ClearTrace()
 	ClearData()
 	if total {
 		results.Reset()

@@ -243,13 +243,14 @@ func writeForkMap(fuzzingTracePath string, tr *trace.Trace) error {
 }
 
 func WriteConstraint(tracePath string, tr *trace.Trace, constr, closure *f_constraints.Constraint) error {
-	mutLen := constr.Len()
+	constrLen := constr.Len()
 	closureLen := closure.Len()
 	var fullConstr *f_constraints.Constraint
 
+	log.Debug2("Len: ", constrLen, " ", closureLen, " ", closure == nil)
+
 	var err error
 	if closure != nil {
-		closure.Len()
 		fullConstr, err = f_constraints.MergeClosureConstraint(closure, constr)
 		if err != nil {
 			log.Info("Rewrite not possible")
@@ -263,7 +264,7 @@ func WriteConstraint(tracePath string, tr *trace.Trace, constr, closure *f_const
 		return err
 	}
 
-	err = writeConstraintOrder(tracePath, tr, fullConstr, mutLen, closureLen)
+	err = writeConstraintOrder(tracePath, tr, fullConstr, constrLen, closureLen)
 	if err != nil {
 		return err
 	}

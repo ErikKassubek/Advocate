@@ -213,11 +213,11 @@ func (this *ElementReturn) Function() *ElementFunc {
 // MARK: Concurrent
 // ========================================================
 
-func (this *ElementReturn) NumberConcurrent(_, _ bool) int {
+func (this *ElementReturn) NumberConcurrent(_ a_clock.VcType, _ bool) int {
 	return 0
 }
 
-func (this *ElementReturn) SetNumberConcurrent(_ int, _, _ bool) {
+func (this *ElementReturn) SetNumberConcurrent(_ int, _ a_clock.VcType, _ bool) {
 }
 
 // ========================================================

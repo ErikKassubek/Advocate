@@ -27,10 +27,10 @@ var (
 	GFuzzFlipP    = 0.99
 	GFuzzFlipPMin = 0.1
 
-	GoPieW1          = 1.0
-	GoPieW2          = 1.0
-	GoPieMaxSCLength = 9
-	ChainMutabound   = 10
+	GoPieW1             = 1.0
+	GoPieW2             = 1.0
+	MaxConstraintLength = 9
+	ChainMutabound      = 10
 
 	GoPieSCStart = 10
 
@@ -82,7 +82,7 @@ func SetSettings() {
 		case "GoPieW2":
 			GoPieW2 = value
 		case "GoPieBound":
-			GoPieMaxSCLength = int(clamp(value, 2.0, math.MaxFloat64))
+			MaxConstraintLength = int(clamp(value, 2.0, math.MaxFloat64))
 		case "GoPieMutabound":
 			ChainMutabound = int(clamp(value, 1, math.MaxFloat64))
 		case "GoPieSCStart":

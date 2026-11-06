@@ -56,11 +56,11 @@ func InitVC() {
 //   - sameElem bool: if true, only return concurrent operations on the same element,
 //     otherwise return all concurrent elements
 //   - sameType bool: only count values on the same type (no effect if same element is true)
-//   - weak bool: use the weak happens before relation
+//   - vcType a_clock: weak or strong
 //
 // Returns:
 //   - []trace.Element: set of elements concurrent to elem
-func GetConcurrent(elem trace.Element, all, sameElem, sameType, weak bool) []trace.Element {
+func GetConcurrent(elem trace.Element, all, sameElem, sameType bool, vcType a_clock.VcType) []trace.Element {
 	if !a_base.HBWasCalc() {
 		log.Error("Cannot find concurrent elements: VCs have not been calculated")
 		return make([]trace.Element, 0)
@@ -94,7 +94,7 @@ func GetConcurrent(elem trace.Element, all, sameElem, sameType, weak bool) []tra
 				continue
 			}
 
-			if weak {
+			if vcType == a_clock.Weak {
 				if a_clock.IsConcurrent(elem.VC(a_clock.Weak), tElem.VC(a_clock.Weak)) {
 					res = append(res, tElem)
 					if !all {

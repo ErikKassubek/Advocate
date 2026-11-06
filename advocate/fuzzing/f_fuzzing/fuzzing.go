@@ -228,7 +228,6 @@ func runFuzzing(testPath string, firstRun bool, fileNumber, testNumber int) erro
 			if control.WasCanceled() {
 				log.Error("Fuzzing run was canceled due to memory")
 				f_gopie.ClearDataRun()
-				a_base.ClearTrace()
 				a_base.ClearData()
 				continue
 			}
@@ -283,7 +282,6 @@ func runFuzzing(testPath string, firstRun bool, fileNumber, testNumber int) erro
 			break
 		}
 
-		a_base.ClearTrace()
 		a_base.ClearData()
 
 	}

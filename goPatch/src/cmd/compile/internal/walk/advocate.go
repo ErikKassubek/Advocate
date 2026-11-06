@@ -620,8 +620,11 @@ func isUserMain(fn *ir.Func) bool {
 	return pkg.Name == "main" && pkg.Path == "main"
 }
 
+// WARNING: there are two ignore functions, one in cmd/compile/interal/walk/advocate.go and 
+// one in src/runtime/advpcate_trace.go.
+// Make sure that they are equivalent.
 func advocateIgnore(file string) bool {
 	return (strings.Contains(file, "goPatch/src/") || strings.Contains(file, "go/pkg/mod")) &&
-		!strings.Contains(file, "goPatch/src/time/tick.go") &&
-		!strings.Contains(file, "goPatch/src/context/context.go")
+		!strings.Contains(file, "goPatch/src/time/") &&
+		!strings.Contains(file, "goPatch/src/context/")
 }
