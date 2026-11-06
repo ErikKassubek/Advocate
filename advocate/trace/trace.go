@@ -54,7 +54,7 @@ type Trace struct {
 	channelIDs            map[int]struct{}
 	blocked               map[int]Element
 	forks                 map[int]*ElementFork
-	forkTree              map[int][]int
+	forkTree              map[int][]types.Pair[int, string]
 	allocs                map[int]*ElementAlloc
 	resources             map[int]Resource
 	callTree              CallTree
@@ -75,7 +75,7 @@ func NewTrace() Trace {
 		lastMutexAcq:          make(map[int]*ElementMutex),
 		blocked:               make(map[int]Element),
 		forks:                 make(map[int]*ElementFork),
-		forkTree:              make(map[int][]int),
+		forkTree:              make(map[int][]types.Pair[int, string]),
 		allocs:                make(map[int]*ElementAlloc),
 		resources:             make(map[int]Resource),
 		callTree:              *newCallGraph(),
@@ -92,7 +92,7 @@ func (this *Trace) Clear() {
 	this.lastMutexAcq = make(map[int]*ElementMutex)
 	this.blocked = make(map[int]Element)
 	this.forks = make(map[int]*ElementFork)
-	this.forkTree = make(map[int][]int)
+	this.forkTree = make(map[int][]types.Pair[int, string])
 	this.allocs = make(map[int]*ElementAlloc)
 	this.resources = make(map[int]Resource)
 	this.callTree = *newCallGraph()
@@ -113,9 +113,9 @@ func (this *Trace) AddElement(elem Element) {
 	case *ElementFork:
 		this.forks[e.objId] = e
 		if _, ok := this.forkTree[routine]; !ok {
-			this.forkTree[routine] = make([]int, 0)
+			this.forkTree[routine] = make([]types.Pair[int, string], 0)
 		}
-		this.forkTree[routine] = append(this.forkTree[routine], e.objId)
+		this.forkTree[routine] = append(this.forkTree[routine], types.Pair[int, string]{e.objId, e.Pos().String()})
 	}
 
 	this.AddRoutine(routine)
@@ -511,7 +511,7 @@ func (this *Trace) CallTree() *CallTree {
 	return &this.callTree
 }
 
-func (this *Trace) ForkTree() map[int][]int {
+func (this *Trace) ForkTree() map[int][]types.Pair[int, string] {
 	return this.forkTree
 }
 

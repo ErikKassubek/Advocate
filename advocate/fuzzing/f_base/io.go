@@ -12,6 +12,7 @@ package f_base
 import (
 	"advocate/fuzzing/f_constraints"
 	"advocate/trace"
+	"advocate/utils/flags"
 	"advocate/utils/io"
 	"advocate/utils/log"
 	"advocate/utils/paths"
@@ -227,15 +228,20 @@ func writeForkMap(fuzzingTracePath string, tr *trace.Trace) error {
 
 	defer f.Close()
 
+	if flags.DisableStableIDs {
+		f.WriteString("NoStableID")
+		return nil
+	}
+
 	for old, new := range tree {
 		newStr := ""
 		for i, n := range new {
 			if i != 0 {
 				newStr += ","
 			}
-			newStr += fmt.Sprintf("%d", n)
+			newStr += fmt.Sprintf("%d-%s", n.X, n.Y)
 		}
-		key := fmt.Sprintf("%d#%s\n", old, newStr)
+		key := fmt.Sprintf("%d@%s\n", old, newStr)
 		f.WriteString(key)
 	}
 
@@ -246,8 +252,6 @@ func WriteConstraint(tracePath string, tr *trace.Trace, constr, closure *f_const
 	constrLen := constr.Len()
 	closureLen := closure.Len()
 	var fullConstr *f_constraints.Constraint
-
-	log.Debug2("Len: ", constrLen, " ", closureLen, " ", closure == nil)
 
 	var err error
 	if closure != nil {

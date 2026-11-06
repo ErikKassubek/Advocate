@@ -79,7 +79,8 @@ var (
 
 	Experiment string
 
-	ClosureType string
+	ClosureType      string
+	DisableStableIDs bool
 )
 
 // execution control

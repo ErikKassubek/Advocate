@@ -13,7 +13,7 @@ import (
 )
 
 var advocatePath = "/home/advocate/Advocate/Advocate/advocate"
-var srcPath string
+var srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDIClosure/"
 
 var progs = []string{
 	"argo-cd",
@@ -39,6 +39,14 @@ var progs = []string{
 	// "zinx",
 }
 
+var consts = []string{
+	"scpc", "hb", "order", "replay",
+}
+
+var stable = []bool{
+	true, false,
+}
+
 var now = time.Now()
 var id = now.Format("2006-01-02-15-04-05")
 var closure string
@@ -52,7 +60,7 @@ var modes = []string{
 
 var settings = "-timeoutRun 30 -timeoutFuz 420 -stats -noInfo -maxNumberElements 10000000"
 
-var maxWorker = 1
+var maxWorker = 3
 
 var fileMutex sync.Mutex
 
@@ -63,11 +71,24 @@ func main() {
 	sem := make(chan struct{}, maxWorker)
 	// for _, mode := range modes {
 	for i, p := range progs {
-		wg.Add(1)
-		// m := mode
-		path := filepath.Join(srcPath, p)
-		go worker(path, p, &wg, sem, i == len(progs)-1)
-		time.Sleep(time.Second)
+		for _, s := range stable {
+			for _, c := range consts {
+				wg.Add(1)
+				// m := mode
+
+				path := srcPath
+				if s {
+					path = filepath.Join(path, "stable")
+				} else {
+					path = filepath.Join(path, "nonStable")
+				}
+
+				path = filepath.Join(path, c)
+				path = filepath.Join(path, p)
+
+				go worker(path, p, c, s, &wg, sem, i == len(progs)-1)
+			}
+		}
 	}
 	// }
 	wg.Wait()
@@ -98,13 +119,17 @@ func readFlag() {
 	log("Run: " + id + " " + *valuesFlag + " with " + *threadsFlags + " workers")
 }
 
-func worker(path, name string, wg *sync.WaitGroup, sem chan struct{}, last bool) {
+func worker(path, prog string, closure string, stable bool, wg *sync.WaitGroup, sem chan struct{}, last bool) {
 	defer wg.Done()
 	sem <- struct{}{}
 
-	log(fmt.Sprintf("START : %s", name))
+	log(fmt.Sprintf("START : %s", prog))
 
-	cmdStr := fmt.Sprintf("fuzzing -path %s %s", path, settings)
+	cmdStr := fmt.Sprintf("fuzzing -path %s -closure %s %s", path, closure, settings)
+
+	if !stable {
+		cmdStr += " -disableStableID"
+	}
 
 	cmd := exec.Command("./advocate", strings.Split(cmdStr, " ")...)
 
@@ -116,15 +141,15 @@ func worker(path, name string, wg *sync.WaitGroup, sem chan struct{}, last bool)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err := cmd.Run()
-	if err != nil {
-		log(fmt.Sprintf("ERROR : %s %s", name, err.Error()))
-	}
+	// err := cmd.Run()
+	// if err != nil {
+	// 	log(fmt.Sprintf("ERROR : %s %s", prog, err.Error()))
+	// }
 
-	log(fmt.Sprintf("FINISH: %s", name))
+	log(fmt.Sprintf("FINISH: %s", prog))
 
 	if !last {
-		time.Sleep(30 * time.Minute)
+		time.Sleep(20 * time.Minute)
 	}
 
 	<-sem
@@ -134,27 +159,7 @@ func log(c string) {
 	fileMutex.Lock()
 	defer fileMutex.Unlock()
 
-	if len(os.Args) != 2 {
-		panic("Incalid number of args")
-	}
-
-	closure = strings.ToLower(os.Args[1])
-	logName = "runner_" + closure + "_" + id + ".log"
-
-	switch closure {
-	case "hbc":
-		srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDIClosure/hbc"
-		settings += " -closure=hb"
-	case "order":
-		srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDIClosure/order"
-		settings += " -closure=order"
-	case "replay":
-		srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDIClosure/replay"
-		settings += " -closure=replay"
-	case "scpc":
-		srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDIClosure/scpc"
-		settings += " -closure=scpc"
-	}
+	logName = "runner_" + id + ".log"
 
 	file, err := os.OpenFile(logName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

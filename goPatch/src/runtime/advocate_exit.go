@@ -171,5 +171,5 @@ func ExitReplayWithCode(code int, msg any) {
 		print("\n")
 	}
 
-	exit(int32(code))
+	// exit(int32(code))
 }

@@ -50,7 +50,6 @@ func AdvocateAlloc(objType string, qSize int) uint64 {
 	id := GetAdvocateObjectID()
 
 	if AdvocateIgnore(file) {
-		println("IGNORE: ", file)
 		return id
 	}
 

@@ -15,7 +15,6 @@ import (
 	"advocate/analysis/hb/a_concurrent"
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_constraints"
-	"advocate/utils/log"
 	"advocate/utils/settings"
 	"math/rand"
 )
@@ -35,7 +34,6 @@ func startChains(num int) []f_constraints.Constraint {
 		routines := a_base.MainTrace.Routines()
 
 		if len(routines) == 0 {
-			log.Error("Routines 0")
 			return res
 		}
 
