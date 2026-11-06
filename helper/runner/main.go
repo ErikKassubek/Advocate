@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var advocatePath = "/home/advocate/Desktop/Advocate/advocate/"
+var advocatePath = "/home/advocate/Advocate/Advocate/advocate"
 var srcPath string
 
 var progs = []string{
@@ -104,9 +104,11 @@ func worker(path, name string, wg *sync.WaitGroup, sem chan struct{}, last bool)
 
 	log(fmt.Sprintf("START : %s", name))
 
-	cmdStr := fmt.Sprintf("analysis -path %s %s", path, settings)
+	cmdStr := fmt.Sprintf("fuzzing -path %s %s", path, settings)
 
 	cmd := exec.Command("./advocate", strings.Split(cmdStr, " ")...)
+
+	println(cmd.String())
 
 	// Set the working directory
 	cmd.Dir = advocatePath
@@ -140,7 +142,7 @@ func log(c string) {
 	logName = "runner_" + closure + "_" + id + ".log"
 
 	switch closure {
-	case "hb":
+	case "hbc":
 		srcPath = "/home/advocate/Advocate/Experiments/Progs/PLDIClosure/hbc"
 		settings += " -closure=hb"
 	case "order":

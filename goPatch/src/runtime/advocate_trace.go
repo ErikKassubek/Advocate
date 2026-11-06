@@ -321,9 +321,14 @@ func DeleteTrace() {
 //
 // Returns:
 //   - bool: true if the operation should be ignored, false otherwise
+//
+// WARNING: there are two ignore functions, one in cmd/compile/interal/walk/advocate.go and 
+// one in src/runtime/advpcate_trace.go.
+// Make sure that they are equivalent.
 func AdvocateIgnore(file string) bool {
 	return (containsStr(file, "goPatch/src/") || containsStr(file, "go/pkg/mod")) &&
-		!containsStr(file, "goPatch/src/time/tick.go")
+		!containsStr(file, "goPatch/src/time/") &&
+		!containsStr(file, "goPatch/src/context/")
 }
 
 func AdvocateIgnoreRoutine(file string) bool {

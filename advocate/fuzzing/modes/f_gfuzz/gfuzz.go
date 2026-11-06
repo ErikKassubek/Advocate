@@ -10,7 +10,6 @@
 package f_gfuzz
 
 import (
-	"advocate/utils/log"
 	"math"
 )
 
@@ -25,10 +24,7 @@ func CreateMutations(guided bool) {
 			numberMut = min(numberMut, maxNumberMutsIfGuided)
 		}
 		flipProb := getFlipProbability()
-		numMutAdd := createMutationsGFuzz(numberMut, flipProb)
-		log.Infof("Add %d select mutations to queue", numMutAdd)
-	} else {
-		log.Info("Add 0 select mutations to queue")
+		createMutationsGFuzz(numberMut, flipProb)
 	}
 }
 

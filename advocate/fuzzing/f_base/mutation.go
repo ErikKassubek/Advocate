@@ -11,6 +11,7 @@ package f_base
 
 import (
 	"advocate/analysis/a_base"
+	"advocate/analysis/hb/a_clock"
 	"advocate/analysis/hb/a_concurrent"
 	"advocate/fuzzing/f_constraints"
 	"advocate/trace"
@@ -36,7 +37,7 @@ func Mutate(c f_constraints.Constraint, energy int, rel1, rel2 map[trace.Element
 		energy = 100
 	}
 
-	bound := settings.GoPieMaxSCLength
+	bound := settings.MaxConstraintLength
 	if flags.FuzzingMode == GoPie {
 		bound = 3
 	}
@@ -228,7 +229,7 @@ func augment(c f_constraints.Constraint, rel2 map[trace.Element]map[trace.Elemen
 	res := make([]f_constraints.Constraint, 0)
 
 	if UseHBInfoFuzzing {
-		concurrent := a_concurrent.GetConcurrent(c.LastElem(), true, false, settings.SameElementTypeInSC, true)
+		concurrent := a_concurrent.GetConcurrent(c.LastElem(), true, false, settings.SameElementTypeInSC, a_clock.Weak)
 		for _, elem := range concurrent {
 			if c.Contains(elem) {
 				continue
@@ -336,8 +337,8 @@ func Quality(elem trace.Element) float64 {
 	w3 := 0.5
 
 	numberOps, _ := a_base.GetOpsPerID(elem.ResourceID())
-	numberConcurrentTotal := a_concurrent.GetNumberConcurrent(elem, false, false, true)
-	numberConcurrentSame := a_concurrent.GetNumberConcurrent(elem, true, false, true)
+	numberConcurrentTotal := a_concurrent.GetNumberConcurrent(elem, false, false, a_clock.Weak)
+	numberConcurrentSame := a_concurrent.GetNumberConcurrent(elem, true, false, a_clock.Weak)
 
 	if numberConcurrentSame == 0 && numberConcurrentTotal == 0 {
 		return 0

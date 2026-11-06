@@ -369,12 +369,12 @@ func (this *ElementControllFlow) VC(weak a_clock.VcType) *a_clock.VectorClock {
 // If not set, it returns -1
 //
 // Parameter:
-//   - weak bool: get number of weak concurrent
+//   - vcType a_clock.VcType: weak or strong
 //   - sameElem bool: only operation on the same variable
 //
 // Returns:
 //   - number of concurrent element, or -1
-func (this *ElementControllFlow) NumberConcurrent(_, _ bool) int {
+func (this *ElementControllFlow) NumberConcurrent(_ a_clock.VcType, _ bool) int {
 	return -1
 }
 
@@ -382,9 +382,9 @@ func (this *ElementControllFlow) NumberConcurrent(_, _ bool) int {
 //
 // Parameter:
 //   - c int: the number of concurrent elements
-//   - weak bool: return number of weak concurrent
+//   - vcType a_clock.VcType: weak or strong
 //   - sameElem bool: only operation on the same variable
-func (this *ElementControllFlow) SetNumberConcurrent(_ int, _, _ bool) {
+func (this *ElementControllFlow) SetNumberConcurrent(_ int, _ a_clock.VcType, _ bool) {
 
 }
 

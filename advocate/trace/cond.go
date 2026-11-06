@@ -407,23 +407,23 @@ func (this *ElementCond) VC(weak a_clock.VcType) *a_clock.VectorClock {
 // If not set, it returns -1
 //
 // Parameter:
-//   - weak bool: get number of weak concurrent
+//   - vcType a_clock.VcType: weak or strong
 //   - sameElem bool: only operation on the same variable
 //
 // Returns:
 //   - number of concurrent element, or -1
-func (this *ElementCond) NumberConcurrent(weak, sameElem bool) int {
-	return this.ci.GetNumberConcurrent(weak, sameElem)
+func (this *ElementCond) NumberConcurrent(vcType a_clock.VcType, sameElem bool) int {
+	return this.ci.GetNumberConcurrent(vcType, sameElem)
 }
 
 // SetNumberConcurrent sets the number of concurrent elements
 //
 // Parameter:
 //   - c int: the number of concurrent elements
-//   - weak bool: return number of weak concurrent
+//   - vcType a_clock.VcType: weak or strong
 //   - sameElem bool: only operation on the same variable
-func (this *ElementCond) SetNumberConcurrent(c int, weak, sameElem bool) {
-	this.ci.SetNumberConcurrent(c, weak, sameElem)
+func (this *ElementCond) SetNumberConcurrent(c int, vcType a_clock.VcType, sameElem bool) {
+	this.ci.SetNumberConcurrent(c, vcType, sameElem)
 }
 
 // ========================================================

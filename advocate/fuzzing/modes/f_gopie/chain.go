@@ -11,9 +11,11 @@ package f_gopie
 
 import (
 	"advocate/analysis/a_base"
+	"advocate/analysis/hb/a_clock"
 	"advocate/analysis/hb/a_concurrent"
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_constraints"
+	"advocate/utils/log"
 	"advocate/utils/settings"
 	"math/rand"
 )
@@ -33,12 +35,13 @@ func startChains(num int) []f_constraints.Constraint {
 		routines := a_base.MainTrace.Routines()
 
 		if len(routines) == 0 {
+			log.Error("Routines 0")
 			return res
 		}
 
 		top := []f_constraints.ElemWithQual{}
 
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 10000; i++ {
 			key := rand.Intn(len(routines)) + 1
 
 			routine, ok := routines[key]
@@ -58,7 +61,7 @@ func startChains(num int) []f_constraints.Constraint {
 				continue
 			}
 
-			if a_concurrent.GetNumberConcurrent(elem, sameElem, settings.SameElementTypeInSC, false) == 0 {
+			if a_concurrent.GetNumberConcurrent(elem, sameElem, settings.SameElementTypeInSC, a_clock.Weak) == 0 {
 				continue
 			}
 
@@ -90,13 +93,13 @@ func startChains(num int) []f_constraints.Constraint {
 			return res
 		}
 
-		rounds := settings.GoPieMaxSCLength
+		rounds := settings.MaxConstraintLength
 		for i := 0; i < rounds; i++ {
 			if len(res) == 0 {
 				for _, e := range top {
-					posPartner := a_concurrent.GetConcurrent(e.Elem, true, true, settings.SameElementTypeInSC, true)
+					posPartner := a_concurrent.GetConcurrent(e.Elem, true, true, settings.SameElementTypeInSC, a_clock.Weak)
 					if len(posPartner) == 0 {
-						posPartner = a_concurrent.GetConcurrent(e.Elem, true, false, settings.SameElementTypeInSC, true)
+						posPartner = a_concurrent.GetConcurrent(e.Elem, true, false, settings.SameElementTypeInSC, a_clock.Weak)
 						if len(posPartner) == 0 {
 							continue
 						}
@@ -114,7 +117,7 @@ func startChains(num int) []f_constraints.Constraint {
 						continue
 					}
 
-					posNext := a_concurrent.GetConcurrent(lastElem, true, true, settings.SameElementTypeInSC, true)
+					posNext := a_concurrent.GetConcurrent(lastElem, true, true, settings.SameElementTypeInSC, a_clock.Weak)
 					if len(posNext) == 0 {
 						continue
 					}

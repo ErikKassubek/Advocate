@@ -183,6 +183,7 @@ func (this *Constraint) Copy() Constraint {
 //   - the number of elements in the chain
 func (this *Constraint) Len() int {
 	if this == nil {
+		panic("Constratin Len NIL")
 		return 0
 	}
 	return len(this.Elems)

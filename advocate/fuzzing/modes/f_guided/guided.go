@@ -11,6 +11,7 @@ package f_guided
 
 import (
 	"advocate/analysis/a_base"
+	"advocate/analysis/hb/a_clock"
 	"advocate/analysis/hb/a_concurrent"
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_constraints"
@@ -131,7 +132,7 @@ func startConstraint(num, length int) []f_constraints.Constraint {
 		}
 
 		sameElem := true
-		if a_concurrent.GetNumberConcurrent(elem, sameElem, settings.SameElementTypeInSC, false) == 0 {
+		if a_concurrent.GetNumberConcurrent(elem, sameElem, settings.SameElementTypeInSC, a_clock.Weak) == 0 {
 			continue
 		}
 
@@ -167,9 +168,9 @@ func startConstraint(num, length int) []f_constraints.Constraint {
 		c.Add(e.Elem)
 
 		for i := 0; i < length; i++ {
-			posNext := a_concurrent.GetConcurrent(c.LastElem(), true, true, settings.SameElementTypeInSC, true)
+			posNext := a_concurrent.GetConcurrent(c.LastElem(), true, true, settings.SameElementTypeInSC, a_clock.Weak)
 			if len(posNext) == 0 {
-				posNext = a_concurrent.GetConcurrent(c.LastElem(), true, false, settings.SameElementTypeInSC, true)
+				posNext = a_concurrent.GetConcurrent(c.LastElem(), true, false, settings.SameElementTypeInSC, a_clock.Weak)
 				if len(posNext) == 0 {
 					break
 				}

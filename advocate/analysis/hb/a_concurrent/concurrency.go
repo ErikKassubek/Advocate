@@ -25,24 +25,24 @@ import (
 //   - sameElem bool: if true, only return concurrent operations on the same element,
 //     otherwise return all concurrent elements
 //   - sameType bool: only count values on the same type (no effect if same element is true)
-//   - weak bool: get based on weak happens before
+//   - vcType a_clock.VcType: weak or strong vc
 //
 // Returns:
 //   - []trace.Element: concurrent elements to elem
 //
 // testGetHB: VC: 1m12.514176153s/12.104044486s; OG: 1m59.067111952s/3.901911481s; ST1: 395.051728ms/861.348032ms
 // testGetConcurrent: VC: 9m7.457251619s/50.972716941s; OG: 982.252538ms/672.449538ms; ST1: 1.084918573s/1.430036096s, ST2: 14m19.141553283s/4.613264804s
-func GetConcurrent(elem trace.Element, all, sameElem, sameType, weak bool) []trace.Element {
+func GetConcurrent(elem trace.Element, all, sameElem, sameType bool, vcType a_clock.VcType) []trace.Element {
 	// if elem.GetNumberConcurrent(weak, sameElem) != -1 {
 	// 	return elem.GetConcurrent(weak, sameElem)
 	// }
 
-	b := a_vc.GetConcurrent(elem, all, sameElem, sameType, weak)
+	b := a_vc.GetConcurrent(elem, all, sameElem, sameType, vcType)
 	// b := pog.GetConcurrent(elem, all, sameElem, weak)
 	// b := cssts.GetConcurrentAllPairs(elem, all, sameElem, weak)
 	// b := cssts.GetConcurrent(elem, all, sameElem, weak)
 
-	elem.SetNumberConcurrent(len(b), weak, sameElem)
+	elem.SetNumberConcurrent(len(b), vcType, sameElem)
 
 	// if all concurrent are selected, filter out sameElement concurrent and set
 	// as well
@@ -64,7 +64,7 @@ func GetConcurrent(elem trace.Element, all, sameElem, sameType, weak bool) []tra
 			}
 
 		}
-		elem.SetNumberConcurrent(len(res), weak, true)
+		elem.SetNumberConcurrent(len(res), vcType, true)
 	}
 	return b
 }
@@ -80,13 +80,13 @@ func GetConcurrent(elem trace.Element, all, sameElem, sameType, weak bool) []tra
 //
 // Returns:
 //   - int: number of elements that are concurrent to the element
-func GetNumberConcurrent(elem trace.Element, sameElem, sameType, weak bool) int {
-	m := elem.NumberConcurrent(weak, sameElem)
+func GetNumberConcurrent(elem trace.Element, sameElem, sameType bool, vcType a_clock.VcType) int {
+	m := elem.NumberConcurrent(vcType, sameElem)
 	if m != -1 {
 		return m
 	}
 
-	n := GetConcurrent(elem, true, sameElem, sameType, weak)
+	n := GetConcurrent(elem, true, sameElem, sameType, vcType)
 	return len(n)
 }
 

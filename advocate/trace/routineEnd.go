@@ -294,20 +294,20 @@ func (this *ElementRoutineEnd) VC(weak a_clock.VcType) *a_clock.VectorClock {
 
 // NumberConcurrent returns the number of elements concurrent to the element
 // If not set, it returns -1
-func (this *ElementRoutineEnd) NumberConcurrent(_, _ bool) int {
+func (this *ElementRoutineEnd) NumberConcurrent(vcType a_clock.VcType, _ bool) int {
 	return -1
 }
 
 // SetNumberConcurrent sets the number of concurrent elements
-func (this *ElementRoutineEnd) SetNumberConcurrent(_ int, _, _ bool) {}
+func (this *ElementRoutineEnd) SetNumberConcurrent(_ int, vcType a_clock.VcType, _ bool) {}
 
 // GetConcurrent returns the elements that are concurrent to the element
-func (this *ElementRoutineEnd) GetConcurrent(_, _ bool) []Element {
+func (this *ElementRoutineEnd) GetConcurrent(_ a_clock.VcType, _ bool) []Element {
 	return []Element{}
 }
 
 // SetConcurrent sets the concurrent elements
-func (this *ElementRoutineEnd) SetConcurrent(_ []Element, _, _ bool) {
+func (this *ElementRoutineEnd) SetConcurrent(_ []Element, _ a_clock.VcType, _ bool) {
 }
 
 // ========================================================
