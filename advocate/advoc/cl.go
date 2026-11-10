@@ -176,13 +176,14 @@ func checkClosure() bool {
 	flags.ClosureType = strings.ToLower(flags.ClosureType)
 
 	switch flags.ClosureType {
-	case flags.ClosureOrder, flags.ClosureHB, flags.ClosureSCPC, flags.ClosureReplay:
+	case flags.ClosureOrder, flags.ClosureHB, flags.ClosureMHB, flags.ClosureSCPC, flags.ClosureReplay:
 		return true
 	default:
 		log.Error("Unknown closure type: ", flags.Mode)
 		log.ErrorInfo("Possible Values: ")
 		log.ErrorInfof("\t%s", flags.ClosureOrder)
 		log.ErrorInfof("\t%s", flags.ClosureHB)
+		log.ErrorInfof("\t%s", flags.ClosureMHB)
 		log.ErrorInfof("\t%s", flags.ClosureSCPC)
 		log.ErrorInfof("\t%s", flags.ClosureReplay)
 		return false

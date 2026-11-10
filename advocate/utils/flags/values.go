@@ -23,6 +23,7 @@ const (
 const (
 	ClosureOrder  = "order"
 	ClosureHB     = "hb"
+	ClosureMHB    = "mhb"
 	ClosureSCPC   = "scpc"
 	ClosureReplay = "replay"
 )

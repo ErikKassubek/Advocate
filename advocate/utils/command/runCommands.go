@@ -75,6 +75,11 @@ func RunCommand(osOut, osErr *os.File, timeout int, name string, args ...string)
 func RunGoModTidy() {
 	log.Info("Run go mod tidy")
 
+	if err := os.Chdir(paths.Prog); err != nil {
+		log.Errorf("Failed to change directory: %v", err)
+		return
+	}
+
 	err := os.Setenv("GOROOT", paths.GoPatch)
 	if err == nil {
 		defer os.Unsetenv("GOROOT")

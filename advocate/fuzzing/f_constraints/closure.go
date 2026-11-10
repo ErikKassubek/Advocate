@@ -18,8 +18,6 @@ import (
 	"advocate/utils/log"
 )
 
-const mustHB = a_clock.Strong
-
 // The stable closure is calculated based on the following three rules.z
 // Assume there is a constraint s and trace T.
 //
@@ -42,9 +40,11 @@ func CalcuateClosure(s *Constraint) *Constraint {
 	case flags.ClosureOrder:
 		return calculateClosureOrder(s)
 	case flags.ClosureHB:
-		return calculateClosureHB(s, mustHB)
+		return calculateClosureHB(s, a_clock.Weak)
+	case flags.ClosureMHB:
+		return calculateClosureHB(s, a_clock.Strong)
 	case flags.ClosureSCPC:
-		return calculateClosureSCPC(s, mustHB)
+		return calculateClosureSCPC(s)
 	case flags.ClosureReplay:
 		return calculateClosureReplay(s)
 	default:
@@ -218,12 +218,11 @@ func calculateClosureHB2(s *Constraint, vcType a_clock.VcType) *Constraint {
 //
 // Parameter:
 //   - s *Constraint: the constraint
-//   - vcType vcType a_clock.VcType: weak or string
 //
 // Return:
 //   - *Constraint: The closue constraint
-func calculateClosureSCPC(s *Constraint, vcType a_clock.VcType) *Constraint {
-	res := calculateClosureHB2(s, vcType)
+func calculateClosureSCPC(s *Constraint) *Constraint {
+	res := calculateClosureHB2(s, a_clock.Strong)
 
 	for i, a1 := range s.Elems {
 		added := false
