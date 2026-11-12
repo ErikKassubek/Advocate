@@ -37,7 +37,7 @@ import (
 // THe Stable closure CL is then CL_T(S) \ S
 func CalcuateClosure(s *Constraint) *Constraint {
 	switch flags.ClosureType {
-	case flags.ClosureOrder:
+	case flags.ClosurePF:
 		return calculateClosureOrder(s)
 	case flags.ClosureHB:
 		return calculateClosureHB(s, a_clock.Weak)

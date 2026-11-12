@@ -21,7 +21,7 @@ const (
 
 // Closures
 const (
-	ClosureOrder  = "order"
+	ClosurePF     = "pf"
 	ClosureHB     = "hb"
 	ClosureMHB    = "mhb"
 	ClosureSCPC   = "scpc"
