@@ -47,6 +47,9 @@ func CalcuateClosure(s *Constraint) *Constraint {
 		return calculateClosureSCPC(s)
 	case flags.ClosureReplay:
 		return calculateClosureReplay(s)
+	case flags.ClosureNone:
+		c := NewConstraint()
+		return &c
 	default:
 		panic("Unknown closure type " + flags.ClosureType)
 	}

@@ -26,4 +26,5 @@ const (
 	ClosureMHB    = "mhb"
 	ClosureSCPC   = "scpc"
 	ClosureReplay = "replay"
+	ClosureNone   = "none"
 )

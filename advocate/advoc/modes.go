@@ -97,7 +97,7 @@ func modeExperiments() error {
 		return fmt.Errorf("No experiment selected. Select with `-experiment [name]`")
 	}
 
-	switch flags.ExecName {
+	switch flags.Experiment {
 	case experiments.IndexingEx:
 		experimentIndexing()
 	default:

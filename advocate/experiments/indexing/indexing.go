@@ -185,7 +185,7 @@ func CheckForEq() {
 
 			if i1 == i2 {
 				if printPairs {
-					log.Important("Same Index for different Objects:\n%s -> %s\n%s -> %s", e1.StringDebug(), i1, e2.StringDebug(), i2)
+					log.Importantf("Same Index for different Objects:\n%s -> %s\n%s -> %s", e1.StringDebug(), i1, e2.StringDebug(), i2)
 				}
 				pairCount += 1
 			}
@@ -197,15 +197,15 @@ func CheckForEq() {
 	totalEqual += pairCount
 
 	if pairCount != 0 {
-		log.Important("Found Index Violation Pairs: %d (%d)", pairCount, allPairs)
+		log.Importantf("Found Index Violation Pairs: %d (%d)", pairCount, allPairs)
 	} else {
-		log.Important("Found No Violation Pairs (%d)", allPairs)
+		log.Importantf("Found No Violation Pairs (%d)", allPairs)
 	}
 
 	var perc float64 = 0
 	if totalPair != 0 {
 		perc = float64(totalEqual) / float64(totalPair) * 100
-		log.Important("Total: %d / %d (%f %%)", totalEqual, totalPair, perc)
+		log.Importantf("Total: %d / %d (%f %%)", totalEqual, totalPair, perc)
 	} else {
 		log.Important("Total: 0")
 	}
