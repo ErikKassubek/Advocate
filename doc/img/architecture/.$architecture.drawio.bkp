@@ -205,7 +205,7 @@
         <mxCell id="k2_uHjtbIO64c7X6u3tt-108" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;jumpStyle=arc;" parent="1" source="k2_uHjtbIO64c7X6u3tt-46" target="k2_uHjtbIO64c7X6u3tt-99" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="k2_uHjtbIO64c7X6u3tt-122" value="Advocate" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+        <mxCell id="k2_uHjtbIO64c7X6u3tt-122" value="GoSC" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
           <mxGeometry x="195" y="486" width="60" height="14" as="geometry" />
         </mxCell>
         <mxCell id="k2_uHjtbIO64c7X6u3tt-123" value="Patched Go Runtime" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">

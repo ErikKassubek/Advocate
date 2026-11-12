@@ -807,12 +807,12 @@ var panicnil = &godebugInc{name: "panicnil"}
 //
 //go:linkname gopanic
 func gopanic(e any) {
-	// ADVOCATE-START
+	// GOSC-START
 	if IsTracingEnabled() || replayEnabled {
 		currentGoRoutineInfo().panicked()
-		AdvocatePanic(e)
+		GoscPanic(e)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	if e == nil {
 		if debug.panicnil.Load() != 1 {

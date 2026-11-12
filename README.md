@@ -1,58 +1,74 @@
-# AdvocateGo
+# GoSC
+
+GoSC is an artefact for the PLDI2027 submission for the paper "Stable Scheduling Constraints for Reliable Deadlock Discovery in Go".
 
 ![Arechitecture](./doc/img/architecture/architecture_new.png)
 
-## What is AdvocateGo
+Gosc provides multiple different modes:
 
-AdvocateGo is an analysis tool for concurrent Go programs.
-It tries to detects concurrency bugs and gives diagnostic insight.
-
-AdvocateGo tries to detect the following situations:
-
-- A01: "Actual Send on Closed Channel",
-- A02: "Actual Close on Closed Channel",
-- A03: "Actual Close on Nil Channel",
-- A04: "Actual Negative Wait Group",
-- A05: "Actual Unlock of Not Locked Mutex",
-- A06: "Actual Non-Cyclic Blocking Bug",
-- A07: "Actual Cyclic Deadlock with Mutex",
-- A08: "Actual Concurrent Receive on Same Channel",
-- A09: "Actual Cyclic Deadlock with Mutex and Channel
-- P01: "Possible Send on Closed Channel",
-- P02: "Possible Negative WaitGroup cCounter",
-- P03: "Possible unlock of not locked mutex",
-- P04: "Possible Cyclic Deadlock with Mutex",
-- P05: "Possible Cyclic Deadlock with Mutex and Channel",
-- L00: "Leak with unknown cause",
-- L01: "Leak on a channel",
-- L02: "Leak on nil channel",
-- L03: "Leak on select",
-- L04: "Leak on sync.Mutex",
-- L05: "Leak on sync.WaitGroup",
-- L16: "Leak on sync.Cond",
-
-Additionally it is able to record and deterministically replay
-executions of concurrent GO programs.
-
-## Modes
-
-Advocate provides 4 different modes:
-
-- record: record the execution of a program or test into a trace
-- replay: given a trace file, execute a program in such a way, that it follows the trace
-- analysis: record a program and analyze the recorded trace to detect potential concurrency bugs. If a potential bug is found, rewrite the trace in such a way that the bug is triggered and replay this trace to confirm that the bug is possible.
 - fuzzing: Apply different fuzzing approaches to increase the reach of the analysis.
+- experiments: Run specific experiments, especially the execution indexing implementation. 
+
+For the stable scheduling constraint, the `fuzzing` mode is the mode to use.
+
+The implementation also contains some additional modes like `record` or `replay`. Which are not directly required for the artefact.
 
 ## Usage
 
-For an explanation on how to use advocate, see [here](./doc/usage.md).
+The following is a short overview on how to build and use the implementation. For more detailes see [./doc/usage.md](./doc/usage.md).
 
-> [!IMPORTANT]
-> advocate is implemented for go version 1.27.
-> Make sure, that the program does not choose another version/toolchain and is compatible with go 1.27.
-> The output `package advocate is not in std` or similar indicates a problem with the used version.
-> It can help to shorten the go version number in the go.mod file of the analyzed program from go 1.27.x to go 1.27.
+The implementation consists of a modified version of the go runtime in the [goPath](./goPatch/) directory and a controller program in [gosc](./gosc/).
 
-## Documentation
+### Build
 
-A detailed description of how advocate works can be found in the [doc](doc) folder.
+The GoSC program is a Go program. To build it change into the corresponding directory and run 
+
+```shell
+go build
+```
+
+
+To build the modified go runtime, move into
+[go-path/src](../goPatch/src/) directory and run the
+
+```shell
+./src/make.bash
+```
+
+or 
+
+```shell
+./src/make.bat
+```
+
+script. This will create a go executable in the `bin` directory.
+
+
+On Linux you can use the make file by running `make` to automatically build both gosc and the modified runtime.
+
+### Run
+
+To run an analysis run the previously build `gosc` executable with
+
+```
+./gosc fuzzing -path ~/pathToProg/progDir/
+```
+
+As a default, this will iterate over all unit tests in the program. To execute the main function or one specific unit test add one of the following tags:
+
+- `-main`
+- `-exec [testName]`
+
+To add a timeout add 
+
+- `-timeoutRun [t]` for the timeout in seconds for one execution, or
+- `-timeoutFuz [t]` for the timout in seconds used to analyze one test.
+
+To select a closure mode, select it with `-closure [name]` with the following names:
+
+- `hb`: happens-before based closure (default)
+- `mhb`: must-happen-before based closure
+- `pf`: routine-intern and fork closure
+- `none`: no closure
+
+Running a program will create an `goscResult` folder in the directory of the analyzed program, containing all output files. 

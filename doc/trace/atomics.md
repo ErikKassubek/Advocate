@@ -34,10 +34,10 @@ was not possible for the atomics, since they are partially implemented in
 go-assembly. We therefore needed to add a layer between the call of a
 atomic operation and its assembly execution.
 The main signatures for the functions are defined in [sync/atomic/doc.go](../../goPatch/src/sync/atomic/doc.go) and the implementations are in [sync/atomic/asm.s](../../goPatch/src/sync/atomic/asm.s) (in practice the function in the asm.s file only jump to the actual architecture specific implementations in runtime/atomic/, but for here this is not relevant). To add the recording and replay code, we rename all functions in
-the [doc](../../goPatch/src/sync/atomic/doc.go) and [asm](../../goPatch/src/sync/atomic/asm.s) files to [oldName]advocatego. The same is also done in the
-[doc_32](../../goPatch/src/sync/atomic/doc_32.go) and [doc_64](../../goPatch/src/sync/atomic/doc_64.go) files. We add two new files [advocate_atomic.go](../../goPatch/src/sync/atomic/advocate_atomic.go) and [advocate_atomic_type.go](../../goPatch/src/sync/atomic/advocate_atomic_type.go). In them, we now implement a function for each of the
+the [doc](../../goPatch/src/sync/atomic/doc.go) and [asm](../../goPatch/src/sync/atomic/asm.s) files to [oldName]goscgo. The same is also done in the
+[doc_32](../../goPatch/src/sync/atomic/doc_32.go) and [doc_64](../../goPatch/src/sync/atomic/doc_64.go) files. We add two new files [gosc_atomic.go](../../goPatch/src/sync/atomic/gosc_atomic.go) and [gosc_atomic_type.go](../../goPatch/src/sync/atomic/gosc_atomic_type.go). In them, we now implement a function for each of the
 atomic functions with the original function name. Those functions
-contain the code for the replay and the [recording](../../goPatch/src/runtime/advocate_trace_atomic.go) and then a call
+contain the code for the replay and the [recording](../../goPatch/src/runtime/gosc_trace_atomic.go) and then a call
 to the renamed original function for the operations. For example, the
 SwapInt32 function is now implemented as
 
@@ -50,26 +50,26 @@ func SwapInt32(addr *int32, new int32) (old int32) {
 	}
 
 	// recording
-	runtime.AdvocateAtomic(addr, runtime.SwapOp, 2)
+	runtime.GoscAtomic(addr, runtime.SwapOp, 2)
 
 	if chAck != nil {
 		chAck <- struct{}{}
 	}()
 
 	// original function
-	return SwapInt32Advocate(addr, new)
+	return SwapInt32Gosc(addr, new)
 }
 ```
 
 The two files contain almost the same code. The only difference is that
-while the [advocate_atomic.go](../../goPatch/src/sync/atomic/advocate_atomic.go)
+while the [gosc_atomic.go](../../goPatch/src/sync/atomic/gosc_atomic.go)
 file contains the functions with the original atomic function names as
 shown in the example,
-in [advocate_atomic_type.go](../../goPatch/src/sync/atomic/advocate_atomic_type.go),
-the names are all of the form [functionName]AdvocateType. Additionally the
+in [gosc_atomic_type.go](../../goPatch/src/sync/atomic/gosc_atomic_type.go),
+the names are all of the form [functionName]GoscType. Additionally the
 skip value used to determine the position of the function call (in the example 2)
-is increased by one. While the functions in [advocate_atomic.go](../../goPatch/src/sync/atomic/advocate_atomic.go) are meant to be used directly by the user,
-the function in the [advocate_atomic_type.go](../../goPatch/src/sync/atomic/advocate_atomic_type.go) file are used for the implementation on the
+is increased by one. While the functions in [gosc_atomic.go](../../goPatch/src/sync/atomic/gosc_atomic.go) are meant to be used directly by the user,
+the function in the [gosc_atomic_type.go](../../goPatch/src/sync/atomic/gosc_atomic_type.go) file are used for the implementation on the
 atomic types defined in [types.go](../../goPatch/src/sync/atomic/types.go).
 This additional function call makes it necessary to change the skip value.
 

@@ -48,7 +48,7 @@ There are two different select implementations. One is for selects with exactly 
 
 The implementation for the select with more than one non-default case has been split in the implementation for the [original select](../../goPatch/src/runtime/select.go#L629) and the [select with preferred case](../../goPatch/src/runtime/select.go#L151) (for more info see [here](../replay.md#select)). The entry point for select in the [selectgo](../../goPatch/src/runtime/select.go#L123) function now calls one of the two select versions. The recording is done in the two selects separately, since we need to know the lock order of the cases, but in terms of recording, the two versions are basically identical.
 
-We implement a [Pre](../../goPatch/src/runtime/advocate_trace_select.go#L189) and a [Post](../../goPatch/src/runtime/advocate_trace_select.go#L249) function for the select case with exactly one non default case and separate [Pre](../../goPatch/src/runtime/advocate_trace_select.go#L51) and [Post](../../goPatch/src/runtime/advocate_trace_select.go#L141) functions for all other selects.
+We implement a [Pre](../../goPatch/src/runtime/gosc_trace_select.go#L189) and a [Post](../../goPatch/src/runtime/gosc_trace_select.go#L249) function for the select case with exactly one non default case and separate [Pre](../../goPatch/src/runtime/gosc_trace_select.go#L51) and [Post](../../goPatch/src/runtime/gosc_trace_select.go#L141) functions for all other selects.
 
 The case with only one select case is the simple one. Here the Pre function records the involved channel and whether the case is a send or receive. The post function simple adds the information about whether the default or the non-default case was chosen. Since they basically have the form
 
@@ -96,16 +96,16 @@ if casi < nsends {
 }
 ```
 
-To now record the involved channels in the [Pre](../../goPatch/src/runtime/advocate_trace_select.go#L51)
-function, we create a map `caseElementMap` from the `casi` to an `AdvocateTraceChannel`, which is our
+To now record the involved channels in the [Pre](../../goPatch/src/runtime/gosc_trace_select.go#L51)
+function, we create a map `caseElementMap` from the `casi` to an `GoscTraceChannel`, which is our
 internal representation for a channel event, and therefore for on of the select cases.
 We now iterate over the lockorder as shown above, and store the id of the
-involved channel and the send/recv information in the `AdvocateTraceChannel`.
+involved channel and the send/recv information in the `GoscTraceChannel`.
 We then iterate over the `casi` from 0 to the total number if cases (`ncases`). We
 then check if a case with this `casi` is in `caseElementMap`.
-If yes, we add the `AdvocateTraceChannel` to a slice `caseElements`.
+If yes, we add the `GoscTraceChannel` to a slice `caseElements`.
 If not, we know that it was a case with a nil channel. We than add
-a corresponding `AdvocateTraceChannel` about this nil channel to `caseElements`.
+a corresponding `GoscTraceChannel` about this nil channel to `caseElements`.
 
 We now have a slice containing the information about each case in the select,
 sorted by the `casi`. This is also the same order in which we write
@@ -113,7 +113,7 @@ the select channels in the final trace.\
 Additionally, we use the Pre function to get the tPre, the select id,
 whether it has a default case and the select position in the code.
 
-For the [Post](../../goPatch/src/runtime/advocate_trace_select.go#L141)
+For the [Post](../../goPatch/src/runtime/gosc_trace_select.go#L141)
 function we now get the `selIndex`. This index is either `-1`, if the default
 case has been chosen or equal to the `casi` of the selected case.
 

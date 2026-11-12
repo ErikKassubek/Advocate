@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	// ADVOCATE-START
+	// GOSC-START
 	"runtime"
-	// ADVOCATE-END
+	// GOSC-END
 )
 
 // Cond implements a condition variable, a rendezvous point
@@ -47,9 +47,9 @@ type Cond struct {
 	notify  notifyList
 	checker copyChecker
 
-	// ADVOCATE-START
+	// GOSC-START
 	id uint64
-	// ADVOCATE-END
+	// GOSC-END
 }
 
 // NewCond returns a new Cond with Locker l.
@@ -57,21 +57,21 @@ func NewCond(l Locker) *Cond {
 	return &Cond{L: l}
 }
 
-// ADVOCATE-START
+// GOSC-START
 //
-//go:linkname AdvocateAllocCondVar runtime.AdvocateAllocCondVar
-func AdvocateAllocCondVar(ptr unsafe.Pointer) {
-	if runtime.AdvocateTracingDisabled {
+//go:linkname GoscAllocCondVar runtime.GoscAllocCondVar
+func GoscAllocCondVar(ptr unsafe.Pointer) {
+	if runtime.GoscTracingDisabled {
 		return
 	}
 	c := (*Cond)(ptr)
 	if c.id != 0 {
 		return
 	}
-	c.id = runtime.AdvocateAlloc("D", 0)
+	c.id = runtime.GoscAlloc("D", 0)
 }
 
-// ADVOCATE-END
+// GOSC-END
 
 // Wait atomically unlocks c.L and suspends execution
 // of the calling goroutine. After later resuming execution,
@@ -89,7 +89,7 @@ func AdvocateAllocCondVar(ptr unsafe.Pointer) {
 //	... make use of condition ...
 //	c.L.Unlock()
 func (c *Cond) Wait() {
-	// ADVOCATE-START
+	// GOSC-START
 
 	// replay
 	key, chWait := runtime.WaitForReplay(runtime.OperationCondWait, runtime.CallerSkipCond)
@@ -98,13 +98,13 @@ func (c *Cond) Wait() {
 	}
 
 	//record
-	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondWait)
-	defer runtime.AdvocateCondCom(advocateIndex)
+	goscIndex := runtime.GoscCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondWait)
+	defer runtime.GoscCondCom(goscIndex)
 
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 	c.checker.check()
 	t := runtime_notifyListAdd(&c.notify)
 	c.L.Unlock()
@@ -120,7 +120,7 @@ func (c *Cond) Wait() {
 // Signal() does not affect goroutine scheduling priority; if other goroutines
 // are attempting to lock c.L, they may be awoken before a "waiting" goroutine.
 func (c *Cond) Signal() {
-	// ADVOCATE-START
+	// GOSC-START
 
 	// replay
 	key, chWait := runtime.WaitForReplay(runtime.OperationCondSignal, runtime.CallerSkipCond)
@@ -129,12 +129,12 @@ func (c *Cond) Signal() {
 	}
 
 	// recording
-	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondSignal)
-	defer runtime.AdvocateCondCom(advocateIndex)
+	goscIndex := runtime.GoscCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondSignal)
+	defer runtime.GoscCondCom(goscIndex)
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 	c.checker.check()
 	runtime_notifyListNotifyOne(&c.notify)
 }
@@ -146,7 +146,7 @@ func (c *Cond) Signal() {
 // be aware that holding the lock across a call to Broadcast
 // will extend the amount of time that the lock is held.
 func (c *Cond) Broadcast() {
-	// ADVOCATE-START
+	// GOSC-START
 
 	// replay
 	key, chWait := runtime.WaitForReplay(runtime.OperationCondBroadcast, runtime.CallerSkipCond)
@@ -155,13 +155,13 @@ func (c *Cond) Broadcast() {
 	}
 
 	//recording
-	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondBroadcast)
-	defer runtime.AdvocateCondCom(advocateIndex)
+	goscIndex := runtime.GoscCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondBroadcast)
+	defer runtime.GoscCondCom(goscIndex)
 
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 	c.checker.check()
 	runtime_notifyListNotifyAll(&c.notify)
 }

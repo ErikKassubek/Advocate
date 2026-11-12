@@ -1,0 +1,191 @@
+// Copyright (c) 2024
+//
+// File: cl.go
+// Brief: command line entries
+//
+//
+// License: BSD-3-Clause
+
+package tool
+
+import (
+	"flag"
+	"gosc/fuzzing/f_base"
+	"gosc/utils/flags"
+	"gosc/utils/helper"
+	"gosc/utils/log"
+	"os"
+	"strings"
+)
+
+var (
+	help bool
+)
+
+// CommandLine reads and processes the command line arguments
+//
+// Returns:
+//   - bool: true if execution can continue, false if it should stop, e.g. because help was selected/shown
+func CommandLine() bool {
+	flag.BoolVar(&help, "h", false, "Print help")
+	flag.BoolVar(&help, "help", false, "Print help")
+
+	flag.StringVar(&flags.ProgPath, "path", "", "Path to the program folder, for main: path to main file, for test: path to test folder")
+	flag.StringVar(&flags.RootPath, "root", "", "Path to the root of the program folder. Must only be set if different from path")
+
+	flag.StringVar(&flags.ProgName, "prog", "", "Name of the program")
+	flag.StringVar(&flags.ExecName, "exec", "", "Name of the executable or test")
+
+	flag.StringVar(&flags.TracePath, "trace", "", "Path to the trace folder to replay")
+
+	flag.IntVar(&flags.Timeout, "timeoutRun", 180, "Set the timeout in seconds for one recording/replay. Default: 180s. To disable set to -1")
+	flag.IntVar(&flags.TimeoutFuzzing, "timeoutFuz", 420, "Timeout of fuzzing per test/program in seconds. Default: 420s. To Disable, set to -1")
+	flag.IntVar(&flags.MaxFuzzingRun, "maxFuzzingRuns", -1, "Maximum number of fuzzing runs per test/prog. Default: -1. To Disable, set to -1")
+	flag.IntVar(&flags.MaxNumberElements, "maxNumberElements", 10000000, "Set the maximum number of elements in a trace. Traces with more elements will be skipped. To disable set -1. Default: 10000000")
+
+	flag.BoolVar(&flags.RecordPlus, "recordPlus", false, "Record functions and flow controll operations.")
+
+	flag.BoolVar(&flags.MeasureTime, "time", false, "measure the runtime")
+	flag.BoolVar(&flags.CreateStatistics, "stats", false, "Create statistics.")
+	flag.BoolVar(&flags.NotExecuted, "notExec", false, "Find never executed operations")
+
+	flag.BoolVar(&flags.IgnoreCriticalSection, "ignoreCritSec", false, "Ignore happens before relations of critical sections (default false)")
+	flag.BoolVar(&flags.IgnoreAtomics, "ignoreAtomics", false, "Ignore atomic operations (default false). Use to reduce memory header for large traces.")
+	flag.BoolVar(&flags.OnlyAPanicAndLeak, "onlyActual", false, "only test for actual bugs leading to panic and actual leaks. This will overwrite `scen`")
+
+	flag.BoolVar(&flags.NoSkipRewrite, "replayAll", false, "Replay a bug even if it has already been confirmed")
+	flag.BoolVar(&flags.NoRewrite, "noRewrite", false, "Do not rewrite the trace file (default false)")
+	flag.BoolVar(&flags.DeleteTraces, "deleteTrace", false, "If set, the traces are deleted after analysis.")
+	flag.BoolVar(&flags.SkipExisting, "skipExisting", false, "If set, all tests that already have a results folder will be skipped. Also skips failed tests.")
+
+	flag.BoolVar(&flags.Continue, "cont", false, "Continue a partial analysis of tests")
+
+	flag.BoolVar(&flags.NoWarning, "noWarning", false, "Only show critical bugs")
+	flag.BoolVar(&flags.NoInfo, "noInfo", false, "Do not show infos in the terminal (will only show results, errors, important and progress)")
+	flag.BoolVar(&flags.NoProgress, "noProgress", false, "Do not show progress info")
+	flag.BoolVar(&flags.Output, "output", false, "Show the output of the executed programs in the terminal. Otherwise it is only in output.log file.")
+
+	flag.BoolVar(&flags.AlwaysPanic, "panic", false, "Panic if the analysis panics")
+	flag.BoolVar(&flags.NoMemorySupervisor, "noMemorySupervisor", false, "Disable the memory supervisor")
+
+	flag.BoolVar(&flags.ShowFile, "showFile", false, "Show the file name. Only used for 'show' mode. Otherwise only the line number is used.")
+
+	flag.StringVar(&flags.Experiment, "experiment", "", "Name of the experiment, only in experiment mode.")
+
+	flag.StringVar(&flags.Scenarios, "scen", "", "Select which analysis scenario to run, e.g. -scen srd for the option s, r and d."+
+		"If not set, all scenarios are run.\n"+
+		"Options:\n"+
+		"\ts: Send on closed channel\n"+
+		// "\tr: Receive on closed channel\n"+
+		"\tw: Done before add on waitGroup\n"+
+		"\tn: Close of closed channel\n"+
+		// "\tb: Concurrent receive on channel\n"+
+		"\tl: Leaking routine\n"+
+		"\tu: Unlock of unlocked mutex\n"+
+		"\tc: Cyclic deadlock\n"+
+		"\tm: Mixed deadlock\n",
+	)
+
+	flag.StringVar(&flags.FuzzingMode, "mode", "",
+		"Mode for fuzzing. Possible values are:\n\tGuided\n\tGFuzz\n\tGFuzzHB\n\tGFuzzHBFlow\n\tFlow\n\tGoPie\n\tGoCR\n\tGoCRHB\n\tDefault: Guided")
+
+	flag.BoolVar(&flags.ModeMain, "main", false, "set to run on main function")
+
+	flag.StringVar(&flags.Settings, "settings", "", "Set some internal settings. For more info, see ../doc/usage.md")
+
+	flag.BoolVar(&flags.CheckBenign, "benign", false, "Check if blocking bug is benign")
+
+	// for experiments
+	flag.BoolVar(&f_base.FinishIfBugFound, "finishIfBugFound", false, "Finish fuzzing as soon as a bug was found")
+	flag.BoolVar(&flags.CancelTestIfBugFound, "cancelTestIfBugFound", false, "Skip further fuzzing runs of a test if one bug has been found")
+	flag.StringVar(&flags.ClosureType, "closure", flags.ClosureHB, "Closure type. Possible values: scpc, chb, order, replay. Default: scpc.")
+	flag.BoolVar(&flags.DisableStableIDs, "disableStableID", false, "Disable stable routine ids for constraint execution.")
+
+	flag.Parse()
+
+	return check()
+}
+
+func check() bool {
+	log.Info("Run CL Checks")
+
+	if len(os.Args) >= 2 && !strings.HasPrefix(os.Args[1], "-") {
+		flags.Mode = os.Args[1]
+		flag.CommandLine.Parse(os.Args[2:])
+		if help {
+			helper.PrintHelpMode(flags.Mode)
+			return false
+		}
+	} else {
+		if help {
+			helper.PrintHelp()
+			return false
+		}
+		helper.PrintHelp()
+		return false
+	}
+
+	if !checkMode() {
+		return false
+	}
+	if !checkClosure() {
+		return false
+	}
+	if flags.Mode != "show" {
+		CheckProg()
+	}
+
+	log.Info("Passed CL Checks")
+
+	return true
+}
+
+func checkMode() bool {
+	flags.Mode = strings.ToLower(flags.Mode)
+
+	switch flags.Mode {
+	case "analysis":
+		flags.Mode = flags.ModeAnalysis
+	case "fuzzing":
+		flags.Mode = flags.ModeFuzzing
+	case "record", "recording", "trace":
+		flags.Mode = flags.ModeRecord
+	case "replay":
+		flags.Mode = flags.ModeReplay
+	case "experiment", "experiments":
+		flags.Mode = flags.ModeExperiments
+	case "show":
+		flags.Mode = flags.ModeShow
+	default:
+		log.Error("Unknown mode: ", flags.Mode)
+		log.ErrorInfo("Possible Values: ")
+		log.ErrorInfof("\t%s", flags.ModeAnalysis)
+		log.ErrorInfof("\t%s", flags.ModeFuzzing)
+		log.ErrorInfof("\t%s", flags.ModeRecord)
+		log.ErrorInfof("\t%s", flags.ModeReplay)
+		log.ErrorInfof("\t%s", flags.ModeExperiments)
+		log.ErrorInfof("\t%s", flags.ModeShow)
+		return false
+	}
+
+	return true
+}
+
+func checkClosure() bool {
+	flags.ClosureType = strings.ToLower(flags.ClosureType)
+
+	switch flags.ClosureType {
+	case flags.ClosurePF, flags.ClosureHB, flags.ClosureMHB, flags.ClosureSCPC, flags.ClosureReplay, flags.ClosureNone:
+		return true
+	default:
+		log.Error("Unknown closure type: ", flags.Mode)
+		log.ErrorInfo("Possible Values: ")
+		log.ErrorInfof("\t%s", flags.ClosurePF)
+		log.ErrorInfof("\t%s", flags.ClosureHB)
+		log.ErrorInfof("\t%s", flags.ClosureMHB)
+		log.ErrorInfof("\t%s", flags.ClosureSCPC)
+		log.ErrorInfof("\t%s", flags.ClosureReplay)
+		log.ErrorInfof("\t%s", flags.ClosureNone)
+		return false
+	}
+}

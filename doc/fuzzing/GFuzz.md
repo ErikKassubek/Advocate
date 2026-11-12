@@ -66,7 +66,7 @@ Then the analyzer will be applied to the recorded trace to find potential bugs. 
 Afterwards the fuzzing will parse the internal trace and calculate all values required to determine whether the run was interesting and if so, how many new mutations should be created (see [GFuzz](#gfuzz)).\
 If the run was interesting, the new mutations are created. For this, a [flip probability](#flip-probability), meaning the probability that a select changes its preferred case is calculated.\
 For the selects that are flipped, a case, including the default, is selected randomly as the new preferred case, making sure that the new preferred case is not equal to the last preferred case.\
-Different to the original GFuzz implementation, which needs to run in to a bug to detect it and therefor may need to run the same mutation multiple times, advocate can also detect a bug if it does not occur directly. For this reason, the same mutation may only be run a limited number of times (maybe even just once). We therefore check if the created mutation has been added to the mutation queue before and if it has how often it has been added and only add the new mutation if the number of runs for the mutation does not exceed a set limit.
+Different to the original GFuzz implementation, which needs to run in to a bug to detect it and therefor may need to run the same mutation multiple times, gosc can also detect a bug if it does not occur directly. For this reason, the same mutation may only be run a limited number of times (maybe even just once). We therefore check if the created mutation has been added to the mutation queue before and if it has how often it has been added and only add the new mutation if the number of runs for the mutation does not exceed a set limit.
 
 This loop is repeated until the mutation queue is empty. Additionally a maximum number of runs or a maximum time can be set. -->
 
@@ -134,8 +134,8 @@ The flip probability is the probability that a single select in the fuzzingData 
 When executing a mutation, we must make sure, that first the select only
 waits on the preferred case and only falls back to the whole select if
 this case cannot be executed (timeout). The original implementation and
-the implementation used in Advocate are different. While for the original
-GFuzz, the program code is directly implemented, in Advocate the runtime
+the implementation used in Gosc are different. While for the original
+GFuzz, the program code is directly implemented, in Gosc the runtime
 is changes to be able to prefer a case.
 
 #### Original GFuzz implementation
@@ -191,7 +191,7 @@ of this case. The second is a `time.After(T)` case, where `T` is a predefined
 time for a timeout. If this timeout case is triggered, before the preferred
 case has executed, a copy of the original, full select will be called.
 
-#### Advocate GFuzz
+#### Gosc GFuzz
 
 In the here implemented GFuzz version, we do not instrument each select in the
 code, but instead change the implementation of the select in the runtime.
@@ -206,7 +206,7 @@ select was terminated by a time out.
 
 ```go
 func selectgo(cas0 *scase, order0 *uint16, pc0 *uintptr, nsends, nrecvs int, block bool) (int, bool) {
-  fuzzingEnabled, fuzzingIndex, fuzzingTimeout := AdvocateFuzzingGetPreferredCase(2)
+  fuzzingEnabled, fuzzingIndex, fuzzingTimeout := GoscFuzzingGetPreferredCase(2)
   if fuzzingEnabled {
     if ok, i, b := fuzzingSelect(cas0, order0, pc0, nsends, nrecvs, block, fuzzingIndex, fuzzingTimeout); ok {
       return i, b

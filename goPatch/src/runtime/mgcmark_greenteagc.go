@@ -261,10 +261,10 @@ func gcUsesSpanInlineMarkBits(size uintptr) bool {
 
 // tryDeferToSpanScan tries to queue p on the span it points to, if it
 // points to a small object span (gcUsesSpanQueue size).
-// ADVOCATE-START
+// GOSC-START
 // ADD id
 func tryDeferToSpanScan(p uintptr, gcw *gcWork, id uint64) bool {
-	// ADVOCATE-END
+	// GOSC-END
 	if useCheckmark {
 		return false
 	}
@@ -285,7 +285,7 @@ func tryDeferToSpanScan(p uintptr, gcw *gcWork, id uint64) bool {
 	q := spanInlineMarkBitsFromBase(base)
 	objIndex := uint16((uint64(p-base) * uint64(gc.SizeClassToDivMagic[q.class.sizeclass()])) >> 32)
 
-	// ADVOCATE-START
+	// GOSC-START
 	obj := base + uintptr(objIndex)*uintptr(gc.SizeClassToSize[q.class.sizeclass()])
 
 	if CollectPartialDeadlockInfo {
@@ -295,7 +295,7 @@ func tryDeferToSpanScan(p uintptr, gcw *gcWork, id uint64) bool {
 			}
 		}
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	// Set mark bit.
 	idx, mask := objIndex/8, uint8(1)<<(objIndex%8)
@@ -935,9 +935,9 @@ func scanSpan(p objptr, gcw *gcWork) {
 
 	// Process all the pointers we just got.
 	for _, p := range gcw.ptrBuf[:nptrs] {
-		// ADVOCATE-START
+		// GOSC-START
 		if !tryDeferToSpanScan(p, gcw, 0) {
-			// ADVOCATE-END
+			// GOSC-END
 			if obj, span, objIndex := findObject(p, 0, 0); obj != 0 {
 				greyobject(obj, 0, 0, span, gcw, objIndex)
 			}
@@ -1021,9 +1021,9 @@ func scanObjectSmall(spanBase, b, objSize uintptr, gcw *gcWork) {
 		if p == 0 {
 			continue
 		}
-		// ADVOCATE-START
+		// GOSC-START
 		if !tryDeferToSpanScan(p, gcw, 0) {
-			// ADVOCATE-END
+			// GOSC-END
 			if obj, span, objIndex := findObject(p, 0, 0); obj != 0 {
 				greyobject(obj, 0, 0, span, gcw, objIndex)
 			}
@@ -1071,9 +1071,9 @@ func scanObjectsSmall(base, objSize uintptr, elems uint16, gcw *gcWork, scans *g
 		if p == 0 {
 			continue
 		}
-		// ADVOCATE-START
+		// GOSC-START
 		if !tryDeferToSpanScan(p, gcw, 0) {
-			// ADVOCATE-END
+			// GOSC-END
 			if obj, span, objIndex := findObject(p, 0, 0); obj != 0 {
 				greyobject(obj, 0, 0, span, gcw, objIndex)
 			}
@@ -1286,9 +1286,9 @@ func scanObject(b uintptr, gcw *gcWork) {
 			// heap. In this case, we know the object was
 			// just allocated and hence will be marked by
 			// allocation itself.
-			// ADVOCATE-START
+			// GOSC-START
 			if !tryDeferToSpanScan(obj, gcw, 0) {
-				// ADVOCATE-END
+				// GOSC-END
 				if obj, span, objIndex := findObject(obj, b, addr-b); obj != 0 {
 					greyobject(obj, b, addr-b, span, gcw, objIndex)
 				}

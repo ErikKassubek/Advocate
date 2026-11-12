@@ -129,15 +129,15 @@ type CmdFlags struct {
 	PgoProfile         string       "help:\"read profile or pre-process profile from `file`\""
 	ErrorURL           bool         "help:\"print explanatory URL with error message if applicable\""
 
-	// ADVOCATE-START
-	AdvocateTrace      bool   "help:\"record the program using the advocate recorder\""
-	AdvocateReplay     bool   "help:\"replay a trace using the advocate replayer\""
-	AdvocateFuzzing    bool   "help:\"run fuzzing using the advocate mechanism\""
-	AdvocatePath       string "help:\"set the advocate replay path\""
-	AdvocateTimeout    int    "help:\"set the advocate tinmeout in s\""
-	AdvocateMain       bool   "help:\"set if advocate is used on main\""
-	AdvocateRecordPlus bool   "help:\"record function calls and returns and controll flow operations\""
-	// ADVOCATE-END
+	// GOSC-START
+	GoscTrace      bool   "help:\"record the program using the gosc recorder\""
+	GoscReplay     bool   "help:\"replay a trace using the gosc replayer\""
+	GoscFuzzing    bool   "help:\"run fuzzing using the gosc mechanism\""
+	GoscPath       string "help:\"set the gosc replay path\""
+	GoscTimeout    int    "help:\"set the gosc tinmeout in s\""
+	GoscMain       bool   "help:\"set if gosc is used on main\""
+	GoscRecordPlus bool   "help:\"record function calls and returns and controll flow operations\""
+	// GOSC-END
 
 	// Configuration derived from flags; not a flag itself.
 	Cfg struct {

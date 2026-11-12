@@ -15,9 +15,9 @@ import (
 	"strings"
 	"unicode"
 
-	// ADVOCATE-START
+	// GOSC-START
 	"cmd/compile/internal/base"
-	// ADVOCATE-END
+	// GOSC-END
 )
 
 // A declInfo describes a package-level const, type, var, or func declaration.
@@ -241,22 +241,22 @@ func (check *Checker) collectObjects() {
 		// we get "." as the directory which is what we would want.
 		fileDir := dir(file.PkgName.Pos().RelFilename()) // TODO(gri) should this be filename?
 
-		// ADVOCATE-START
+		// GOSC-START
 		if check.pkg.Name() == "main" {
-			if base.Flag.AdvocateMain && (base.Flag.AdvocateTrace || base.Flag.AdvocateFuzzing || base.Flag.AdvocateReplay) {
+			if base.Flag.GoscMain && (base.Flag.GoscTrace || base.Flag.GoscFuzzing || base.Flag.GoscReplay) {
 				file.DeclList = append([]syntax.Decl{
 					&syntax.ImportDecl{
 						LocalPkgName: &syntax.Name{
 							Value: "_",
 						},
 						Path: &syntax.BasicLit{
-							Value: `"advocatego"`,
+							Value: `"gosc"`,
 						},
 					},
 				}, file.DeclList...)
 			}
 		}
-		// ADVOCATE-END
+		// GOSC-END
 
 		first := -1                // index of first ConstDecl in the current group, or -1
 		var last *syntax.ConstDecl // last ConstDecl with init expressions, or nil

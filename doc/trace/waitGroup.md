@@ -31,6 +31,6 @@ where `W` identifies the element as a wait group element. The following sets are
 ## Implementation
 
 The recording of the operations is done in the `goPatch/src/sync/waitgroup.go` file in the [Add](../../goPatch/src/sync/waitgroup.go#L53) (Add, Done) and [Wait](../../goPatch/src/sync/waitgroup.go#L138) with
-the functions being implemented [here](../../goPatch/src/runtime/advocate_trace_waitgroup.go).
+the functions being implemented [here](../../goPatch/src/runtime/gosc_trace_waitgroup.go).
 
 We differentiate between add and done by checking the delta value (done -1, add > 0).

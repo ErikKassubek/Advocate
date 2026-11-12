@@ -30,44 +30,44 @@ If the toolchain is used, this is done automatically.
 ## Changed files
 
 The following is a list of all files in the runtime that have been added or modified.\
-All modifications have been annotated with ADVOCATE-START and ADVOCATE-END.
+All modifications have been annotated with GOSC-START and GOSC-END.
 
 ### Added files
 
-- [src/advocatego/advocate_fuzzing.go](../goPatch/src/advocatego/advocate_fuzzing.go)
-- [src/advocatego/advocate_replay.go](../goPatch/src/advocatego/advocate_replay.go)
-- [src/advocatego/advocate_tracing.go](../goPatch/src/advocatego/advocate_tracing.go)
-- [src/runtime/advocate_exit.go](../goPatch/src/runtime/advocate_exit.go)
-- [src/runtime/advocate_fuzzing.go](../goPatch/src/runtime/advocate_fuzzing.go)
-- [src/runtime/advocate_ids.go](../goPatch/src/runtime/advocate_ids.go)
-- [src/runtime/advocate_replay.go](../goPatch/src/runtime/advocate_replay.go)
-- [src/runtime/advocate_routine.go](../goPatch/src/runtime/advocate_routine.go)
-- [src/runtime/advocate_time.go](../goPatch/src/runtime/advocate_time.go)
-- [src/runtime/advocate_trace.go](../goPatch/src/runtime/advocate_trace.go)
-- [src/runtime/advocate_trace_atomic.go](../goPatch/src/runtime/advocate_trace_atomic.go)
-- [src/runtime/advocate_trace_channel.go](../goPatch/src/runtime/advocate_trace_channel.go)
-- [src/runtime/advocate_trace_cond.go](../goPatch/src/runtime/advocate_trace_cond.go)
-- [src/runtime/advocate_trace_mutex.go](../goPatch/src/runtime/advocate_trace_mutex.go)
-- [src/runtime/advocate_new_elem.go](../goPatch/src/runtime/advocate_trace_new_elem.go)
-- [src/runtime/advocate_trace_once.go](../goPatch/src/runtime/advocate_trace_once.go)
-- [src/runtime/advocate_trace_routine.go](../goPatch/src/runtime/advocate_trace_routine.go)
-- [src/runtime/advocate_trace_select.go](../goPatch/src/runtime/advocate_trace_select.go)
-- [src/runtime/advocate_trace_waitgroup.go](../goPatch/src/runtime/advocate_trace_waitgroup.go)
-- [src/runtime/advocate_tracing.go](../goPatch/src/runtime/advocate_tracing.go)
-- [src/runtime/advocate_util.go](../goPatch/src/runtime/advocate_util.go)
-- [src/runtime/advocate_wait.go](../goPatch/src/runtime/advocate_wait.go)
-- [src/sync/atomic/advocate_atomic.go](../goPatch/src/sync/atomic/advocate_atomic.go)
-- [src/sync/atomic/advocate_atomic_type.go](../goPatch/src/sync/atomic/advocate_atomic_type.go)
-- [src/cmd/compile/internal/walk/advocate.go](../goPatch/src/cmd/compile/internal/ssawalken/advocate.go)
+- [src/goscgo/gosc_fuzzing.go](../goPatch/src/goscgo/gosc_fuzzing.go)
+- [src/goscgo/gosc_replay.go](../goPatch/src/goscgo/gosc_replay.go)
+- [src/goscgo/gosc_tracing.go](../goPatch/src/goscgo/gosc_tracing.go)
+- [src/runtime/gosc_exit.go](../goPatch/src/runtime/gosc_exit.go)
+- [src/runtime/gosc_fuzzing.go](../goPatch/src/runtime/gosc_fuzzing.go)
+- [src/runtime/gosc_ids.go](../goPatch/src/runtime/gosc_ids.go)
+- [src/runtime/gosc_replay.go](../goPatch/src/runtime/gosc_replay.go)
+- [src/runtime/gosc_routine.go](../goPatch/src/runtime/gosc_routine.go)
+- [src/runtime/gosc_time.go](../goPatch/src/runtime/gosc_time.go)
+- [src/runtime/gosc_trace.go](../goPatch/src/runtime/gosc_trace.go)
+- [src/runtime/gosc_trace_atomic.go](../goPatch/src/runtime/gosc_trace_atomic.go)
+- [src/runtime/gosc_trace_channel.go](../goPatch/src/runtime/gosc_trace_channel.go)
+- [src/runtime/gosc_trace_cond.go](../goPatch/src/runtime/gosc_trace_cond.go)
+- [src/runtime/gosc_trace_mutex.go](../goPatch/src/runtime/gosc_trace_mutex.go)
+- [src/runtime/gosc_new_elem.go](../goPatch/src/runtime/gosc_trace_new_elem.go)
+- [src/runtime/gosc_trace_once.go](../goPatch/src/runtime/gosc_trace_once.go)
+- [src/runtime/gosc_trace_routine.go](../goPatch/src/runtime/gosc_trace_routine.go)
+- [src/runtime/gosc_trace_select.go](../goPatch/src/runtime/gosc_trace_select.go)
+- [src/runtime/gosc_trace_waitgroup.go](../goPatch/src/runtime/gosc_trace_waitgroup.go)
+- [src/runtime/gosc_tracing.go](../goPatch/src/runtime/gosc_tracing.go)
+- [src/runtime/gosc_util.go](../goPatch/src/runtime/gosc_util.go)
+- [src/runtime/gosc_wait.go](../goPatch/src/runtime/gosc_wait.go)
+- [src/sync/atomic/gosc_atomic.go](../goPatch/src/sync/atomic/gosc_atomic.go)
+- [src/sync/atomic/gosc_atomic_type.go](../goPatch/src/sync/atomic/gosc_atomic_type.go)
+- [src/cmd/compile/internal/walk/gosc.go](../goPatch/src/cmd/compile/internal/ssawalken/gosc.go)
 
 ### Modified files
 
 Modifications in files are marked with
 
 ```go
-// ADVOCATE-START
+// GOSC-START
 ...
-// ADVOCATE-END
+// GOSC-END
 ```
 
 - [src/runtime/proc.go](../goPatch/src/runtime/proc.go)

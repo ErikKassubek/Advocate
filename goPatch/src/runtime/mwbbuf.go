@@ -237,9 +237,9 @@ func wbBufFlush1(pp *p) {
 			// path to reduce the rate of flushes?
 			continue
 		}
-		// ADVOCATE-START
+		// GOSC-START
 		if tryDeferToSpanScan(ptr, gcw, 0) {
-			// ADVOCATE-END
+			// GOSC-END
 			continue
 		}
 		obj, span, objIndex := findObject(ptr, 0, 0)

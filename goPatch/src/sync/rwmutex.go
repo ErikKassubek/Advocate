@@ -9,9 +9,9 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	// ADVOCATE-START
+	// GOSC-START
 	"runtime"
-	// ADVOCATE-END
+	// GOSC-END
 )
 
 // There is a modified copy of this file in runtime/rwmutex.go.
@@ -47,9 +47,9 @@ type RWMutex struct {
 	readerCount atomic.Int32 // number of pending readers
 	readerWait  atomic.Int32 // number of departing readers
 
-	// ADVOCATE-START
+	// GOSC-START
 	id uint64 // id for the mutex
-	// ADVOCATE-END
+	// GOSC-END
 }
 
 const rwmutexMaxReaders = 1 << 30
@@ -73,30 +73,30 @@ const rwmutexMaxReaders = 1 << 30
 // call excludes new readers from acquiring the lock. See the
 // documentation on the [RWMutex] type.
 func (rw *RWMutex) RLock() {
-	// ADVOCATE-START
+	// GOSC-START
 	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexRLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
 
-	// AdvocateMutexReq records, that a routine tries to lock a mutex.
-	// AdvocatePost is called, if the mutex was locked successfully.
+	// GoscMutexReq records, that a routine tries to lock a mutex.
+	// GoscPost is called, if the mutex was locked successfully.
 	// In this case, the Lock event in the trace is updated to include
-	// this information. advocateIndex is used for AdvocatePost to find the
+	// this information. goscIndex is used for GoscPost to find the
 	// pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexRLock)
-	// ADVOCATE-END
+	goscIndex := runtime.GoscMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexRLock)
+	// GOSC-END
 
 	if race.Enabled {
 		race.Read(unsafe.Pointer(&rw.w))
 		race.Disable()
 	}
 
-	// ADVOCATE-START
+	// GOSC-START
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	if rw.readerCount.Add(1) < 0 {
 		// A writer is pending, wait for it.
@@ -107,9 +107,9 @@ func (rw *RWMutex) RLock() {
 		race.Acquire(unsafe.Pointer(&rw.readerSem))
 	}
 
-	//ADVOCATE-START
-	runtime.AdvocateMutexCom(advocateIndex, true)
-	// ADVOCATE-END
+	//GOSC-START
+	runtime.GoscMutexCom(goscIndex, true)
+	// GOSC-END
 }
 
 // TryRLock tries to lock rw for reading and reports whether it succeeded.
@@ -118,27 +118,27 @@ func (rw *RWMutex) RLock() {
 // and use of TryRLock is often a sign of a deeper problem
 // in a particular use of mutexes.
 func (rw *RWMutex) TryRLock() bool {
-	// ADVOCATE-START
+	// GOSC-START
 	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexTryRLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
 
-	// AdvocateMutexReq records, that a routine tries to lock a mutex.
-	// advocateIndex is used for AdvocateMutexCom to find the pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexTryRLock)
-	// ADVOCATE-END
+	// GoscMutexReq records, that a routine tries to lock a mutex.
+	// goscIndex is used for GoscMutexCom to find the pre event.
+	goscIndex := runtime.GoscMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexTryRLock)
+	// GOSC-END
 
 	if race.Enabled {
 		race.Read(unsafe.Pointer(&rw.w))
 		race.Disable()
 	}
 
-	// ADVOCATE-START
+	// GOSC-START
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	for {
 		c := rw.readerCount.Load()
@@ -147,11 +147,11 @@ func (rw *RWMutex) TryRLock() bool {
 				race.Enable()
 			}
 
-			// ADVOCATE-START
-			// If the mutex was not locked successfully, AdvocateMutexCom is called
+			// GOSC-START
+			// If the mutex was not locked successfully, GoscMutexCom is called
 			// to update the trace.
-			runtime.AdvocateMutexCom(advocateIndex, false)
-			// ADVOCATE-END
+			runtime.GoscMutexCom(goscIndex, false)
+			// GOSC-END
 			return false
 		}
 		if rw.readerCount.CompareAndSwap(c, c+1) {
@@ -160,11 +160,11 @@ func (rw *RWMutex) TryRLock() bool {
 				race.Acquire(unsafe.Pointer(&rw.readerSem))
 			}
 
-			// ADVOCATE-START
-			// If the mutex was locked successfully, AdvocateMutexCom is called
+			// GOSC-START
+			// If the mutex was locked successfully, GoscMutexCom is called
 			// to update the trace.
-			runtime.AdvocateMutexCom(advocateIndex, true)
-			// ADVOCATE-END
+			runtime.GoscMutexCom(goscIndex, true)
+			// GOSC-END
 			return true
 		}
 	}
@@ -175,16 +175,16 @@ func (rw *RWMutex) TryRLock() bool {
 // It is a run-time error if rw is not locked for reading
 // on entry to RUnlock.
 func (rw *RWMutex) RUnlock() {
-	// ADVOCATE-START
+	// GOSC-START
 	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexRUnlock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
 
-	// AdvocateMutexReq is used to record the unlocking of a mutex.
-	// AdvocatePost records the successful unlocking of a mutex.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexRUnlock)
-	// ADVOCATE-END
+	// GoscMutexReq is used to record the unlocking of a mutex.
+	// GoscPost records the successful unlocking of a mutex.
+	goscIndex := runtime.GoscMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexRUnlock)
+	// GOSC-END
 
 	if race.Enabled {
 		race.Read(unsafe.Pointer(&rw.w))
@@ -192,11 +192,11 @@ func (rw *RWMutex) RUnlock() {
 		race.Disable()
 	}
 
-	// ADVOCATE-START
+	// GOSC-START
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	if r := rw.readerCount.Add(-1); r < 0 {
 		// Outlined slow-path to allow the fast-path to be inlined
@@ -206,9 +206,9 @@ func (rw *RWMutex) RUnlock() {
 		race.Enable()
 	}
 
-	// ADVOCATE-START
-	runtime.AdvocateMutexCom(advocateIndex, true)
-	// ADVOCATE-END
+	// GOSC-START
+	runtime.GoscMutexCom(goscIndex, true)
+	// GOSC-END
 }
 
 func (rw *RWMutex) rUnlockSlow(r int32) {
@@ -227,30 +227,30 @@ func (rw *RWMutex) rUnlockSlow(r int32) {
 // If the lock is already locked for reading or writing,
 // Lock blocks until the lock is available.
 func (rw *RWMutex) Lock() {
-	// ADVOCATE-START
+	// GOSC-START
 	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
 
-	// AdvocateMutexReq records, that a routine tries to lock a mutex.
-	// AdvocatePost is called, if the mutex was locked successfully.
+	// GoscMutexReq records, that a routine tries to lock a mutex.
+	// GoscPost is called, if the mutex was locked successfully.
 	// In this case, the Lock event in the trace is updated to include
-	// this information. advocateIndex is used for AdvocatePost to find the
+	// this information. goscIndex is used for GoscPost to find the
 	// pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexLock)
-	// ADVOCATE-END
+	goscIndex := runtime.GoscMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexLock)
+	// GOSC-END
 
 	if race.Enabled {
 		race.Read(unsafe.Pointer(&rw.w))
 		race.Disable()
 	}
 
-	// ADVOCATE-START
+	// GOSC-START
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	// First, resolve competition with other writers.
 	rw.w.Lock()
@@ -266,9 +266,9 @@ func (rw *RWMutex) Lock() {
 		race.Acquire(unsafe.Pointer(&rw.writerSem))
 	}
 
-	// ADVOCATE-START
-	runtime.AdvocateMutexCom(advocateIndex, true)
-	// ADVOCATE-END
+	// GOSC-START
+	runtime.GoscMutexCom(goscIndex, true)
+	// GOSC-END
 }
 
 // TryLock tries to lock rw for writing and reports whether it succeeded.
@@ -277,38 +277,38 @@ func (rw *RWMutex) Lock() {
 // and use of TryLock is often a sign of a deeper problem
 // in a particular use of mutexes.
 func (rw *RWMutex) TryLock() bool {
-	// ADVOCATE-START
+	// GOSC-START
 	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexTryLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
 
-	// AdvocateMutexReq records, that a routine tries to lock a mutex.
-	// advocateIndex is used for AdvocateMutexCom to find the pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexTryLock)
-	// ADVOCATE-END
+	// GoscMutexReq records, that a routine tries to lock a mutex.
+	// goscIndex is used for GoscMutexCom to find the pre event.
+	goscIndex := runtime.GoscMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexTryLock)
+	// GOSC-END
 
 	if race.Enabled {
 		race.Read(unsafe.Pointer(&rw.w))
 		race.Disable()
 	}
 
-	// ADVOCATE-START
+	// GOSC-START
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	if !rw.w.TryLock() {
 		if race.Enabled {
 			race.Enable()
 		}
 
-		// ADVOCATE-START
-		// If the mutex was not locked successfully, AdvocateMutexCom is called
+		// GOSC-START
+		// If the mutex was not locked successfully, GoscMutexCom is called
 		// to update the trace.
-		runtime.AdvocateMutexCom(advocateIndex, false)
-		// ADVOCATE-END
+		runtime.GoscMutexCom(goscIndex, false)
+		// GOSC-END
 
 		return false
 	}
@@ -317,11 +317,11 @@ func (rw *RWMutex) TryLock() bool {
 		if race.Enabled {
 			race.Enable()
 		}
-		// ADVOCATE-START
-		// If the mutex was not locked successfully, AdvocateMutexCom is called
+		// GOSC-START
+		// If the mutex was not locked successfully, GoscMutexCom is called
 		// to update the trace.
-		runtime.AdvocateMutexCom(advocateIndex, false)
-		// ADVOCATE-END
+		runtime.GoscMutexCom(goscIndex, false)
+		// GOSC-END
 
 		return false
 	}
@@ -331,11 +331,11 @@ func (rw *RWMutex) TryLock() bool {
 		race.Acquire(unsafe.Pointer(&rw.writerSem))
 	}
 
-	// ADVOCATE-START
-	// If the mutex was locked successfully, AdvocateMutexCom is called
+	// GOSC-START
+	// If the mutex was locked successfully, GoscMutexCom is called
 	// to update the trace.
-	runtime.AdvocateMutexCom(advocateIndex, true)
-	// ADVOCATE-END
+	runtime.GoscMutexCom(goscIndex, true)
+	// GOSC-END
 
 	return true
 }
@@ -347,17 +347,17 @@ func (rw *RWMutex) TryLock() bool {
 // goroutine. One goroutine may [RWMutex.RLock] ([RWMutex.Lock]) a RWMutex and then
 // arrange for another goroutine to [RWMutex.RUnlock] ([RWMutex.Unlock]) it.
 func (rw *RWMutex) Unlock() {
-	// ADVOCATE-START
+	// GOSC-START
 	key, chWait := runtime.WaitForReplay(runtime.OperationRWMutexUnlock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
-	// AdvocateMutexReq is used to record the unlocking of a mutex.
-	// AdvocatePost records the successful unlocking of a mutex.
+	// GoscMutexReq is used to record the unlocking of a mutex.
+	// GoscPost records the successful unlocking of a mutex.
 	// For non rw mutexe, the unlock cannot fail. Therefore it is not
 	// strictly necessary to record the post for the unlocking of a mutex.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationMutexUnlock)
-	// ADVOCATE-END
+	goscIndex := runtime.GoscMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationMutexUnlock)
+	// GOSC-END
 
 	if race.Enabled {
 		race.Read(unsafe.Pointer(&rw.w))
@@ -365,19 +365,19 @@ func (rw *RWMutex) Unlock() {
 		race.Disable()
 	}
 
-	// ADVOCATE-START
+	// GOSC-START
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	// Announce to readers there is no active writer.
 	r := rw.readerCount.Add(rwmutexMaxReaders)
 	if r >= rwmutexMaxReaders {
 		race.Enable()
-		// ADVOCATE-START
+		// GOSC-START
 		panic("sync: Unlock of unlocked RWMutex")
-		// ADVOCATE-END
+		// GOSC-END
 	}
 	// Unblock blocked readers, if any.
 	for i := 0; i < int(r); i++ {
@@ -389,9 +389,9 @@ func (rw *RWMutex) Unlock() {
 		race.Enable()
 	}
 
-	// ADVOCATE-START
-	runtime.AdvocateMutexCom(advocateIndex, true)
-	// ADVOCATE-END
+	// GOSC-START
+	runtime.GoscMutexCom(goscIndex, true)
+	// GOSC-END
 }
 
 // syscall_hasWaitingReaders reports whether any goroutine is waiting

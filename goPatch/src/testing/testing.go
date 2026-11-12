@@ -422,9 +422,9 @@ import (
 	"unicode"
 	_ "unsafe" // for linkname
 
-	// ADVOCATE-START
-	"advocatego"
-	// ADVOCATE-END
+	// GOSC-START
+	"gosc"
+	// GOSC-END
 )
 
 var initRan bool
@@ -2499,9 +2499,9 @@ var (
 // of failure. For machine readable test results, parse the output of
 // 'go test -json'.
 func (m *M) Run() (code int) {
-	// ADVOCATE-START
-	defer advocatego.FinishFunc()
-	// ADVOCATE-END
+	// GOSC-START
+	defer gosc.FinishFunc()
+	// GOSC-END
 
 	defer func() {
 		code = m.exitCode

@@ -1,4 +1,11 @@
-# How To Use Advocate
+# How To Use Gosc
+
+## Note
+
+GoSC is implemented for go version 1.27.\
+Make sure, that the program does not choose another version/toolchain and is compatible with go 1.27.\
+The output `package gosc is not in std` or similar indicates a problem with the used version.\
+It can help to shorten the go version number in the go.mod file of the analyzed program from go 1.27.x to go 1.27.
 
 
 
@@ -16,7 +23,7 @@ git config core.autocrlf false
 
 ## Build
 
-Before Advocate can be used, it must first be build.
+Before Gosc can be used, it must first be build.
 
 There are two elements that need to be build.
 
@@ -40,85 +47,37 @@ or
 
 script. This will create a go executable in the `bin` directory.
 
-### Advocate
+### GoSc
 
-Additionally, the advocate program needs to be build. This is a standard Go
-program. To build it, move into the [advocate](../advocate/) directory
+Additionally, the gosc program needs to be build. This is a standard Go
+program. To build it, move into the [gosc](../gosc/) directory
 and build it with the standard
 
 ```shell
 go build
 ```
 
-command. This will create an `advocate` executable, which will be used to
+command. This will create an `gosc` executable, which will be used to
 run all recordings, replays, analysis and fuzzing.
-
-Advocate provides an optional gui. For this, it uses [fyne](https://fyne.io/). To build advocate with gui, the required dependencies for fyne must be installed. 
-See [here](https://docs.fyne.io/started/quick/) for details.
-
-If you want to build advocate with gui, you have to enable it by building the program with 
-
-```shell
-go build -tags gui
-```
-
-In this case fyne is not required.
-
-
-## Docker
-
-We also provide a docker file to create the environment.
-
-To build the docker file, run
-
-```shell
-docker build -t advocate-app .
-```
-
-To run the analysis or fuzzing on a program, you can call the following:
-
-```shell
-docker run --rm -it \
-  -v <pathToProg>:/prog \
-  advocate-app [mode] -path /prog [args]
-```
-
-e.g.
-
-```shell
-docker run --rm -it \
-  -v /home/erik/progToTest:/prog \
-  advocate-app fuzzing -path /prog
-```
-
-For the modes and args, see [usage](#usage).
-Note that the -path argument has already been set and does not need to be set again.
 
 ## Usage
 
-All modes of advocates are started and controlled using the [advocate](../advocate/)
+All modes of goscs are started and controlled using the [gosc](../gosc/)
 program. This program implements multiple modes:
 
-- [Gui](#mode-gui)
 - [Recording](#mode-recording)
 - [Replay](#mode-replay)
 - [Analysis](#mode-analysis)
 - [Fuzzing](#mode-fuzzing)
+- [Experiments](#mode-experiments)
 
 ### Help
 
 To get an overview over the possible modes and arguments, you can run
 
 ```shell
-./advocate -help
+./gosc -help
 ```
-
-### Mode: Gui
-
-This modes starts a graphical interface allowing you to run all other modes.
-No other flags are required. 
-
-This is not available, if advocate was build with `-tags nogui`.
 
 ### Mode: Recording
 
@@ -128,15 +87,15 @@ trace of all the elements executed in the program.
 
 For more information about the recording and the created trace, see [here](./recording.md).
 
-To run a recording, we use the advocate program implemented [here](../advocate/).
+To run a recording, we use the gosc program implemented [here](../gosc/).
 To record a program, run
 
 ```shell
-./advocate record [args]
+./gosc record [args]
 ```
 
 This will run the program or tests and create the traces. They are placed
-into a folder called `advocateResult`.
+into a folder called `goscResult`.
 
 Normally, the print outputs of the executed programs are not printed to
 the terminal, but printed into an `output.log` file. To show them on the terminal,
@@ -164,7 +123,7 @@ tests share the same name, all of them will be executed.
 An example command would be
 
 ```
-./advocate record -path ~/program/testFolder/ -exec TestOne
+./gosc record -path ~/program/testFolder/ -exec TestOne
 ```
 
 #### Program
@@ -178,7 +137,7 @@ Here, main tells the program to run the main function instead of the tests.
 Path should point to the file containing the main function of this program.
 
 Go will try to determine the executable name of the program from the `go.mod`
-file. If advocate is unable to find this file, it needs to be set manually
+file. If gosc is unable to find this file, it needs to be set manually
 using
 
 - `-exec [executableName]`
@@ -189,7 +148,7 @@ cannot be recorded (the tests can still be recorded in this case).
 A possible command would therefore be
 
 ```
-./advocate record -main -path ~/program/main.go -exec progName
+./gosc record -main -path ~/program/main.go -exec progName
 ```
 
 ### Mode: Replay
@@ -199,7 +158,7 @@ The replay mode allows us to replay a previously recorded trace.
 This can be done by calling
 
 ```
-./advocate replay [args]
+./gosc replay [args]
 ```
 
 The following args are required
@@ -216,13 +175,13 @@ be found.
 Possible command would therefore be
 
 ```
-./advocate replay -path ~/program/testFolder/ -trace ~/traceFolder
-./advocate -main replay -path ~/program/main.go -trace ~/traceFolder
+./gosc replay -path ~/program/testFolder/ -trace ~/traceFolder
+./gosc -main replay -path ~/program/main.go -trace ~/traceFolder
 ```
 
-Please not, that the trace folder should not be inside the `AdvocateResult` folder.
+Please not, that the trace folder should not be inside the `GoscResult` folder.
 This means, if you want to replay a given recording, you first need to copy it
-to a location outside the `AdvocateResult` folder.
+to a location outside the `GoscResult` folder.
 
 Please note, that the replay relies on the program code not being altered
 between recording and replay. Each change, even on non-concurrency elements
@@ -247,7 +206,7 @@ to confirm the bug.
 It can be run with
 
 ```
-./advocate analysis [args]
+./gosc analysis [args]
 ```
 
 The arguments for `-path` and if necessary `-main` are required. They are
@@ -281,7 +240,7 @@ To select multiple by adding them together, e.g.
 to run the analysis for send on closed and cyclic (resource) deadlocks.\
 If `-scen` is not set, all scenarios will be searched for.
 
-While running, the analyzer will create a `advocateResult` folder. In it, it will create on
+While running, the analyzer will create a `goscResult` folder. In it, it will create on
 folder for each of the analyzed tests. In this folder it will create a file
 for the output of the program runs, as well as two files showing an
 overview over all detected bugs. Additionally, it will create a bug folder.
@@ -291,13 +250,13 @@ type and position of the bug and information about the replay (if performed).
 An example command would be
 
 ```
-./advocate analysis -path ~/pathToProg/progDir/main.go -prog progName -main
+./gosc analysis -path ~/pathToProg/progDir/main.go -prog progName -main
 ```
 
 to run the analysis on the main function of a program, or
 
 ```
-./advocate analysis -path ~/pathToProg/progDir/ -prog progName -scen c -exec TestOne
+./gosc analysis -path ~/pathToProg/progDir/ -prog progName -scen c -exec TestOne
 ```
 
 to analyze the test `TestOne` in the given path, only checking for cyclic (resource) deadlocks.
@@ -327,9 +286,9 @@ you can set `-noRewrite`.\
 The default behavior is to not replay bugs that have already been replayed successfully.
 To still replay them, you can set `-replayAll`.
 
-The traces can become very large. When using advocate for many tests, or multiple
+The traces can become very large. When using gosc for many tests, or multiple
 times, this can lead to a large amount of data being stored in the trace files.
-For this reason, advocate can delete the trace files, as soon as the analysis
+For this reason, gosc can delete the trace files, as soon as the analysis
 has finished. To activate this, you can set `-deleteTrace`.
 
 The [Go Memory-Model](https://go.dev/ref/mem#chan) does not specify, that
@@ -350,7 +309,7 @@ for actually occurring panics or leaks, you can set the `-onlyActual` flag.
 To run the fuzzing as described [here](doc/fuzzing.md), the following command can be used:
 
 ```
-./advocate fuzzing [args]
+./gosc fuzzing [args]
 ```
 
 To use the fuzzing, you need to apply a fuzzing mode with `-fuzzingMode [mode]`.
@@ -375,7 +334,7 @@ Alternatively, a maximum time can be set using `-timeoutFuz [to in s]` (default 
 An example command would therefore be
 
 ```
-./advocate fuzzing -path ~/pathToProg/progDir/ -fuzzingMode GoPieHB -prog progName
+./gosc fuzzing -path ~/pathToProg/progDir/ -prog progName
 ```
 
 To select different closure algoritms, you can select them using 
@@ -384,11 +343,20 @@ To select different closure algoritms, you can select them using
 
 with the following possible values:
 
+- `pf`: routine-intern and fork closure
 - `hb`: happens-before based closure
-- `scpc`: sync-preserving closure
-- `order`: routine-intern and fork closure
-- `replay`: full replay of prefix
+- `mhb`: must-happen-before based closure
+- `none`: no closure
 
+### Mode: fuzzing
+
+The experience mode is extended to run experiments. For here relevant is the `indexing` experiment, which allows us to calculate and compare execution indice.
+
+To run ist call 
+
+```
+./gosc experiments -experiment indexing -path ~/pathToProg/ -main
+```
 
 ## Additional Tags
 
@@ -405,7 +373,7 @@ To get additional information, the following tags can also be set:
 
 If one of these are set, the `-prog [name]` tag can be set to indicate the name of the program.
 
-The created statistic and time files can also be found in the `advocateResult` folder.
+The created statistic and time files can also be found in the `goscResult` folder.
 
 In some situations, especially when only limited storage is available, it may
 be useful to ignore atomic operations during recording and analysis. To do this,
@@ -419,7 +387,7 @@ During the runtime, multiple status messages are shown in the terminal.
 To disable them and only show found bugs, you can set `-noInfo`.
 
 Sometimes the analysis or execution of a test may result in a panic in
-advocatego. Since it would be annoying to terminate the total analysis of all tests,
+goscgo. Since it would be annoying to terminate the total analysis of all tests,
 only because the analysis of one of the tests crashed, a catch mechanism
 has been implemented, that will only terminate the analysis of the given tests
 and continue with the next, without crashing the whole program. To disable this,

@@ -3,7 +3,7 @@
 
 If the `-time` flag is set, a two files with the runtimes will be created.
 
-This will create a `times_detail_nameOfProg.csv` and a `times_total_nameOfProf.csv` file in the `advocateResult` folder.
+This will create a `times_detail_nameOfProg.csv` and a `times_total_nameOfProf.csv` file in the `goscResult` folder.
 The first line of the files contains the column names. All times are given in seconds.
 
 The details file has one line for each test run. For fuzzing it has one line

@@ -57,9 +57,9 @@ import (
 	"strings"
 	"time"
 
-	// ADVOCATE-START
-	_ "advocatego"
-	// ADVOCATE-END
+	// GOSC-START
+	_ "gosc"
+	// GOSC-END
 )
 
 var (

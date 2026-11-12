@@ -2510,11 +2510,11 @@ var blockedLinknames = map[string][]string{
 	"crypto/internal/rand.SetTestingReader": {"testing/cryptotest"}, // pushed from crypto/internal/rand
 	"testing.checkParallel":                 {"testing/cryptotest"}, // pushed from testing
 	"runtime.addmoduledata":                 {},                     // assembly symbol, disallow all packages
-	// ADVOCATE-START
+	// GOSC-START
 	"sync/atomic.StoreUintptr":          {"runtime"},
 	"sync/atomic.SwapUintptr":           {"runtime"},
 	"sync/atomic.CompareAndSwapUintptr": {"runtime"},
-	// ADVOCATE-END
+	// GOSC-END
 }
 
 // check if a linkname reference to symbol s from refpkg is allowed

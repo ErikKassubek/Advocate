@@ -1451,12 +1451,12 @@ func mallocgcSmallNoscan(size uintptr, typ *_type, needzero bool) (unsafe.Pointe
 
 	if checkGCTrigger {
 		if t := (gcTrigger{kind: gcTriggerHeap}); t.test() {
-			// ADVOCATE-START
+			// GOSC-START
 			// This gc can cause the program to freeze during replay. We therefore disable it
 			if !replayEnabled {
 				gcStart(t)
 			}
-			// END-ADVOCATE
+			// END-GOSC
 		}
 	}
 	return x, size

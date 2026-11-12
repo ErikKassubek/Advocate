@@ -44,6 +44,6 @@ The recording of the channel operations is done in the
 queue, to determine, which send and receive operations are
 communication partners. Because of mutexes, that are already present in the original channel implementation,
 it is not possible to mix up these numbers.\
-For the send and receive operations two record functions are implemented. The first one ([AdvocateChanSendPre](../../goPatch/src/runtime/advocate_trace_channel.go#L59)) is called before the send or receive is executed. It records [tPre], [id], [opC], [qSize] and [pos].\
-The other function ([AdvocateChanPost](../../goPatch/src/runtime/advocate_trace_channel.go#L126)) record [tPost] and [qCount].\
-As a close on a channel cannot block, it only needs one recording function. This function ([AdvocateChanClose](../../goPatch/src/runtime/advocate_trace_channel.go#L95)) records all needed values. For [tPre] and [tPost] the same value is set.
+For the send and receive operations two record functions are implemented. The first one ([GoscChanSendPre](../../goPatch/src/runtime/gosc_trace_channel.go#L59)) is called before the send or receive is executed. It records [tPre], [id], [opC], [qSize] and [pos].\
+The other function ([GoscChanPost](../../goPatch/src/runtime/gosc_trace_channel.go#L126)) record [tPost] and [qCount].\
+As a close on a channel cannot block, it only needs one recording function. This function ([GoscChanClose](../../goPatch/src/runtime/gosc_trace_channel.go#L95)) records all needed values. For [tPre] and [tPost] the same value is set.

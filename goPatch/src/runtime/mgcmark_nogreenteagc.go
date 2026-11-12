@@ -22,9 +22,9 @@ func (s *mspan) markBitsForBase() markBits {
 	return markBits{&s.gcmarkBits.x, uint8(1), 0}
 }
 
-// ADVOCATE-START
+// GOSC-START
 func tryDeferToSpanScan(p uintptr, gcw *gcWork, id uint64) bool {
-	// ADVOCATE-END
+	// GOSC-END
 	return false
 }
 
@@ -223,9 +223,9 @@ func scanObject(b uintptr, gcw *gcWork) {
 			// heap. In this case, we know the object was
 			// just allocated and hence will be marked by
 			// allocation itself.
-			// ADVOCATE-START
+			// GOSC-START
 			if !tryDeferToSpanScan(obj, gcw, 0) {
-				// ADVOCATE-END
+				// GOSC-END
 				if obj, span, objIndex := findObject(obj, b, addr-b); obj != 0 {
 					greyobject(obj, b, addr-b, span, gcw, objIndex)
 				}

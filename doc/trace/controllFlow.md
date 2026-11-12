@@ -26,4 +26,4 @@ The other fields are set as follows:
 ## Implementation
 
 Like for function, there is no direct place in the runtime, where we could hook in our recording. We therefore add recording functions into the ir during the compilation. 
-The implementation can be mostly found [here](../../goPatch/src/cmd/compile/internal/walk/advocate.go).
+The implementation can be mostly found [here](../../goPatch/src/cmd/compile/internal/walk/gosc.go).

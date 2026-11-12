@@ -410,7 +410,7 @@ but not the previous chain.
 
 #### Differences to original implementation
 
-We have implemented the described implementation into our Advocate framework.
+We have implemented the described implementation into our Gosc framework.
 The implementation therefore differs from the original GoPie implementation.
 
 The main change is that the original GoPie implementation needs to instrument

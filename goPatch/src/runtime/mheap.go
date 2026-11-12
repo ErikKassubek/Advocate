@@ -2123,9 +2123,9 @@ func addfinalizer(p unsafe.Pointer, f *funcval, nret uintptr, fint *_type, ot *p
 			}
 			// Mark the finalizer itself, since the
 			// special isn't part of the GC'd heap.
-			// ADVOCATE-START
+			// GOSC-START
 			scanblock(uintptr(unsafe.Pointer(&s.fn)), goarch.PtrSize, &oneptrmask[0], gcw, nil, 0)
-			// ADVOCATE-END
+			// GOSC-END
 			releasem(mp)
 		}
 		return true
@@ -2551,9 +2551,9 @@ func getOrAddWeakHandle(p unsafe.Pointer) *atomic.Uintptr {
 			gcw := &mp.p.ptr().gcw
 			// Mark the weak handle itself, since the
 			// special isn't part of the GC'd heap.
-			// ADVOCATE-START
+			// GOSC-START
 			scanblock(uintptr(unsafe.Pointer(&s.handle)), goarch.PtrSize, &oneptrmask[0], gcw, nil, 0)
-			// ADVOCATE-END
+			// GOSC-END
 			releasem(mp)
 		}
 

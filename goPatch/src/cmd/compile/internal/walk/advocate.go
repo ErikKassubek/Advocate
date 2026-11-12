@@ -1,11 +1,10 @@
-// ADVOCATE-FILE-START
+// GOSC-FILE-START
 
-// Copyright (c) 2026 Erik Kassubek
+// Copyright (c) 2026 
 //
-// File: advocate.go
+// File: gosc.go
 // Brief: Insert recording for mutex, cond var and wait group creation
 //
-// Author: Erik Kassubek
 //
 // License: BSD-3-Clause
 
@@ -26,8 +25,8 @@ import (
 // ==================================================
 
 func instrumentBody(fn *ir.Func) {
-	isAdvocate := base.Flag.AdvocateTrace || base.Flag.AdvocateReplay || base.Flag.AdvocateFuzzing
-	if !isAdvocate {
+	isGosc := base.Flag.GoscTrace || base.Flag.GoscReplay || base.Flag.GoscFuzzing
+	if !isGosc {
 		return
 	}
 
@@ -35,7 +34,7 @@ func instrumentBody(fn *ir.Func) {
 		fn.Body = addInit(fn.Body, fn.Pos())
 	}
 
-	if !shouldAdvocate(fn) {
+	if !shouldGosc(fn) {
 		return
 	}
 
@@ -47,37 +46,37 @@ func instrumentBody(fn *ir.Func) {
 func addInit(body ir.Nodes, pos src.XPos) ir.Nodes {
 	out := make(ir.Nodes, 0)
 
-	if base.Flag.AdvocateTrace {
-		fn := typecheck.LookupRuntime("AdvocateInitTracing")
+	if base.Flag.GoscTrace {
+		fn := typecheck.LookupRuntime("GoscInitTracing")
 		out.Append(typecheck.Call(
 			pos,
 			fn,
 			[]ir.Node{
-				ir.NewInt(pos, int64(base.Flag.AdvocateTimeout)),
+				ir.NewInt(pos, int64(base.Flag.GoscTimeout)),
 				ir.NewBool(pos, false),
 			},
 			false,
 		))
-	} else if base.Flag.AdvocateReplay {
-		fn := typecheck.LookupRuntime("AdvocateInitReplay")
+	} else if base.Flag.GoscReplay {
+		fn := typecheck.LookupRuntime("GoscInitReplay")
 		out.Append(typecheck.Call(
 			pos,
 			fn,
 			[]ir.Node{
-				ir.NewString(pos, base.Flag.AdvocatePath),
-				ir.NewInt(pos, int64(base.Flag.AdvocateTimeout)),
+				ir.NewString(pos, base.Flag.GoscPath),
+				ir.NewInt(pos, int64(base.Flag.GoscTimeout)),
 				ir.NewBool(pos, true),
 			},
 			false,
 		))
-	} else if base.Flag.AdvocateFuzzing {
-		fn := typecheck.LookupRuntime("AdvocateInitFuzzing")
+	} else if base.Flag.GoscFuzzing {
+		fn := typecheck.LookupRuntime("GoscInitFuzzing")
 		out.Append(typecheck.Call(
 			pos,
 			fn,
 			[]ir.Node{
-				ir.NewString(pos, base.Flag.AdvocatePath),
-				ir.NewInt(pos, int64(base.Flag.AdvocateTimeout)),
+				ir.NewString(pos, base.Flag.GoscPath),
+				ir.NewInt(pos, int64(base.Flag.GoscTimeout)),
 				ir.NewBool(pos, false),
 			},
 			false,
@@ -212,16 +211,16 @@ func addAlloc(n ir.Node) ir.Node {
 
 	switch {
 	case isSyncType(t, "Mutex") || isSyncType(t, "RWMutex"):
-		runtimeName = "AdvocateAllocMutex"
+		runtimeName = "GoscAllocMutex"
 
 	case isSyncType(t, "Cond"):
-		runtimeName = "AdvocateAllocCondVar"
+		runtimeName = "GoscAllocCondVar"
 
 	case isSyncType(t, "WaitGroup"):
-		runtimeName = "AdvocateAllocWG"
+		runtimeName = "GoscAllocWG"
 
 	case isSyncType(t, "Once"):
-		runtimeName = "AdvocateAllocOnce"
+		runtimeName = "GoscAllocOnce"
 
 	default:
 		return nil
@@ -320,16 +319,16 @@ func isSyncType(t *types.Type, name string) bool {
 // ==================================================
 
 func addControllRec(body ir.Nodes, pos src.XPos, numCases, caseNum int, t string, start bool) ir.Nodes {
-	if !base.Flag.AdvocateRecordPlus {
+	if !base.Flag.GoscRecordPlus {
 		return body
 	}
 
 	p := base.Ctxt.PosTable.Pos(pos)
-	if advocateIgnore(p.Filename()) {
+	if goscIgnore(p.Filename()) {
 		return body
 	}
 
-	fn := typecheck.LookupRuntime("advocateControllFlow")
+	fn := typecheck.LookupRuntime("goscControllFlow")
 
 	call := typecheck.Call(
 		pos,
@@ -350,7 +349,7 @@ func addControllRec(body ir.Nodes, pos src.XPos, numCases, caseNum int, t string
 }
 
 func instrumentIfChain(n *ir.IfStmt) {
-	if !base.Flag.AdvocateRecordPlus {
+	if !base.Flag.GoscRecordPlus {
 		return
 	}
 
@@ -421,7 +420,7 @@ func countIfCases(n *ir.IfStmt) int {
 // ==================================================
 
 func instrumentSwitch(n *ir.SwitchStmt) {
-	if !base.Flag.AdvocateRecordPlus {
+	if !base.Flag.GoscRecordPlus {
 		return
 	}
 
@@ -457,16 +456,16 @@ func countSwitchCases(n *ir.SwitchStmt) int {
 // ==================================================
 
 func instrumentLoop(body ir.Nodes, pos src.XPos) ir.Nodes {
-	if !base.Flag.AdvocateRecordPlus {
+	if !base.Flag.GoscRecordPlus {
 		return body
 	}
 
 	p := base.Ctxt.PosTable.Pos(pos)
-	if advocateIgnore(p.Filename()) {
+	if goscIgnore(p.Filename()) {
 		return body
 	}
 
-	fn := typecheck.LookupRuntime("advocateControllFlow")
+	fn := typecheck.LookupRuntime("goscControllFlow")
 
 	call := typecheck.Call(
 		pos,
@@ -506,16 +505,16 @@ func instrumentParameterCopy(fn *ir.Func) {
 
 		switch {
 		case isSyncType(n.Type(), "Mutex") || isSyncType(n.Type(), "RWMutex"):
-			runtimeName = "AdvocateAllocMutex"
+			runtimeName = "GoscAllocMutex"
 
 		case isSyncType(n.Type(), "Cond"):
-			runtimeName = "AdvocateAllocCondVar"
+			runtimeName = "GoscAllocCondVar"
 
 		case isSyncType(n.Type(), "WaitGroup"):
-			runtimeName = "AdvocateAllocWG"
+			runtimeName = "GoscAllocWG"
 
 		case isSyncType(n.Type(), "Once"):
-			runtimeName = "AdvocateAllocOnce"
+			runtimeName = "GoscAllocOnce"
 
 		default:
 			continue
@@ -544,15 +543,15 @@ func instrumentParameterCopy(fn *ir.Func) {
 }
 
 // ==================================================
-// MARK: shouldAdvocate
+// MARK: shouldGosc
 // ==================================================
 
-func shouldAdvocate(n ir.Node) bool {
+func shouldGosc(n ir.Node) bool {
 	if n == nil {
 		return false
 	}
 
-	if !(base.Flag.AdvocateTrace || base.Flag.AdvocateReplay || base.Flag.AdvocateFuzzing) {
+	if !(base.Flag.GoscTrace || base.Flag.GoscReplay || base.Flag.GoscFuzzing) {
 		return false
 	}
 
@@ -566,10 +565,10 @@ func shouldAdvocate(n ir.Node) bool {
 		return false
 	}
 
-	return !isAdvocateCall(n)
+	return !isGoscCall(n)
 }
 
-func isAdvocateCall(n ir.Node) bool {
+func isGoscCall(n ir.Node) bool {
 	call, ok := n.(*ir.CallExpr)
 	if !ok {
 		return false
@@ -585,11 +584,11 @@ func isAdvocateCall(n ir.Node) bool {
 	}
 
 	return name.Sym() != nil &&
-		(fmt.Sprint(name.Sym()) == "AdvocateAllocMutex" ||
-			fmt.Sprint(name.Sym()) == "AdvocateAllocCondVar" ||
-			fmt.Sprint(name.Sym()) == "AdvocateAllocWG" ||
-			fmt.Sprint(name.Sym()) == "AdvocateAllocOnce" ||
-			fmt.Sprint(name.Sym()) == "advocateTraceControllFlow")
+		(fmt.Sprint(name.Sym()) == "GoscAllocMutex" ||
+			fmt.Sprint(name.Sym()) == "GoscAllocCondVar" ||
+			fmt.Sprint(name.Sym()) == "GoscAllocWG" ||
+			fmt.Sprint(name.Sym()) == "GoscAllocOnce" ||
+			fmt.Sprint(name.Sym()) == "goscTraceControllFlow")
 }
 
 // ==================================================
@@ -620,10 +619,10 @@ func isUserMain(fn *ir.Func) bool {
 	return pkg.Name == "main" && pkg.Path == "main"
 }
 
-// WARNING: there are two ignore functions, one in cmd/compile/interal/walk/advocate.go and 
+// WARNING: there are two ignore functions, one in cmd/compile/interal/walk/gosc.go and 
 // one in src/runtime/advpcate_trace.go.
 // Make sure that they are equivalent.
-func advocateIgnore(file string) bool {
+func goscIgnore(file string) bool {
 	return (strings.Contains(file, "goPatch/src/") || strings.Contains(file, "go/pkg/mod")) &&
 		!strings.Contains(file, "goPatch/src/time/") &&
 		!strings.Contains(file, "goPatch/src/context/")

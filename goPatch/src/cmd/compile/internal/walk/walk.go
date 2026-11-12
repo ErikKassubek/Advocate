@@ -40,9 +40,9 @@ func Walk(fn *ir.Func) {
 		ir.DumpList(s, ir.CurFunc.Body)
 	}
 
-	// ADVOCATE-START
+	// GOSC-START
 	instrumentBody(fn)
-	// ADVOCATE-END
+	// GOSC-END
 
 	walkStmtList(ir.CurFunc.Body)
 	if base.Flag.W != 0 {

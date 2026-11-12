@@ -312,20 +312,20 @@ func asanregisterglobals(unsafe.Pointer, uintptr)
 // used by testing.B.Loop
 func KeepAlive(interface{})
 
-// ADVOCATE-START
-func advocateFunctionCall()
-func advocateFunctionReturn()
-func AdvocateAllocMutex(unsafe.Pointer)
-func AdvocateAllocCondVar(unsafe.Pointer)
-func AdvocateAllocWG(unsafe.Pointer)
-func AdvocateAllocOnce(unsafe.Pointer)
-func advocateControllFlow(string, int, int)
+// GOSC-START
+func goscFunctionCall()
+func goscFunctionReturn()
+func GoscAllocMutex(unsafe.Pointer)
+func GoscAllocCondVar(unsafe.Pointer)
+func GoscAllocWG(unsafe.Pointer)
+func GoscAllocOnce(unsafe.Pointer)
+func goscControllFlow(string, int, int)
 
-func AdvocateInitTracing(int, bool)
-func AdvocateFinishTracing()
-func AdvocateInitReplay(string, int, bool)
-func AdvocateFinishReplay()
-func AdvocateInitFuzzing(string, int, bool)
-func AdvocateFinishFuzzing()
+func GoscInitTracing(int, bool)
+func GoscFinishTracing()
+func GoscInitReplay(string, int, bool)
+func GoscFinishReplay()
+func GoscInitFuzzing(string, int, bool)
+func GoscFinishFuzzing()
 
-// ADVOCATE-END
+// GOSC-END

@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	// ADVOCATE-START
+	// GOSC-START
 	"runtime"
-	// ADVOCATE-END
+	// GOSC-END
 )
 
 // Once is an object that will perform exactly one action.
@@ -33,16 +33,16 @@ type Once struct {
 	done atomic.Bool
 	m    Mutex
 
-	// ADVOCATE-START
+	// GOSC-START
 	id uint64 // id of the once
-	// ADVOCATE-END
+	// GOSC-END
 }
 
-// ADVOCATE-START
+// GOSC-START
 //
-//go:linkname AdvocateAllocOnce runtime.AdvocateAllocOnce
-func AdvocateAllocOnce(ptr unsafe.Pointer) {
-	if runtime.AdvocateTracingDisabled {
+//go:linkname GoscAllocOnce runtime.GoscAllocOnce
+func GoscAllocOnce(ptr unsafe.Pointer) {
+	if runtime.GoscTracingDisabled {
 		return
 	}
 	o := (*Once)(ptr)
@@ -51,10 +51,10 @@ func AdvocateAllocOnce(ptr unsafe.Pointer) {
 		return
 	}
 
-	o.id = runtime.AdvocateAlloc("O", 0)
+	o.id = runtime.GoscAlloc("O", 0)
 }
 
-// ADVOCATE-END
+// GOSC-END
 
 // Do calls the function f if and only if Do is being called for the
 // first time for this instance of [Once]. In other words, given
@@ -91,33 +91,33 @@ func (o *Once) Do(f func()) {
 	// This is why the slow path falls back to a mutex, and why
 	// the o.done.Store must be delayed until after f returns.
 
-	// ADVOCATE-START
+	// GOSC-START
 	key, chWait := runtime.WaitForReplay(runtime.OperationOnceDo, runtime.CallerSkipOne)
 	if chWait != nil {
 		<-chWait
 	}
 
-	index := runtime.AdvocateOnceReq(unsafe.Pointer(o), o.id)
+	index := runtime.GoscOnceReq(unsafe.Pointer(o), o.id)
 	res := false
 
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	if !o.done.Load() {
 		// Outlined slow-path to allow inlining of the fast-path.
-		// ADVOCATE-START
+		// GOSC-START
 		res = o.doSlow(f)
-		// ADVOCATE-END
+		// GOSC-END
 	}
 
-	// ADVOCATE-START
-	runtime.AdvocateOnceCom(index, res)
-	// ADVOCATE-END
+	// GOSC-START
+	runtime.GoscOnceCom(index, res)
+	// GOSC-END
 }
 
-// ADVOCATE-START
+// GOSC-START
 func (o *Once) doSlow(f func()) bool {
 	o.m.Lock()
 	defer o.m.Unlock()
@@ -129,4 +129,4 @@ func (o *Once) doSlow(f func()) bool {
 	return false
 }
 
-// ADVOCATE-END
+// GOSC-END

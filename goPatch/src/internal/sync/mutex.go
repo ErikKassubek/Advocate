@@ -201,9 +201,9 @@ func (m *Mutex) Unlock() {
 
 func (m *Mutex) unlockSlow(new int32) {
 	if (new+mutexLocked)&mutexLocked == 0 {
-		// ADVOCATE-START
+		// GOSC-START
 		panic("sync: unlock of unlocked mutex")
-		// ADVOCATE-END
+		// GOSC-END
 	}
 	if new&mutexStarving == 0 {
 		old := new

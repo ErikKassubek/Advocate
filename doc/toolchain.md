@@ -1,7 +1,7 @@
 # Toolchain
 
 The toolchain allow the user to record, replay and analyze programs or tests.
-It is implemented in [advocate](../advocate/).
+It is implemented in [gosc](../gosc/).
 
 The toolchain has 4 modi, record, replay, analysis and fuzzing.
 
@@ -9,7 +9,7 @@ The toolchain has 4 modi, record, replay, analysis and fuzzing.
 
 Recoding will take a program or a set of unit tests and [records](./recording.md)
 there behavior. This will run the program or tests and record
-the trace files. The files can be found in a created `advocateResult` folder.
+the trace files. The files can be found in a created `goscResult` folder.
 
 ## Replay
 

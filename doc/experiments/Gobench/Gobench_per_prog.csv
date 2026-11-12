@@ -1,9 +1,0 @@
-Test,GFuzz,GoPie,GoCR,Number
-Cockroach,13,18,19,19
-Etcd,8,11,12,12
-Grpc,5,5,5,5
-Istio,2,2,2,3
-Kubernetes,6,11,12,13
-Moby,10,10,11,13
-Serving,2,3,3,3
-Total,46,60,65,68

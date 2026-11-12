@@ -15,23 +15,23 @@ type Bool struct {
 	v uint32
 }
 
-// ADVOCATE-START
+// GOSC-START
 
 // Load atomically loads and returns the value stored in x.
-func (x *Bool) Load() bool { return LoadUint32AdvocateType(&x.v) != 0 }
+func (x *Bool) Load() bool { return LoadUint32GoscType(&x.v) != 0 }
 
 // Store atomically stores val into x.
-func (x *Bool) Store(val bool) { StoreUint32AdvocateType(&x.v, b32(val)) }
+func (x *Bool) Store(val bool) { StoreUint32GoscType(&x.v, b32(val)) }
 
 // Swap atomically stores new into x and returns the previous value.
-func (x *Bool) Swap(new bool) (old bool) { return SwapUint32AdvocateType(&x.v, b32(new)) != 0 }
+func (x *Bool) Swap(new bool) (old bool) { return SwapUint32GoscType(&x.v, b32(new)) != 0 }
 
 // CompareAndSwap executes the compare-and-swap operation for the boolean value x.
 func (x *Bool) CompareAndSwap(old, new bool) (swapped bool) {
-	return CompareAndSwapUint32AdvocateType(&x.v, b32(old), b32(new))
+	return CompareAndSwapUint32GoscType(&x.v, b32(old), b32(new))
 }
 
-// ADVOCATE-END
+// GOSC-END
 
 // b32 returns a uint32 0 or 1 representing b.
 func b32(b bool) uint32 {
@@ -58,7 +58,7 @@ type Pointer[T any] struct {
 	v unsafe.Pointer
 }
 
-// ADVOCATE-START
+// GOSC-START
 
 // Load atomically loads and returns the value stored in x.
 func (x *Pointer[T]) Load() *T { return (*T)(LoadPointer(&x.v)) }
@@ -76,7 +76,7 @@ func (x *Pointer[T]) CompareAndSwap(old, new *T) (swapped bool) {
 	return CompareAndSwapPointer(&x.v, unsafe.Pointer(old), unsafe.Pointer(new))
 }
 
-// ADVOCATE-END
+// GOSC-END
 
 // An Int32 is an atomic int32. The zero value is zero.
 //
@@ -86,34 +86,34 @@ type Int32 struct {
 	v int32
 }
 
-// ADVOCATE-START
+// GOSC-START
 
 // Load atomically loads and returns the value stored in x.
-func (x *Int32) Load() int32 { return LoadInt32AdvocateType(&x.v) }
+func (x *Int32) Load() int32 { return LoadInt32GoscType(&x.v) }
 
 // Store atomically stores val into x.
-func (x *Int32) Store(val int32) { StoreInt32AdvocateType(&x.v, val) }
+func (x *Int32) Store(val int32) { StoreInt32GoscType(&x.v, val) }
 
 // Swap atomically stores new into x and returns the previous value.
-func (x *Int32) Swap(new int32) (old int32) { return SwapInt32AdvocateType(&x.v, new) }
+func (x *Int32) Swap(new int32) (old int32) { return SwapInt32GoscType(&x.v, new) }
 
 // CompareAndSwap executes the compare-and-swap operation for x.
 func (x *Int32) CompareAndSwap(old, new int32) (swapped bool) {
-	return CompareAndSwapInt32AdvocateType(&x.v, old, new)
+	return CompareAndSwapInt32GoscType(&x.v, old, new)
 }
 
 // Add atomically adds delta to x and returns the new value.
-func (x *Int32) Add(delta int32) (new int32) { return AddInt32AdvocateType(&x.v, delta) }
+func (x *Int32) Add(delta int32) (new int32) { return AddInt32GoscType(&x.v, delta) }
 
 // And atomically performs a bitwise AND operation on x using the bitmask
 // provided as mask and returns the old value.
-func (x *Int32) And(mask int32) (old int32) { return AndInt32AdvocateType(&x.v, mask) }
+func (x *Int32) And(mask int32) (old int32) { return AndInt32GoscType(&x.v, mask) }
 
 // Or atomically performs a bitwise OR operation on x using the bitmask
 // provided as mask and returns the old value.
-func (x *Int32) Or(mask int32) (old int32) { return OrInt32AdvocateType(&x.v, mask) }
+func (x *Int32) Or(mask int32) (old int32) { return OrInt32GoscType(&x.v, mask) }
 
-// ADVOCATE-END
+// GOSC-END
 
 // An Int64 is an atomic int64. The zero value is zero.
 //
@@ -124,34 +124,34 @@ type Int64 struct {
 	v int64
 }
 
-// ADVOCATE-START
+// GOSC-START
 
 // Load atomically loads and returns the value stored in x.
-func (x *Int64) Load() int64 { return LoadInt64AdvocateType(&x.v) }
+func (x *Int64) Load() int64 { return LoadInt64GoscType(&x.v) }
 
 // Store atomically stores val into x.
-func (x *Int64) Store(val int64) { StoreInt64AdvocateType(&x.v, val) }
+func (x *Int64) Store(val int64) { StoreInt64GoscType(&x.v, val) }
 
 // Swap atomically stores new into x and returns the previous value.
-func (x *Int64) Swap(new int64) (old int64) { return SwapInt64AdvocateType(&x.v, new) }
+func (x *Int64) Swap(new int64) (old int64) { return SwapInt64GoscType(&x.v, new) }
 
 // CompareAndSwap executes the compare-and-swap operation for x.
 func (x *Int64) CompareAndSwap(old, new int64) (swapped bool) {
-	return CompareAndSwapInt64AdvocateType(&x.v, old, new)
+	return CompareAndSwapInt64GoscType(&x.v, old, new)
 }
 
 // Add atomically adds delta to x and returns the new value.
-func (x *Int64) Add(delta int64) (new int64) { return AddInt64AdvocateType(&x.v, delta) }
+func (x *Int64) Add(delta int64) (new int64) { return AddInt64GoscType(&x.v, delta) }
 
 // And atomically performs a bitwise AND operation on x using the bitmask
 // provided as mask and returns the old value.
-func (x *Int64) And(mask int64) (old int64) { return AndInt64AdvocateType(&x.v, mask) }
+func (x *Int64) And(mask int64) (old int64) { return AndInt64GoscType(&x.v, mask) }
 
 // Or atomically performs a bitwise OR operation on x using the bitmask
 // provided as mask and returns the old value.
-func (x *Int64) Or(mask int64) (old int64) { return OrInt64AdvocateType(&x.v, mask) }
+func (x *Int64) Or(mask int64) (old int64) { return OrInt64GoscType(&x.v, mask) }
 
-// ADVOCATE-END
+// GOSC-END
 
 // A Uint32 is an atomic uint32. The zero value is zero.
 //
@@ -161,34 +161,34 @@ type Uint32 struct {
 	v uint32
 }
 
-// ADVOCATE-START
+// GOSC-START
 
 // Load atomically loads and returns the value stored in x.
-func (x *Uint32) Load() uint32 { return LoadUint32AdvocateType(&x.v) }
+func (x *Uint32) Load() uint32 { return LoadUint32GoscType(&x.v) }
 
 // Store atomically stores val into x.
-func (x *Uint32) Store(val uint32) { StoreUint32AdvocateType(&x.v, val) }
+func (x *Uint32) Store(val uint32) { StoreUint32GoscType(&x.v, val) }
 
 // Swap atomically stores new into x and returns the previous value.
-func (x *Uint32) Swap(new uint32) (old uint32) { return SwapUint32AdvocateType(&x.v, new) }
+func (x *Uint32) Swap(new uint32) (old uint32) { return SwapUint32GoscType(&x.v, new) }
 
 // CompareAndSwap executes the compare-and-swap operation for x.
 func (x *Uint32) CompareAndSwap(old, new uint32) (swapped bool) {
-	return CompareAndSwapUint32AdvocateType(&x.v, old, new)
+	return CompareAndSwapUint32GoscType(&x.v, old, new)
 }
 
 // Add atomically adds delta to x and returns the new value.
-func (x *Uint32) Add(delta uint32) (new uint32) { return AddUint32AdvocateType(&x.v, delta) }
+func (x *Uint32) Add(delta uint32) (new uint32) { return AddUint32GoscType(&x.v, delta) }
 
 // And atomically performs a bitwise AND operation on x using the bitmask
 // provided as mask and returns the old value.
-func (x *Uint32) And(mask uint32) (old uint32) { return AndUint32AdvocateType(&x.v, mask) }
+func (x *Uint32) And(mask uint32) (old uint32) { return AndUint32GoscType(&x.v, mask) }
 
 // Or atomically performs a bitwise OR operation on x using the bitmask
 // provided as mask and returns the old value.
-func (x *Uint32) Or(mask uint32) (old uint32) { return OrUint32AdvocateType(&x.v, mask) }
+func (x *Uint32) Or(mask uint32) (old uint32) { return OrUint32GoscType(&x.v, mask) }
 
-// ADVOCATE-END
+// GOSC-END
 
 // A Uint64 is an atomic uint64. The zero value is zero.
 //
@@ -199,34 +199,34 @@ type Uint64 struct {
 	v uint64
 }
 
-// ADVOCATE-START
+// GOSC-START
 
 // Load atomically loads and returns the value stored in x.
-func (x *Uint64) Load() uint64 { return LoadUint64AdvocateType(&x.v) }
+func (x *Uint64) Load() uint64 { return LoadUint64GoscType(&x.v) }
 
 // Store atomically stores val into x.
-func (x *Uint64) Store(val uint64) { StoreUint64AdvocateType(&x.v, val) }
+func (x *Uint64) Store(val uint64) { StoreUint64GoscType(&x.v, val) }
 
 // Swap atomically stores new into x and returns the previous value.
-func (x *Uint64) Swap(new uint64) (old uint64) { return SwapUint64AdvocateType(&x.v, new) }
+func (x *Uint64) Swap(new uint64) (old uint64) { return SwapUint64GoscType(&x.v, new) }
 
 // CompareAndSwap executes the compare-and-swap operation for x.
 func (x *Uint64) CompareAndSwap(old, new uint64) (swapped bool) {
-	return CompareAndSwapUint64AdvocateType(&x.v, old, new)
+	return CompareAndSwapUint64GoscType(&x.v, old, new)
 }
 
 // Add atomically adds delta to x and returns the new value.
-func (x *Uint64) Add(delta uint64) (new uint64) { return AddUint64AdvocateType(&x.v, delta) }
+func (x *Uint64) Add(delta uint64) (new uint64) { return AddUint64GoscType(&x.v, delta) }
 
 // And atomically performs a bitwise AND operation on x using the bitmask
 // provided as mask and returns the old value.
-func (x *Uint64) And(mask uint64) (old uint64) { return AndUint64AdvocateType(&x.v, mask) }
+func (x *Uint64) And(mask uint64) (old uint64) { return AndUint64GoscType(&x.v, mask) }
 
 // Or atomically performs a bitwise OR operation on x using the bitmask
 // provided as mask and returns the old value.
-func (x *Uint64) Or(mask uint64) (old uint64) { return OrUint64AdvocateType(&x.v, mask) }
+func (x *Uint64) Or(mask uint64) (old uint64) { return OrUint64GoscType(&x.v, mask) }
 
-// ADVOCATE-END
+// GOSC-END
 
 // A Uintptr is an atomic uintptr. The zero value is zero.
 //
@@ -236,34 +236,34 @@ type Uintptr struct {
 	v uintptr
 }
 
-// ADVOCATE-START
+// GOSC-START
 
 // Load atomically loads and returns the value stored in x.
-func (x *Uintptr) Load() uintptr { return LoadUintptrAdvocateType(&x.v) }
+func (x *Uintptr) Load() uintptr { return LoadUintptrGoscType(&x.v) }
 
 // Store atomically stores val into x.
-func (x *Uintptr) Store(val uintptr) { StoreUintptrAdvocateType(&x.v, val) }
+func (x *Uintptr) Store(val uintptr) { StoreUintptrGoscType(&x.v, val) }
 
 // Swap atomically stores new into x and returns the previous value.
-func (x *Uintptr) Swap(new uintptr) (old uintptr) { return SwapUintptrAdvocateType(&x.v, new) }
+func (x *Uintptr) Swap(new uintptr) (old uintptr) { return SwapUintptrGoscType(&x.v, new) }
 
 // CompareAndSwap executes the compare-and-swap operation for x.
 func (x *Uintptr) CompareAndSwap(old, new uintptr) (swapped bool) {
-	return CompareAndSwapUintptrAdvocateType(&x.v, old, new)
+	return CompareAndSwapUintptrGoscType(&x.v, old, new)
 }
 
 // Add atomically adds delta to x and returns the new value.
-func (x *Uintptr) Add(delta uintptr) (new uintptr) { return AddUintptrAdvocateType(&x.v, delta) }
+func (x *Uintptr) Add(delta uintptr) (new uintptr) { return AddUintptrGoscType(&x.v, delta) }
 
 // And atomically performs a bitwise AND operation on x using the bitmask
 // provided as mask and returns the old value.
-func (x *Uintptr) And(mask uintptr) (old uintptr) { return AndUintptrAdvocateType(&x.v, mask) }
+func (x *Uintptr) And(mask uintptr) (old uintptr) { return AndUintptrGoscType(&x.v, mask) }
 
 // Or atomically performs a bitwise OR operation on x using the bitmask
 // provided as mask and returns the old value.
-func (x *Uintptr) Or(mask uintptr) (old uintptr) { return OrUintptrAdvocateType(&x.v, mask) }
+func (x *Uintptr) Or(mask uintptr) (old uintptr) { return OrUintptrGoscType(&x.v, mask) }
 
-// ADVOCATE-END
+// GOSC-END
 
 // noCopy may be added to structs which must not be copied
 // after the first use.

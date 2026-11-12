@@ -3023,14 +3023,14 @@ func PackagesAndErrors(ld *modload.Loader, ctx context.Context, opts PackageOpts
 		pkgs = mainPackagesOnly(pkgs, matches)
 	}
 
-	// ADVOCATE-START
-	// Inject advocatego into command-line packages.
+	// GOSC-START
+	// Inject gosc into command-line packages.
 	for _, p := range pkgs {
-		if p.Internal.CmdlinePkg && p.Name == "main" && p.ImportPath != "advocatego" {
-			EnsureImport(ld, p, "advocatego")
+		if p.Internal.CmdlinePkg && p.Name == "main" && p.ImportPath != "gosc" {
+			EnsureImport(ld, p, "gosc")
 		}
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	// Now that CmdlinePkg is set correctly,
 	// compute the effective flags for all loaded packages

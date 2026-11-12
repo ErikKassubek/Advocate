@@ -33,9 +33,9 @@ Go programs.
 ## How to get started
 
 
-### Combine GoPie and AdvocateGo
+### Combine GoPie and GoscGo
 
-Would need to incorporate GoPie patches into AdvocateGo.
+Would need to incorporate GoPie patches into GoscGo.
 
 How much effort is required?
 

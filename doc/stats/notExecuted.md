@@ -7,20 +7,20 @@ especially if the analyzer is used on tests.
 ## Usage
 This is run automatically by the toolchain.
 
-It creates a folder called `AdvocateNotExecuted` in the
+It creates a folder called `GoscNotExecuted` in the
 results directory. This folder contains two files, on containing the
 files and lines for all never executed operations (only for operations
 we could have recorded) and one for all never executed select cases.
 
 ## Result format
-The file `AdvocateNotExecutedOperations.txt` contains the never executed
+The file `GoscNotExecutedOperations.txt` contains the never executed
 operations. It consists of one line for each file, followed by the line number(s)
 in square brackets, containing the never executed operations. If no operations
 where ever executed, the line numbers are replaced by the line `No element in file was executed`.
 If all operations in the program where executed, the file contains the line
 `All program elements were executed`.
 
-The file `AdvocateNotExecutedSelectCases.txt` contains the never executed select
+The file `GoscNotExecutedSelectCases.txt` contains the never executed select
 cases of executed selects. It consists of one line for each select
 statement, that was executed at least once, but where at least one case was never
 executed. The line contains the file name and line number of the select statement

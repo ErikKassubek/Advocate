@@ -1,0 +1,92 @@
+// Copyright (c) 2024 
+//
+// File: headerUnitTests.go
+// Brief: Functions to add and remove the GOSC header into file containing
+//    unit tests
+//
+//
+// License: BSD-3-Clause
+
+package toolchain
+
+import (
+	"gosc/analysis/a_base"
+	"gosc/utils/flags"
+	"gosc/utils/paths"
+	"fmt"
+	"os"
+)
+
+// Run is the main function for the toolchain
+//
+// Parameter:
+//   - pathToTest string: specify specific test path, only used for fuzzing
+//   - runRecord bool: run the recording. If set to false, but runAnalysis or runReplay is
+//     set the trace at tracePath is used
+//   - runAnalysis bool: run the analysis on a path
+//   - runReplay bool: run replay, if runAnalysis is true, those replays are used
+//     otherwise the trace at tracePath is replayed
+//   - fuzzing int: -1 if not fuzzing, otherwise number of fuzzing run, starting with 0
+//   - fuzzingTrace string: path to the fuzzing trace path. If not used path (GFuzz or Flow), opr not fuzzing, set to empty string
+//   - replayAt bool: replay atomics
+//   - stats bool: create statistics
+//   - firstRun bool: this is the first run, only set to false for fuzzing (except for the first fuzzing)
+//
+// Returns:
+//   - int: TraceID
+//   - int: number results
+//   - error
+func Run(pathToTest string,
+	runRecord, runAnalysis, runReplay bool, fuzzing int, fuzzingTrace string,
+	firstRun bool, fileNumber, testNumber int) (int, int, error) {
+
+	a_base.Clear(true)
+
+	switch flags.ModeMain {
+	case true:
+		if paths.Gosc == "" {
+			return 0, 0, fmt.Errorf("Path to gosc required for mode main")
+		}
+		if paths.Prog == "" {
+			return 0, 0, fmt.Errorf("Path to file required")
+		}
+		if flags.ExecName == "" {
+			return 0, 0, fmt.Errorf("Name of the executable required")
+		}
+		if (flags.CreateStatistics || flags.MeasureTime) && flags.ProgName == "" {
+			flags.ProgName = paths.GetProgName(flags.ProgPath)
+		}
+		return runWorkflowMain(runRecord, runAnalysis, runReplay,
+			fuzzing, fuzzingTrace, firstRun)
+	case false:
+		if paths.Gosc == "" {
+			return 0, 0, fmt.Errorf("Path to gosc required")
+		}
+		if paths.Prog == "" {
+			return 0, 0, fmt.Errorf("Path to test folder required for mode main")
+		}
+		if (flags.CreateStatistics || flags.MeasureTime) && flags.ProgName == "" {
+			flags.ProgName = paths.GetProgName(flags.ProgPath)
+		}
+		return runWorkflowUnit(runRecord, runAnalysis, runReplay,
+			pathToTest, fuzzing, fuzzingTrace,
+			firstRun, fileNumber, testNumber)
+	default:
+		return 0, 0, fmt.Errorf("Choose one mode from 'main' or 'test'")
+	}
+}
+
+func createResultFolder() error {
+	if flags.ModeMain || !flags.SkipExisting {
+		os.RemoveAll(paths.NameResult)
+	}
+
+	if info, _ := os.Stat(paths.NameResult); info == nil {
+		if err := os.MkdirAll(paths.NameResult, os.ModePerm); err != nil {
+			return fmt.Errorf("Failed to create %s directory: %v", paths.NameResult, err)
+		}
+	}
+
+	return nil
+
+}

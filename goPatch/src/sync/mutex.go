@@ -13,10 +13,10 @@ package sync
 import (
 	isync "internal/sync"
 
-	// ADVOCATE-START
+	// GOSC-START
 	"runtime"
 	"unsafe"
-	// ADVOCATE-END
+	// GOSC-END
 )
 
 // A Mutex is a mutual exclusion lock.
@@ -37,9 +37,9 @@ type Mutex struct {
 
 	mu isync.Mutex
 
-	// ADVOCATE-START
+	// GOSC-START
 	id uint64 // id for the mutex
-	// ADVOCATE-END
+	// GOSC-END
 }
 
 // A Locker represents an object that can be locked and unlocked.
@@ -48,49 +48,49 @@ type Locker interface {
 	Unlock()
 }
 
-// ADVOCATE-START
+// GOSC-START
 //
-//go:linkname AdvocateAllocMutex runtime.AdvocateAllocMutex
-func AdvocateAllocMutex(ptr unsafe.Pointer) {
-	if runtime.AdvocateTracingDisabled {
+//go:linkname GoscAllocMutex runtime.GoscAllocMutex
+func GoscAllocMutex(ptr unsafe.Pointer) {
+	if runtime.GoscTracingDisabled {
 		return
 	}
 	m := (*Mutex)(ptr)
 	// if m.id != 0 {
 	// 	return
 	// }
-	m.id = runtime.AdvocateAlloc("M", 0)
+	m.id = runtime.GoscAlloc("M", 0)
 }
 
-// ADVOCATE-END
+// GOSC-END
 
 // Lock locks m.
 // If the lock is already in use, the calling goroutine
 // blocks until the mutex is available.
 func (m *Mutex) Lock() {
-	// ADVOCATE-START
+	// GOSC-START
 	key, chWait := runtime.WaitForReplay(runtime.OperationMutexLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
 
-	// AdvocateMutexReq records, that a routine tries to lock a mutex.
-	// AdvocatePost is called, if the mutex was locked successfully.
+	// GoscMutexReq records, that a routine tries to lock a mutex.
+	// GoscPost is called, if the mutex was locked successfully.
 	// In this case, the Lock event in the trace is updated to include
-	// this information. advocateIndex is used for AdvocatePost to find the
+	// this information. goscIndex is used for GoscPost to find the
 	// pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexLock)
+	goscIndex := runtime.GoscMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexLock)
 
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	m.mu.Lock()
 
-	// ADVOCATE-START
-	runtime.AdvocateMutexCom(advocateIndex, true)
-	//ADVOCATE-END
+	// GOSC-START
+	runtime.GoscMutexCom(goscIndex, true)
+	//GOSC-END
 }
 
 // TryLock tries to lock m and reports whether it succeeded.
@@ -99,15 +99,15 @@ func (m *Mutex) Lock() {
 // and use of TryLock is often a sign of a deeper problem
 // in a particular use of mutexes.
 func (m *Mutex) TryLock() bool {
-	// ADVOCATE-START
+	// GOSC-START
 	key, chWait := runtime.WaitForReplay(runtime.OperationMutexTryLock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
 
-	// AdvocateMutexReq records, that a routine tries to lock a mutex.
-	// advocateIndex is used for AdvocateMutexCom to find the pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexTryLock)
+	// GoscMutexReq records, that a routine tries to lock a mutex.
+	// goscIndex is used for GoscMutexCom to find the pre event.
+	goscIndex := runtime.GoscMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexTryLock)
 
 	if chWait != nil {
 		runtime.AckReplay(key)
@@ -115,10 +115,10 @@ func (m *Mutex) TryLock() bool {
 
 	res := m.mu.TryLock()
 
-	runtime.AdvocateMutexCom(advocateIndex, res)
+	runtime.GoscMutexCom(goscIndex, res)
 
 	return res
-	// ADVOCATE-END
+	// GOSC-END
 }
 
 // Unlock unlocks m.
@@ -128,13 +128,13 @@ func (m *Mutex) TryLock() bool {
 // It is allowed for one goroutine to lock a Mutex and then
 // arrange for another goroutine to unlock it.
 func (m *Mutex) Unlock() {
-	// ADVOCATE-START
+	// GOSC-START
 	key, chWait := runtime.WaitForReplay(runtime.OperationMutexUnlock, runtime.CallerSkipMutex)
 	if chWait != nil {
 		<-chWait
 	}
-	// AdvocateMutexReq is used to record the unlocking of a mutex.
-	// AdvocatePost records the successful unlocking of a mutex.
+	// GoscMutexReq is used to record the unlocking of a mutex.
+	// GoscPost records the successful unlocking of a mutex.
 	// For non rw mutexe, the unlock cannot fail. Therefore it is not
 	// strictly necessary to record the post for the unlocking of a mutex.
 	// For rw mutexes, the unlock can fail (e.g. unlock after rlock). Therefore
@@ -142,18 +142,18 @@ func (m *Mutex) Unlock() {
 	// rw mutex.
 	// Here the post is seperatly recorded to easy the implementation for
 	// the rw mutexes.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexUnlock)
-	// ADVOCATE-END
+	goscIndex := runtime.GoscMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexUnlock)
+	// GOSC-END
 
 	m.mu.Unlock()
 
-	// ADVOCATE-START
+	// GOSC-START
 	if chWait != nil {
 		runtime.AckReplay(key)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
-	// ADVOCATE-START
-	runtime.AdvocateMutexCom(advocateIndex, true)
-	// ADVOCATE-END
+	// GOSC-START
+	runtime.GoscMutexCom(goscIndex, true)
+	// GOSC-END
 }

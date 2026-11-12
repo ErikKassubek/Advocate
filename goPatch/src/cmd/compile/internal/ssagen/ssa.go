@@ -571,15 +571,15 @@ func buildssa(fn *ir.Func, worker int, isPgoHot bool) *ssa.Func {
 	s.zeroResults()
 	s.paramsToHeap()
 
-	// ADVOCATE-START
-	if base.Flag.AdvocateRecordPlus && shouldAdvocate(fn) {
+	// GOSC-START
+	if base.Flag.GoscRecordPlus && shouldGosc(fn) {
 		s.rtcall(
-			typecheck.LookupRuntimeFunc("advocateFunctionCall"),
+			typecheck.LookupRuntimeFunc("goscFunctionCall"),
 			true,
 			nil,
 		)
 	}
-	// ADVOCATE-END
+	// GOSC-END
 
 	s.stmtList(fn.Body)
 
@@ -2369,9 +2369,9 @@ func (s *state) stmt(n ir.Node) {
 const shareDeferExits = false
 
 // ADOVCATE-START
-// MARK: shouldAdvocate
-func shouldAdvocate(fn *ir.Func) bool {
-	if !(base.Flag.AdvocateTrace || base.Flag.AdvocateReplay || base.Flag.AdvocateFuzzing) {
+// MARK: shouldGosc
+func shouldGosc(fn *ir.Func) bool {
+	if !(base.Flag.GoscTrace || base.Flag.GoscReplay || base.Flag.GoscFuzzing) {
 		return false
 	}
 
@@ -2405,7 +2405,7 @@ func shouldAdvocate(fn *ir.Func) bool {
 		return false
 	}
 
-	if name == "advocateFunctionCall" || name == "advocateFunctionReturn" {
+	if name == "goscFunctionCall" || name == "goscFunctionReturn" {
 		return false
 	}
 
@@ -2413,22 +2413,22 @@ func shouldAdvocate(fn *ir.Func) bool {
 }
 
 // MARK: exit
-func (s *state) advocateExitCall(fn *ir.Func) {
-	if !shouldAdvocate(fn) {
+func (s *state) goscExitCall(fn *ir.Func) {
+	if !shouldGosc(fn) {
 		return
 	}
 
-	if base.Flag.AdvocateRecordPlus {
-		s.rtcall(typecheck.LookupRuntimeFunc("advocateFunctionReturn"), true, nil)
+	if base.Flag.GoscRecordPlus {
+		s.rtcall(typecheck.LookupRuntimeFunc("goscFunctionReturn"), true, nil)
 	}
 
 	if isUserMain(fn) {
-		if base.Flag.AdvocateTrace {
-			s.rtcall(typecheck.LookupRuntimeFunc("AdvocateFinishTracing"), true, nil)
-		} else if base.Flag.AdvocateReplay {
-			s.rtcall(typecheck.LookupRuntimeFunc("AdvocateFinishReplay"), true, nil)
-		} else if base.Flag.AdvocateFuzzing {
-			s.rtcall(typecheck.LookupRuntimeFunc("AdvocateFinishFuzzing"), true, nil)
+		if base.Flag.GoscTrace {
+			s.rtcall(typecheck.LookupRuntimeFunc("GoscFinishTracing"), true, nil)
+		} else if base.Flag.GoscReplay {
+			s.rtcall(typecheck.LookupRuntimeFunc("GoscFinishReplay"), true, nil)
+		} else if base.Flag.GoscFuzzing {
+			s.rtcall(typecheck.LookupRuntimeFunc("GoscFinishFuzzing"), true, nil)
 		}
 	}
 }
@@ -2451,7 +2451,7 @@ func isUserMain(fn *ir.Func) bool {
 	return pkg.Name == "main" && pkg.Path == "main"
 }
 
-// ADVOCATE-END
+// GOSC-END
 
 // exit processes any code that needs to be generated just before returning.
 // It returns a BlockRet block that ends the control flow. Its control value
@@ -2464,9 +2464,9 @@ func (s *state) exit() *ssa.Block {
 					panic("Block for an exit should be BlockPlain")
 				}
 
-				// ADVOCATE-START
-				s.advocateExitCall(s.curfn)
-				// ADVOCATE-END
+				// GOSC-START
+				s.goscExitCall(s.curfn)
+				// GOSC-END
 
 				s.curBlock.AddEdgeTo(s.lastDeferExit)
 				s.endBlock()
@@ -2524,9 +2524,9 @@ func (s *state) exit() *ssa.Block {
 		s.rtcall(ir.Syms.Racefuncexit, true, nil)
 	}
 
-	// ADVOCATE-START
-	s.advocateExitCall(s.curfn)
-	// ADVOCATE-END
+	// GOSC-START
+	s.goscExitCall(s.curfn)
+	// GOSC-END
 
 	results[len(results)-1] = s.mem()
 	m := s.newValue0(ssa.OpMakeResult, s.f.OwnAux.LateExpansionResultType())

@@ -1,8 +1,8 @@
 # Execution, Recording and Trace
 
-Advocate is able to record a program or test run, and to store the executed
+Gosc is able to record a program or test run, and to store the executed
 interleaving in a trace. Those traces can be used to deterministically
-[replay](./replay.md) a program run or to perform [dynamic analysis](analysis.md) on the recorded execution.
+[replay](./replay.md) a program run or to perform different analysis on the recorded execution.
 
 To record the relevant operation into traces, we have added the required
 functionality directly into the implementations of the operations. For this
@@ -31,7 +31,7 @@ We record the following operations:
 To record a trace, import 
 
 ```
-import _ "advocatego"
+import _ "goscgo"
 ``` 
 
 and
@@ -39,13 +39,13 @@ and
 build the program with 
 
 ```
--gcflags=all="-advocatetrace"
+-gcflags=all="-gosctrace"
 ```
 
 e.g.
 
 ```go
-./go build -gcflags=all="-advocatetrace"
+./go build -gcflags=all="-gosctrace"
 ```
 
 The run the compiled program.
@@ -53,10 +53,10 @@ The run the compiled program.
 For tests, run 
 
 ```
-./go test ./... -gcflags=all="-advocatetrace"
+./go test ./... -gcflags=all="-gosctrace"
 ```
 
-When the [toolchain](../advocate/) is used, this is done automatically.
+When the [toolchain](../gosc/) is used, this is done automatically.
 
 ## Trace local recording
 
@@ -70,10 +70,10 @@ the [timestamps](#timestamp).
 
 ## Implementation
 
-To record the execution trace local, we add an new variable `advocateRoutineInfo`
+To record the execution trace local, we add an new variable `goscRoutineInfo`
 into the [g struct](../goPatch/src/runtime/runtime2.go#L517).
 This struct is automatically created for each routine by the runtime.
-This variable (defined [here](../goPatch/src/runtime/advocate_routine.go#L28)), stores the routine id,
+This variable (defined [here](../goPatch/src/runtime/gosc_routine.go#L28)), stores the routine id,
 the maximum id of any element used in this routine and the
 trace of this routine as a list of elements.
 
@@ -86,9 +86,9 @@ in a global map.
 Before the runtime starts to run the main functions, multiple routines are created
 and executed. They would always result in completely empty trace files, since
 the recording only starts after the
-[InitTracing](../goPatch/src/advocate/advocate_tracing.go#25) has been executed.
+[InitTracing](../goPatch/src/gosc/gosc_tracing.go#25) has been executed.
 We therefore ignore those routines by setting there IDs to 0
-and don't add there `advocateRoutineInfo` into the global map.
+and don't add there `goscRoutineInfo` into the global map.
 
 To identify operations, that where executed on the same element, we assign
 an ID to each element (channel, mutex, ...). Since most of those elements are internally
@@ -133,7 +133,7 @@ For elements that are executed directly without the possibility of the operation
 being delayed by other operations (e.g. close on channel), the pre and post
 signal may be recorded with the same function.
 
-When the program execution has finished, it will create a folder `advocateTrace`
+When the program execution has finished, it will create a folder `goscTrace`
 in which it stores the trace files. For each routine, one trace file will be
 generated. In it, each line contains the information about one recorded
 event. The events are sorted by the time when the operations was executed.
@@ -237,12 +237,12 @@ timestamp is requested.
 
 ## Writing
 
-When the main function terminates, it calls the [FinishTracing](../goPatch/src/advocate/advocate_tracing.go#65) function. This will collect all the local traces and write them into files.
+When the main function terminates, it calls the [FinishTracing](../goPatch/src/gosc/gosc_tracing.go#65) function. This will collect all the local traces and write them into files.
 We ignore all internal routines, that where created and run before the main
 routine started to execute.
 
 The trace files are stored trace local, meaning one file per trace in a folder called
-`advocateTrace_[number]` inside the `advocateResult` folder.
+`goscTrace_[number]` inside the `goscResult` folder.
 The files are called `trace_[id].log`. In each file the elements executed
 in this routine are stored, one element per line sorted by the pre counter.
 The elements stored for each operations are described in the

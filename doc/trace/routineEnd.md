@@ -18,7 +18,7 @@ fields are
 
 # Implementation
 
-The call to record the routine is set in runtime/proc.go in the [goexit1](../../goPatch/src/runtime/proc.go#L4327) function using the [AdvocateRoutineExit](../../goPatch/src/runtime/advocate_trace_routine.go#L67) function.
+The call to record the routine is set in runtime/proc.go in the [goexit1](../../goPatch/src/runtime/proc.go#L4327) function using the [GoscRoutineExit](../../goPatch/src/runtime/gosc_trace_routine.go#L67) function.
 
 goexit1 is executed by the [GoExit](../../goPatch/src/runtime/panic.go#L624) function,
 which is called every time a routine terminates, and is also responsible

@@ -1,11 +1,11 @@
-.PHONY: all build-patch patch clean-cache advocate
+.PHONY: all build-patch patch clean-cache gosc
 
 all: build
 
-advocate: 
-	cd advocate && go build
+gosc: 
+	cd gosc && go build
 
-build: patch advocate
+build: patch gosc
 
 patch: clean-dir build-patch clean-cache
 
@@ -18,8 +18,8 @@ clean-dir:
 clean-cache:
 	./goPatch/bin/go clean -cache
 
-adv: advocate
-	cd advocate && ./advocate static -path /home/erik/Arbeit/examples/blocking/main.go -main -output -panic
+adv: gosc
+	cd gosc && ./gosc static -path /home/erik/Arbeit/examples/blocking/main.go -main -output -panic
 
 mkbuiltin:
 	cd ./goPatch/src/cmd/compile/internal/typecheck && go run mkbuiltin.go
