@@ -19,7 +19,6 @@ import (
 func (this *window) setFuzzing() {
 	var content []fyne.CanvasObject
 	content = []fyne.CanvasObject{
-		this.settings.components.mainTestSelect.Container,
 		widget.NewSeparator(),
 		this.settings.components.label.Container,
 		this.settings.components.fuzzingMode.Container,

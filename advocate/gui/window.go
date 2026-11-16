@@ -19,6 +19,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -41,14 +42,16 @@ type window struct {
 	left  *fyne.Container
 	right *fyne.Container
 
-	modeSelect   *componentModeSelect
-	projSelector *componentPathSelector
-	runButton    *componentButton
-	cancelButton *componentButton
-	traceButton  *componentButton
-	output       *componentOutput
-	progressBar  *componentProgress
-	settings     *componentSetting
+	modeSelect     *componentModeSelect
+	projSelector   *componentPathSelector
+	mainTestSelect *componentMainTestSelect
+	runButton      *componentButton
+	cancelButton   *componentButton
+	traceButton    *componentButton
+	output         *componentOutput
+	progressBar    *componentProgress
+	settingsButton *componentButton
+	settings       *componentSetting
 
 	worker *worker
 }
@@ -61,6 +64,10 @@ func (this *window) create() {
 	this.window.Resize(windowSize)
 	this.window.CenterOnScreen()
 
+	this.app.Settings().SetTheme(guiTheme{
+		Theme: theme.DefaultTheme(),
+	})
+
 	this.handleClose()
 
 	this.createComponents()
@@ -72,6 +79,10 @@ func (this *window) build() {
 			this.modeSelect.Container,
 			widget.NewSeparator(),
 			this.projSelector.Container,
+			widget.NewSeparator(),
+			this.mainTestSelect.Container,
+			widget.NewSeparator(),
+			this.settingsButton.Container,
 		),
 		container.NewVBox(
 			this.runButton.Container,
@@ -80,7 +91,6 @@ func (this *window) build() {
 		),
 		nil,
 		nil,
-		container.NewScroll(this.settings.Container),
 	)
 
 	this.right = container.NewBorder(
@@ -101,10 +111,14 @@ func (this *window) createComponents() {
 	this.output = createOutput()
 
 	this.projSelector = createPathSelector("Project", &flags.ProgPath, getAllTestNames, win.window)
+	this.mainTestSelect = creatMainTestSelector()
+
 	this.runButton = createRunButton()
 	this.cancelButton = createCancelButton()
 	this.traceButton = createTraceButton()
 	this.progressBar = createProgressBar()
+
+	this.settingsButton = createSettingsButton()
 	this.settings = createSettings()
 
 	this.modeSelect = createModeSelect() // must be created last

@@ -17,6 +17,7 @@ const (
 	ModeReplay      = "replay"
 	ModeExperiments = "experiments"
 	ModeShow        = "show"
+	ModeGui         = "gui"
 )
 
 // Closures

@@ -58,8 +58,7 @@ func (this *componentSetting) enable() {
 // ------------------------------------------------------------------------------------
 
 type settingComponents struct {
-	label          *componentSectionLabel
-	mainTestSelect *componentMainTestSelect
+	label *componentSectionLabel
 
 	timeout   *textInput
 	toFuzzing *textInput
@@ -106,7 +105,6 @@ const (
 func createSettingComponents() *settingComponents {
 	to := settingComponents{
 		label:                  createSectionLabel("Settings"),
-		mainTestSelect:         creatMainTestSelector(),
 		timeout:                createInputNumeric("Timeout Replay [s]: ", &flags.Timeout, canBeDisabled),
 		toFuzzing:              createInputNumeric("Timeout Fuzzing [s]: ", &flags.TimeoutFuzzing, canBeDisabled),
 		maxFuzzingRun:          createInputNumeric("Max. Fuzzing Runs: ", &flags.MaxFuzzingRun, canBeDisabled),
@@ -144,8 +142,6 @@ func createSettingComponents() *settingComponents {
 }
 
 func (this *settingComponents) disable() {
-	this.mainTestSelect.disable()
-
 	this.timeout.disable()
 	this.toFuzzing.disable()
 
@@ -185,8 +181,6 @@ func (this *settingComponents) disable() {
 }
 
 func (this *settingComponents) enable() {
-	this.mainTestSelect.enable()
-
 	this.timeout.enable()
 	this.toFuzzing.enable()
 

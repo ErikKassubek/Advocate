@@ -31,7 +31,6 @@ func createSettingsRecord(comp *settingComponents) *settingsRecord {
 
 func (this *window) setRecord() {
 	objects := []fyne.CanvasObject{
-		this.settings.components.mainTestSelect.Container,
 		widget.NewSeparator(),
 		this.settings.components.label.Container,
 		this.settings.components.label,

@@ -39,7 +39,7 @@ const (
 	replay   = "Replay"
 	analysis = "Analysis"
 	fuzzing  = "Fuzzing"
-	static   = "Static"
+	// static   = "Static"
 )
 
 func createModeSelect() *componentModeSelect {
@@ -51,15 +51,17 @@ func createModeSelect() *componentModeSelect {
 			replay,
 			analysis,
 			fuzzing,
-			static,
+			// static,
 		},
 		func(value string) {
 			flags.Mode = strings.ToLower(value)
 
+			win.WriteGui("Set Mode: ", flags.Mode)
+
 			if value == replay {
-				win.settings.components.mainTestSelect.isReplay(true)
+				win.mainTestSelect.isReplay(true)
 			} else {
-				win.settings.components.mainTestSelect.isReplay(false)
+				win.mainTestSelect.isReplay(false)
 			}
 
 			switch value {
@@ -71,8 +73,8 @@ func createModeSelect() *componentModeSelect {
 				win.setReplay()
 			case fuzzing:
 				win.setFuzzing()
-			case static:
-				win.setStatic()
+				// case static:
+				// 	win.setStatic()
 			}
 
 		},
@@ -85,7 +87,7 @@ func createModeSelect() *componentModeSelect {
 		cms.modeSelectWidget,
 	)
 
-	cms.modeSelectWidget.SetSelected(static)
+	cms.modeSelectWidget.SetSelected(record)
 
 	return cms
 }
@@ -144,5 +146,5 @@ func getAllTestNames(path string) {
 
 	sort.Strings(testNames)
 
-	win.settings.components.mainTestSelect.setTestNames(&testNames)
+	win.mainTestSelect.setTestNames(&testNames)
 }

@@ -34,7 +34,9 @@ func main() {
 
 	flags.ContainsGui = true
 
-	if flags.Mode == "gui" {
+	if flags.Mode == flags.ModeGui {
+		flags.Mode = flags.ModeRecord
+		log.Info("Start Gui.")
 		gui.Run()
 	} else {
 		err := advoc.Run()

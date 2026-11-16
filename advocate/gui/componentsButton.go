@@ -49,6 +49,10 @@ func createTraceButton() *componentButton {
 	return createButton("Trace Viewer", win.openTraceViewer)
 }
 
+func createSettingsButton() *componentButton {
+	return createButton("Settings", win.openSettings)
+}
+
 func (this *componentButton) disable() {
 	this.runButton.Disable()
 }

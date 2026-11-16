@@ -157,6 +157,8 @@ func checkMode() bool {
 		flags.Mode = flags.ModeExperiments
 	case "show":
 		flags.Mode = flags.ModeShow
+	case "gui":
+		flags.Mode = flags.ModeGui
 	default:
 		log.Error("Unknown mode: ", flags.Mode)
 		log.ErrorInfo("Possible Values: ")

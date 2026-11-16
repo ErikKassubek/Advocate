@@ -18,7 +18,6 @@ import (
 
 func (this *window) setReplay() {
 	objects := []fyne.CanvasObject{
-		this.settings.components.mainTestSelect.Container,
 		widget.NewSeparator(),
 		this.settings.components.tracePath.Container,
 		widget.NewSeparator(),
