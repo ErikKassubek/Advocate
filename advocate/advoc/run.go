@@ -81,7 +81,7 @@ func Run() error {
 		return err
 	}
 
-	if flags.Mode != "show" {
+	if flags.Tidy {
 		command.RunGoModTidy()
 	}
 

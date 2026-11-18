@@ -88,7 +88,9 @@ func runVersion(ctx context.Context, cmd *base.Command, args []string) {
 		if gover.TestVersion != "" {
 			v = gover.TestVersion + " (TESTGO_VERSION)"
 		}
-		fmt.Printf("go version %s %s/%s\n", v, runtime.GOOS, runtime.GOARCH)
+		// ADVOCATE-START
+		fmt.Printf("go version %s Advocate %s/%s\n", v, runtime.GOOS, runtime.GOARCH)
+		// ADVOCATE-END
 		return
 	}
 

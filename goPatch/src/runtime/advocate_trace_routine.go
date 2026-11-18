@@ -69,7 +69,7 @@ func AdvocatRoutineExit() {
 	}
 
 	rout := currentGoRoutineInfo()
-	if rout.ignored || rout.hasPanicked {
+	if rout == nil || rout.ignored || rout.hasPanicked {
 		return
 	}
 

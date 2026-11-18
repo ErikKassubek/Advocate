@@ -29,14 +29,13 @@ with
 The typeIDs have the following meaning:
 
 - A01: "Actual Send on Closed Channel",
-- A02: "Actual Receive on Closed Channel",
-- A03: "Actual Close on Closed Channel",
-- A04: "Actual Close on nil channel",
-- A05: "Actual negative Wait Group",
-- A06: "Actual unlock of not locked mutex",
-- A07: "Actual Leak (Non-Cyclic blocking bug)",
-- A08: "Actual Deadlock (Cyclic blocking bug)",
-- A09: "Actual Mixed Deadlock"
+- A02: "Actual Close on Closed Channel",
+- A03: "Actual Close on Nil Channel",
+- A04: "Actual Negative Wait Group",
+- A05: "Actual Unlock of Not Locked Mutex",
+- A06: "Actual Non-Cyclic Blocking Bug",
+- A07: "Actual Deadlock of one type",
+- A08: "Actual Deadlock of multiple types (mixed)"
 - P01: "Possible Send on Closed Channel",
 - P02: "Possible Negative WaitGroup Counter",
 - P03: "Possible unlock of not locked mutex",

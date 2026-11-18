@@ -37,7 +37,7 @@ func CommandLine() bool {
 	flag.StringVar(&flags.ProgName, "prog", "", "Name of the program")
 	flag.StringVar(&flags.ExecName, "exec", "", "Name of the executable or test")
 
-	flag.StringVar(&flags.TracePath, "trace", "", "Path to the trace folder to replay")
+	flag.StringVar(&flags.TracePath, "trace", "", "Path to the trace folder to replay or show")
 
 	flag.IntVar(&flags.Timeout, "timeoutRun", 180, "Set the timeout in seconds for one recording/replay. Default: 180s. To disable set to -1")
 	flag.IntVar(&flags.TimeoutFuzzing, "timeoutFuz", 420, "Timeout of fuzzing per test/program in seconds. Default: 420s. To Disable, set to -1")
@@ -72,6 +72,8 @@ func CommandLine() bool {
 	flag.BoolVar(&flags.ShowFile, "showFile", false, "Show the file name. Only used for 'show' mode. Otherwise only the line number is used.")
 
 	flag.StringVar(&flags.Experiment, "experiment", "", "Name of the experiment, only in experiment mode.")
+
+	flag.BoolVar(&flags.Tidy, "tidy", false, "Run 'go mod tidy' before execution.")
 
 	flag.StringVar(&flags.Scenarios, "scen", "", "Select which analysis scenario to run, e.g. -scen srd for the option s, r and d."+
 		"If not set, all scenarios are run.\n"+

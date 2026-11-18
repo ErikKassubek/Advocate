@@ -65,35 +65,6 @@ go build -tags gui
 In this case fyne is not required.
 
 
-## Docker
-
-We also provide a docker file to create the environment.
-
-To build the docker file, run
-
-```shell
-docker build -t advocate-app .
-```
-
-To run the analysis or fuzzing on a program, you can call the following:
-
-```shell
-docker run --rm -it \
-  -v <pathToProg>:/prog \
-  advocate-app [mode] -path /prog [args]
-```
-
-e.g.
-
-```shell
-docker run --rm -it \
-  -v /home/erik/progToTest:/prog \
-  advocate-app fuzzing -path /prog
-```
-
-For the modes and args, see [usage](#usage).
-Note that the -path argument has already been set and does not need to be set again.
-
 ## Usage
 
 All modes of advocates are started and controlled using the [advocate](../advocate/)
@@ -310,9 +281,8 @@ The analysis will try to find the following situations:
 - A04: "Actual Negative Wait Group",
 - A05: "Actual Unlock of Not Locked Mutex",
 - A06: "Actual Non-Cyclic Blocking Bug",
-- A07: "Actual Cyclic Deadlock with Mutex",
-- A08: "Actual Concurrent Receive on Same Channel",
-- A09: "Actual Cyclic Deadlock with Mutex and Channel
+- A07: "Actual Deadlock of one type",
+- A08: "Actual Deadlock of multiple types (mixed)"
 - P01: "Possible Send on Closed Channel",
 - P02: "Possible Negative WaitGroup cCounter",
 - P03: "Possible unlock of not locked mutex",

@@ -133,9 +133,9 @@ func AdvocatePanic(msg any) {
 	SetExitCodeFromPanicMsg(msg)
 
 	if IsAdvocateFuzzingEnabled() {
-		finishFuzzingFunc()
+		FinishFuzzingFunc()
 	} else if IsTracingEnabled() {
-		finishTracingFunc()
+		FinishTracingFunc()
 	}
 
 	// if !IsReplayEnabled() {

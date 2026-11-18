@@ -70,7 +70,8 @@ func InitTracing(timeout int, init bool) {
 
 	// go writeTraceIfFull()
 	// go removeAtomicsIfFull()
-	runtime.InitTracing(FinishTracing, WriteToTraceFile, init)
+	runtime.FinishTracingFunc = FinishTracing
+	runtime.InitTracing(WriteToTraceFile, init)
 }
 
 // Write the trace of the program to a file.

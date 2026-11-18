@@ -81,6 +81,8 @@ var (
 
 	ClosureType      string
 	DisableStableIDs bool
+
+	Tidy bool
 )
 
 // execution control

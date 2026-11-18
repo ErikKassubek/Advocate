@@ -46,6 +46,7 @@ func InitFuzzing(tracePath string, timeout int, init bool) {
 
 	InitTracing(timeout, init)
 
+	runtime.FinishFuzzingFunc = FinishFuzzing
 	if tracePath == "" { // GoFuzz
 		fuzzingSelectPath := "fuzzingData.log"
 		var err error
@@ -54,9 +55,9 @@ func InitFuzzing(tracePath string, timeout int, init bool) {
 			println("Error in reading ", fuzzingSelectPath, ": ", err.Error())
 			panic(err)
 		}
-		runtime.InitFuzzingSelect(prefSel, prefFlow, FinishFuzzing)
+		runtime.InitFuzzingSelect(prefSel, prefFlow)
 	} else { // Constraints
-		runtime.InitFuzzingReplay(FinishFuzzing)
+		runtime.InitFuzzingReplay()
 		tracePathRewritten = tracePath
 		startReplay(timeout)
 	}

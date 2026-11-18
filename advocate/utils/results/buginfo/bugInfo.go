@@ -23,8 +23,8 @@ const (
 	AUnlockOfNotLockedMutex ResultType = "A05"
 	ABlocking               ResultType = "A06"
 	ADeadlock               ResultType = "A07"
-	AConcurrentRecv         ResultType = "A08"
-	AMixedDeadlock          ResultType = "A09"
+	AMixedDeadlock          ResultType = "A08"
+	AConcurrentRecv         ResultType = "A09"
 
 	// possible
 	PSendOnClosed     ResultType = "P01"
@@ -128,9 +128,9 @@ func ResultTypeFromString(code string) ResultType {
 	case "A07":
 		return ADeadlock
 	case "A08":
-		return AConcurrentRecv
-	case "A09":
 		return AMixedDeadlock
+	case "A09":
+		return AConcurrentRecv
 	case "P01":
 		return PSendOnClosed
 	case "P02":
@@ -192,7 +192,7 @@ var ResultTypeMap = map[ResultType]string{
 	AConcurrentRecv:         "Concurrent Receive",
 	ACloseOnNilChannel:      "Actual close on nil channel",
 	ABlocking:               "Actual Non-Cyclic Blocking Bug",
-	ADeadlock:               "Actual Cyclic Deadlock",
+	ADeadlock:               "Actual Deadlock",
 	ANegWG:                  "Actual negative Wait Group",
 	AUnlockOfNotLockedMutex: "Actual unlock of not locked mutex",
 

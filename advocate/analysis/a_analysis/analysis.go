@@ -201,8 +201,6 @@ func RunHBAnalysis(fuzzing bool) {
 
 	a_base.MainTrace.SetHBWasCalc(hb.CalcVC)
 
-	log.Info("Finished HB analysis")
-
 	if f_base.FuzzingModeGFuzz {
 		a_scenarios.RerunCheckForSelectCaseWithPartnerChannel()
 		a_scenarios.CheckForSelectCaseWithPartner()
@@ -239,4 +237,6 @@ func RunHBAnalysis(fuzzing bool) {
 	if a_base.AnalysisCasesMap[flags.UnlockBeforeLock] {
 		a_scenarios.CheckForUnlockBeforeLock()
 	}
+
+	log.Info("Finished HB analysis")
 }

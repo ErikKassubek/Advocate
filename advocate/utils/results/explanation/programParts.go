@@ -23,33 +23,25 @@ import (
 // Get the positions of the bug elements in the program
 //
 // Parameter:
-//   - traceElems map[int]string: The trace elements of the bug
-//
-// Returns:
-//   - map[int][]string: Dict for the code snippets
-func getBugPositions(traceElems map[int][]string) (map[int][]string, error) {
-	res := make(map[int][]string)
-
-	for i, elem := range traceElems {
-		for _, e := range elem {
-			pos := strings.Split(e, consts.PosSep)
+//   - bugObj map[int]string: The trace elements of the bug
+func getBugPositions(bugObj map[int][]bugObj) error {
+	for i, elem := range bugObj {
+		for j, e := range elem {
+			pos := strings.Split(e.pos, consts.PosSep)
 			file := pos[0]
 			line, err := strconv.Atoi(pos[1])
 			if err != nil {
 				log.Error("Invalid line: ", pos[1])
 			}
 
-			code, err := GetProgramCode(file, line, true)
+			bugObj[i][j].code, err = GetProgramCode(file, line, true)
 			if err != nil {
-				res[i] = append(res[i], "")
 				log.Error(err.Error())
-			} else {
-				res[i] = append(res[i], code)
 			}
 		}
 	}
 
-	return res, nil
+	return nil
 }
 
 // GetProgramCode returns the code snippet of a program file at a specific line
@@ -83,13 +75,13 @@ func GetProgramCode(file string, line int, numbers bool) (string, error) {
 
 	code := lines[start : end+1]
 
-	res := "```go"
-
-	if start != 1 {
-		res += "...\n"
-	}
+	res := "```go\n"
 
 	width := len(fmt.Sprintf("%d", 20+start))
+
+	if start != 1 {
+		res += fmt.Sprintf("%*d ...\n", width, start)
+	}
 
 	for i, l := range code {
 		ln := i + start + 1
@@ -99,14 +91,14 @@ func GetProgramCode(file string, line int, numbers bool) (string, error) {
 		res += l
 
 		if ln-1 == line {
-			res += "                    // <================= "
+			res += "                   // <=============================="
 		}
 
 		res += "\n"
 	}
 
 	if end != len(lines)-1 {
-		res += "...\n"
+		res += fmt.Sprintf("%*d ...\n", width, len(code)+start+1)
 	}
 
 	res += "```"

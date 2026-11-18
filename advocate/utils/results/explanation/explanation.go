@@ -29,6 +29,13 @@ type bug struct {
 	pos     string
 }
 
+type bugObj struct {
+	pos   string
+	routs []int
+	t     string
+	code  string
+}
+
 type bugKeys int
 
 const (
@@ -50,11 +57,11 @@ const (
 
 var printedExplanations = make(map[bug]struct{})
 
-func writeBug(bugType buginfo.ResultType, positions map[int][]string) bool {
+func writeBug(bugType buginfo.ResultType, obj map[int][]bugObj) bool {
 	posSet := make(map[string]struct{})
-	for _, p := range positions {
+	for _, p := range obj {
 		for _, l := range p {
-			posSet[l] = struct{}{}
+			posSet[l.pos] = struct{}{}
 		}
 	}
 
@@ -146,7 +153,7 @@ func CreateOverview(ignoreDouble bool, traceID, fuzzing int) (int, error) {
 				id += elem[len(elem)-1] + "_" + strconv.Itoa(index)
 			}
 
-			bugType, bugPos, bugElemType, falsePositive, err := readAnalysisResults(result, index, progInfo[file])
+			bugType, bugObj, falsePositive, err := readAnalysisResults(result, index, progInfo[file])
 			if err != nil {
 				log.Error("Could not read analysis result: ", err.Error())
 				continue
@@ -163,7 +170,7 @@ func CreateOverview(ignoreDouble bool, traceID, fuzzing int) (int, error) {
 			bugTypeDescription := getBugTypeDescription(bugType)
 
 			// get the code of the bug elements
-			code, err := getBugPositions(bugPos)
+			err = getBugPositions(bugObj)
 			if err != nil {
 				log.Error("Error getting bug positions: ", err)
 			}
@@ -175,12 +182,11 @@ func CreateOverview(ignoreDouble bool, traceID, fuzzing int) (int, error) {
 			// 	continue
 			// }
 
-			if !writeBug(bugType, bugPos) {
+			if !writeBug(bugType, bugObj) {
 				continue
 			}
 
-			err = writeFile(paths.CurrentResult, id, bugTypeDescription, bugPos, bugElemType, code,
-				progInfo, fuzzing, falsePositive)
+			err = writeFile(paths.CurrentResult, id, bugTypeDescription, bugObj, progInfo, fuzzing, falsePositive)
 		}
 	}
 
@@ -198,14 +204,13 @@ func CreateOverview(ignoreDouble bool, traceID, fuzzing int) (int, error) {
 //
 // Returns:
 //   - buginfo.ResultType: bug type
-//   - map[int][]string: bug element positions
-//   - map[int]string: bug element types
+//   - map[int][]string: bug elements
 //   - bool: true if false positive
 //   - error
-func readAnalysisResults(path string, index int, fileWithHeader string) (buginfo.ResultType, map[int][]string, map[int]string, bool, error) {
+func readAnalysisResults(path string, index int, fileWithHeader string) (buginfo.ResultType, map[int][]bugObj, bool, error) {
 	file, err := os.ReadFile(path)
 	if err != nil {
-		return "", nil, nil, false, err
+		return "", nil, false, err
 	}
 
 	lines := strings.Split(string(file), "\n")
@@ -213,7 +218,7 @@ func readAnalysisResults(path string, index int, fileWithHeader string) (buginfo
 	index-- // the index is 1-based
 
 	if index >= len(lines) {
-		return "", nil, nil, false, errors.New("index out of range")
+		return "", nil, false, errors.New("index out of range")
 	}
 
 	bugStr := string(lines[index])
@@ -221,10 +226,9 @@ func readAnalysisResults(path string, index int, fileWithHeader string) (buginfo
 	bugType := buginfo.ResultTypeFromString(bugFields[0])
 	falsePositive := (bugFields[1] == "fp")
 
-	bugPos := make(map[int][]string)
-	bugElemType := make(map[int]string)
+	obj := make(map[int][]bugObj)
 
-	posAlreadyKnown := make([]string, 0)
+	posAlreadyKnown := make(map[string]int, 0)
 
 	for i := 2; i < len(bugFields); i++ {
 		bugElems := strings.Split(bugFields[i], ";")
@@ -232,17 +236,19 @@ func readAnalysisResults(path string, index int, fileWithHeader string) (buginfo
 			continue
 		}
 
-		bugPos[i] = make([]string, 0)
+		obj[i] = make([]bugObj, 0)
 
-		for j, elem := range bugElems {
+		for _, elem := range bugElems {
 			fields := strings.Split(elem, consts.PosSep)
 
 			if fields[0] != "T" {
 				continue
 			}
 
-			if j == 0 {
-				bugElemType[i] = getBugElementType(fields[4])
+			rout, err := strconv.Atoi(fields[1])
+			if err != nil {
+				log.Error(err)
+				continue
 			}
 
 			file := fields[5]
@@ -250,16 +256,23 @@ func readAnalysisResults(path string, index int, fileWithHeader string) (buginfo
 
 			pos := file + consts.PosSep + line
 
-			if slices.Contains(posAlreadyKnown, pos) {
+			if o, ok := posAlreadyKnown[pos]; ok {
+				obj[i][o].routs = append(obj[i][o].routs, rout)
 				continue
 			}
-			posAlreadyKnown = append(posAlreadyKnown, pos)
+			posAlreadyKnown[pos] = len(obj[i])
 
-			bugPos[i] = append(bugPos[i], pos)
+			o := bugObj{
+				pos:   pos,
+				routs: []int{rout},
+				t:     getBugElementType(fields[4]),
+			}
+
+			obj[i] = append(obj[i], o)
 		}
 	}
 
-	return bugType, bugPos, bugElemType, falsePositive, nil
+	return bugType, obj, falsePositive, nil
 }
 
 // writeFile(path, id, bugTypeDescription, bugPos, bugElemType, code,
@@ -271,9 +284,7 @@ func readAnalysisResults(path string, index int, fileWithHeader string) (buginfo
 //   - path string: path where the explanation file should be created
 //   - index int: index of the bug file (name is e.g. bug_actual_[index])
 //   - description map[string]string: description of the bug, containing e.g. bug/diagnostics, name, explanation
-//   - positions map[int][]string: positions of the bug elements
-//   - bugElemType map[int]string: types of the bug elements
-//   - code map[int][]string: program codes that contains the bug elements
+//   - obj map[int][]bugObj: bug objects
 //   - progInfo map[string]sting: Info about the prog, e.g. prog/test name
 //   - fuzzing int: Fuzzing run number
 //   - falsePositive bool: true if it is likely a false positive
@@ -281,8 +292,7 @@ func readAnalysisResults(path string, index int, fileWithHeader string) (buginfo
 // Returns:
 //   - error
 func writeFile(path string, index string, description map[bugKeys]string,
-	positions map[int][]string, bugElemType map[int]string, code map[int][]string,
-	progInfo map[bugKeys]string, fuzzing int, falsePositive bool) error {
+	obj map[int][]bugObj, progInfo map[bugKeys]string, fuzzing int, falsePositive bool) error {
 
 	// write the bug type description
 	res := "# " + description[crit] + ": " + description[bugType] + " - " + description[name] + "\n\n"
@@ -314,43 +324,62 @@ func writeFile(path string, index string, description map[bugKeys]string,
 	}
 
 	// write the code of the bug elements
-	if len(positions) > 0 {
+	if len(obj) > 0 {
 		res += "## Bug Elements\n\n"
 		res += "The elements involved in the found "
 		res += strings.ToLower(description[crit])
 		res += " are located at the following positions:\n\n"
 
-		for key := range positions {
-			if len(positions[key]) == 0 {
+		for key := range obj {
+			if len(obj[key]) == 0 {
 				continue
 			}
 
-			res += "###  "
+			for _, o := range obj[key] {
 
-			closeBracket := false
-			switch key {
-			case 2:
-				res += description[arg1] + " ("
-				closeBracket = true
-			case 3:
-				res += description[arg2] + " ("
-				closeBracket = true
-			}
+				res += "###  "
 
-			res += bugElemType[key]
+				closeBracket := false
+				switch key {
+				case 2:
+					res += description[arg1] + " ("
+					closeBracket = true
+				case 3:
+					res += description[arg2] + " ("
+					closeBracket = true
+				}
 
-			if closeBracket {
-				res += ")"
-			}
+				res += o.t
 
-			res += "\n\n"
+				if len(o.routs) > 1 {
+					res += fmt.Sprintf(", %dx", len(o.routs))
+				}
 
-			for j, pos := range positions[key] {
-				if pos == ":-1" {
+				if closeBracket {
+					res += ")"
+				}
+
+				res += "\n\n"
+
+				if o.pos == ":-1" {
 					return nil
 				}
-				code := code[key][j]
-				res += "-> " + pos + "\n\n"
+				code := o.code
+
+				routsName := "Routines"
+				if len(o.routs) < 2 {
+					routsName = "Routine"
+				}
+				routs := ""
+				slices.Sort(o.routs)
+				for i, r := range o.routs {
+					if i != 0 {
+						routs += ", "
+					}
+					routs += fmt.Sprintf("%d", r)
+				}
+
+				res += fmt.Sprintf("-> %s\n-> %s: %s\n\n", o.pos, routsName, routs)
 				res += code + "\n\n"
 			}
 		}

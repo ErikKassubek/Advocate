@@ -25,7 +25,7 @@ func BuildOAT() {
 	// Done to prevent alloc during GC
 	InfoHaveRef = make(map[uintptr][]bool)
 	for b := range blocked {
-		InfoHaveRef[b] = make([]bool, maxRoutId+1)
+		InfoHaveRef[b] = make([]bool, 2*(maxRoutId + 1))
 	}
 
 	haveRefArray = make([]uintptr, len(InfoHaveRef))

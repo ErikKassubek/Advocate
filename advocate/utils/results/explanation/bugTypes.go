@@ -77,9 +77,9 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"This means, there is a routine that is blocked, and there is not possibility of it being unblocked in the future"},
 	buginfo.ADeadlock: ResultTypeInfo{
 		Bug, Actual,
-		"Actual Cyclic Deadlock",
-		"During the execution, a resource deadlock was detected.\n" +
-			"This means, there is are routine that are cyclical blocked on mutexes, and there is not possibility of it being unblocked in the future"},
+		"Actual Deadlock",
+		"During the execution, a deadlock was detected.\n" +
+			"This means, there is are routine that are (cyclical) blocked, and there is not possibility of it being unblocked in the future"},
 	buginfo.AConcurrentRecv: ResultTypeInfo{
 		Diagnostic, Actual,
 		"Actual Concurrent Receive",
@@ -90,7 +90,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 		Bug, Actual,
 		"Actual Mixed Deadlock",
 		"During the execution, a mixed deadlock was detected.\n" +
-			"This means, there is are routine that are cyclical blocked on a combination of channels and mutexes, and there is not possibility of it being unblocked in the future"},
+			"This means, there is are routine that are (cyclical) blocked on a combination of different primitives, and there is not possibility of it being unblocked in the future"},
 
 	buginfo.PSendOnClosed: ResultTypeInfo{
 		Bug, Potential,

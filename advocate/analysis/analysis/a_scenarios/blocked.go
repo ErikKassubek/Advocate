@@ -15,6 +15,7 @@ import (
 	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/types"
+	"fmt"
 	"strings"
 )
 
@@ -110,19 +111,25 @@ func checkSelectDefaultOrTImer(tr *trace.Trace, b map[int]struct{}) []int {
 }
 
 // check for cyclic dependencies
-func checkCyclic(b map[int]struct{}, res map[int][]trace.Resource) map[int]struct{} {
+func checkCyclic(b map[int]struct{}, resources map[int][]trace.Resource) map[int]struct{} {
 	graph := map[int][]int{}
 	selfLoop := map[int]bool{}
 
 	for rID := range b {
 		for rID2 := range b {
-			if types.HasCommonElement(res[rID], res[rID2]) {
-
+			if types.HasCommonElement(resources[rID], resources[rID2]) {
 				graph[rID] = append(graph[rID], rID2)
 				if rID == rID2 {
 					selfLoop[rID] = true
 				}
 			}
+		}
+	}
+
+	for key, obj := range graph {
+		res := fmt.Sprintf("%d -> ", key)
+		for _, o := range obj {
+			res += fmt.Sprintf("%d ", o)
 		}
 	}
 
