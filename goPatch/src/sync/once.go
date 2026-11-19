@@ -97,7 +97,8 @@ func (o *Once) Do(f func()) {
 		<-chWait
 	}
 
-	index := runtime.AdvocateOnceReq(unsafe.Pointer(o), o.id)
+	var advocateIndex int
+	advocateIndex, o.id = runtime.AdvocateOnceReq(unsafe.Pointer(o), o.id)
 	res := false
 
 	if chWait != nil {
@@ -113,7 +114,7 @@ func (o *Once) Do(f func()) {
 	}
 
 	// ADVOCATE-START
-	runtime.AdvocateOnceCom(index, res)
+	runtime.AdvocateOnceCom(advocateIndex, res)
 	// ADVOCATE-END
 }
 

@@ -23,3 +23,11 @@ type AdvocateTraceResource struct {
 	id   uint64
 	addr unsafe.Pointer
 }
+
+func newAdvocateTraceResource(id uint64, addr unsafe.Pointer) (AdvocateTraceResource, uint64) {
+	if id == 0 {
+		id = GetAdvocateObjectID()
+	}
+
+	return AdvocateTraceResource{id, addr}, id
+}

@@ -158,7 +158,8 @@ func (wg *WaitGroup) Add(delta int) {
 	// do not block the program. Therefore it is not possible, that it is
 	// called but not finished (except if it panics). Therefore it is not
 	// necessary to record a post event.
-	index := runtime.AdvocateWaitGroupAdd(unsafe.Pointer(wg), wg.id, delta, v)
+	var advocateIndex int
+	advocateIndex, wg.id = runtime.AdvocateWaitGroupAdd(unsafe.Pointer(wg), wg.id, delta, v)
 	// ADVOCATE-END
 
 	if race.Enabled && delta > 0 && v == int32(delta) {
@@ -175,7 +176,7 @@ func (wg *WaitGroup) Add(delta int) {
 	}
 	if v > 0 || w == 0 {
 		// ADVOCATE-START
-		runtime.AdvocateWaitGroupCom(index)
+		runtime.AdvocateWaitGroupCom(advocateIndex)
 		// ADVOCATE-END
 		return
 	}
@@ -199,7 +200,7 @@ func (wg *WaitGroup) Add(delta int) {
 	}
 
 	// ADVOCATE-START
-	runtime.AdvocateWaitGroupCom(index)
+	runtime.AdvocateWaitGroupCom(advocateIndex)
 	// ADVOCATE-END
 }
 
@@ -230,7 +231,8 @@ func (wg *WaitGroup) Wait() {
 	// The wait will run until the waitgroup counte is zero. Therefor it
 	// blocks the routine and it is nessesary to record the successful
 	// finish of the wait with a post.
-	advocateIndex := runtime.AdvocateWaitGroupWaitReq(unsafe.Pointer(wg), wg.id)
+	var advocateIndex int
+	advocateIndex, wg.id = runtime.AdvocateWaitGroupWaitReq(unsafe.Pointer(wg), wg.id)
 	// ADVOCATE-END
 
 	if race.Enabled {

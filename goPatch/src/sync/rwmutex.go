@@ -84,7 +84,8 @@ func (rw *RWMutex) RLock() {
 	// In this case, the Lock event in the trace is updated to include
 	// this information. advocateIndex is used for AdvocatePost to find the
 	// pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexRLock)
+	var advocateIndex int
+	advocateIndex, rw.id = runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexRLock)
 	// ADVOCATE-END
 
 	if race.Enabled {
@@ -126,7 +127,8 @@ func (rw *RWMutex) TryRLock() bool {
 
 	// AdvocateMutexReq records, that a routine tries to lock a mutex.
 	// advocateIndex is used for AdvocateMutexCom to find the pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexTryRLock)
+	var advocateIndex int
+	advocateIndex, rw.id = runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexTryRLock)
 	// ADVOCATE-END
 
 	if race.Enabled {
@@ -183,7 +185,8 @@ func (rw *RWMutex) RUnlock() {
 
 	// AdvocateMutexReq is used to record the unlocking of a mutex.
 	// AdvocatePost records the successful unlocking of a mutex.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexRUnlock)
+	var advocateIndex int
+	advocateIndex, rw.id = runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexRUnlock)
 	// ADVOCATE-END
 
 	if race.Enabled {
@@ -238,7 +241,8 @@ func (rw *RWMutex) Lock() {
 	// In this case, the Lock event in the trace is updated to include
 	// this information. advocateIndex is used for AdvocatePost to find the
 	// pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexLock)
+	var advocateIndex int
+	advocateIndex, rw.id = runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexLock)
 	// ADVOCATE-END
 
 	if race.Enabled {
@@ -285,7 +289,8 @@ func (rw *RWMutex) TryLock() bool {
 
 	// AdvocateMutexReq records, that a routine tries to lock a mutex.
 	// advocateIndex is used for AdvocateMutexCom to find the pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexTryLock)
+	var advocateIndex int
+	advocateIndex, rw.id = runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationRWMutexTryLock)
 	// ADVOCATE-END
 
 	if race.Enabled {
@@ -356,7 +361,8 @@ func (rw *RWMutex) Unlock() {
 	// AdvocatePost records the successful unlocking of a mutex.
 	// For non rw mutexe, the unlock cannot fail. Therefore it is not
 	// strictly necessary to record the post for the unlocking of a mutex.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationMutexUnlock)
+	var advocateIndex int
+	advocateIndex, rw.id = runtime.AdvocateMutexReq(unsafe.Pointer(rw), rw.id, runtime.OperationMutexUnlock)
 	// ADVOCATE-END
 
 	if race.Enabled {

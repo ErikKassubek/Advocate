@@ -79,7 +79,8 @@ func (m *Mutex) Lock() {
 	// In this case, the Lock event in the trace is updated to include
 	// this information. advocateIndex is used for AdvocatePost to find the
 	// pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexLock)
+	var advocateIndex int
+	advocateIndex, m.id = runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexLock)
 
 	if chWait != nil {
 		runtime.AckReplay(key)
@@ -107,7 +108,8 @@ func (m *Mutex) TryLock() bool {
 
 	// AdvocateMutexReq records, that a routine tries to lock a mutex.
 	// advocateIndex is used for AdvocateMutexCom to find the pre event.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexTryLock)
+	var advocateIndex int
+	advocateIndex, m.id = runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexTryLock)
 
 	if chWait != nil {
 		runtime.AckReplay(key)
@@ -142,7 +144,8 @@ func (m *Mutex) Unlock() {
 	// rw mutex.
 	// Here the post is seperatly recorded to easy the implementation for
 	// the rw mutexes.
-	advocateIndex := runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexUnlock)
+	var advocateIndex int
+	advocateIndex, m.id = runtime.AdvocateMutexReq(unsafe.Pointer(m), m.id, runtime.OperationMutexUnlock)
 	// ADVOCATE-END
 
 	m.mu.Unlock()

@@ -70,7 +70,8 @@ func AdvocateChanReq(c *hchan, op Operation, isNil bool) int {
 		return -1
 	}
 
-	res := AdvocateTraceResource{id: c.id, addr: unsafe.Pointer(c)}
+	var res AdvocateTraceResource
+	res, c.id = newAdvocateTraceResource(c.id, unsafe.Pointer(c))
 
 	elem := AdvocateTraceChannel{
 		tReq:  timer,
@@ -105,7 +106,8 @@ func AdvocateChanClose(c *hchan) int {
 		return -1
 	}
 
-	res := AdvocateTraceResource{id: c.id, addr: unsafe.Pointer(c)}
+	var res AdvocateTraceResource
+	res, c.id = newAdvocateTraceResource(c.id, unsafe.Pointer(c))
 
 	elem := AdvocateTraceChannel{
 		tReq:   timer,

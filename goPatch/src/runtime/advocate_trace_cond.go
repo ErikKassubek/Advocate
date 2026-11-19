@@ -40,19 +40,19 @@ type AdvocateTraceCond struct {
  * Return:
  * 	index of the operation in the trace
  */
-func AdvocateCondReq(mem unsafe.Pointer, id uint64, op Operation) int {
+func AdvocateCondReq(mem unsafe.Pointer, id uint64, op Operation) (int, uint64) {
 	if AdvocateTracingDisabled {
-		return -1
+		return -1, id
 	}
 
 	timer := GetNextTimeStep()
 	_, file, line, _ := Caller(CallerSkipCond)
 
 	if AdvocateIgnore(file) {
-		return -1
+		return -1, id
 	}
 
-	res := AdvocateTraceResource{id: id, addr: mem}
+	res, id := newAdvocateTraceResource(id, mem)
 
 	elem := AdvocateTraceCond{
 		tReq: timer,
@@ -62,7 +62,7 @@ func AdvocateCondReq(mem unsafe.Pointer, id uint64, op Operation) int {
 		line: line,
 	}
 
-	return insertIntoTrace(elem)
+	return insertIntoTrace(elem), id
 }
 
 /*

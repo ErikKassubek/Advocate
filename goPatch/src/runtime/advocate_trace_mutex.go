@@ -47,9 +47,10 @@ var lastRWOpLock mutex
 //
 // Returns:
 //   - index of the operation in the trace
-func AdvocateMutexReq(mem unsafe.Pointer, id uint64, op Operation) int {
+//   - index of the mutex
+func AdvocateMutexReq(mem unsafe.Pointer, id uint64, op Operation) (int, uint64) {
 	if AdvocateTracingDisabled {
-		return -1
+		return -1, id
 	}
 
 	timer := GetNextTimeStep()
@@ -57,10 +58,10 @@ func AdvocateMutexReq(mem unsafe.Pointer, id uint64, op Operation) int {
 	_, file, line, _ := Caller(CallerSkipMutex)
 
 	if AdvocateIgnore(file) {
-		return -1
+		return -1, id
 	}
 
-	res := AdvocateTraceResource{id: id, addr: mem}
+	res, id := newAdvocateTraceResource(id, mem)
 
 	elem := AdvocateTraceMutex{
 		tReq: timer,
@@ -71,7 +72,7 @@ func AdvocateMutexReq(mem unsafe.Pointer, id uint64, op Operation) int {
 		line: line,
 	}
 
-	return insertIntoTrace(elem)
+	return insertIntoTrace(elem), id
 }
 
 // AdvocateMutexCom adds the end counter to an operation of the trace.

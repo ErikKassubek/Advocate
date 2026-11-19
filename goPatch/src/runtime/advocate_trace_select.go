@@ -81,7 +81,8 @@ func AdvocateSelectReq(cases *[]scase, nsends int, ncases int, block bool) int {
 				isNil: true,
 			}
 		} else {
-			res := AdvocateTraceResource{id: c.id, addr: unsafe.Pointer(c)}
+			var res AdvocateTraceResource
+			res, c.id = newAdvocateTraceResource(c.id, unsafe.Pointer(c))
 			caseElements[casi] = AdvocateTraceChannel{
 				tReq:  timer,
 				res:   res,
@@ -178,7 +179,8 @@ func AdvocateSelectReqOneNonDef(c *hchan, send bool) int {
 	var caseElem AdvocateTraceChannel
 
 	if c != nil {
-		res := AdvocateTraceResource{id: c.id, addr: unsafe.Pointer(c)}
+		var res AdvocateTraceResource
+		res, c.id = newAdvocateTraceResource(c.id, unsafe.Pointer(c))
 		caseElem = AdvocateTraceChannel{
 			tReq:  timer,
 			res:   res,

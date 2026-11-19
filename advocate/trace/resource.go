@@ -30,7 +30,7 @@ func NewResource(id int, alloc *ElementAlloc) Resource {
 	shortIDs[id] = minShortID
 	minShortID++
 
-	return Resource{id: id, shortID: minShortID, alloc: alloc}
+	return Resource{id: id, shortID: shortIDs[id], alloc: alloc}
 }
 
 func (this *Resource) Id() int {

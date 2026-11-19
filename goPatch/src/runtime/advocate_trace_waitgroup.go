@@ -48,9 +48,9 @@ type AdvocateTraceWaitGroup struct {
 //
 // Returns:
 //   - index of the operation in the trace
-func AdvocateWaitGroupAdd(mem unsafe.Pointer, id uint64, delta int, val int32) int {
+func AdvocateWaitGroupAdd(mem unsafe.Pointer, id uint64, delta int, val int32) (int, uint64) {
 	if AdvocateTracingDisabled {
-		return -1
+		return -1, id
 	}
 
 	timer := GetNextTimeStep()
@@ -64,10 +64,11 @@ func AdvocateWaitGroupAdd(mem unsafe.Pointer, id uint64, delta int, val int32) i
 	}
 
 	if AdvocateIgnore(file) {
-		return -1
+		return -1, id
 	}
 
-	res := AdvocateTraceResource{id: id, addr: mem}
+	var res AdvocateTraceResource
+	res, id = newAdvocateTraceResource(id, mem)
 
 	elem := AdvocateTraceWaitGroup{
 		tReq:  timer,
@@ -79,7 +80,7 @@ func AdvocateWaitGroupAdd(mem unsafe.Pointer, id uint64, delta int, val int32) i
 		line:  line,
 	}
 
-	return insertIntoTrace(elem)
+	return insertIntoTrace(elem), id
 }
 
 // AdvocateWaitGroupWaitReq adds a waitgroup wait to the trace
@@ -90,9 +91,10 @@ func AdvocateWaitGroupAdd(mem unsafe.Pointer, id uint64, delta int, val int32) i
 //
 // Returns:
 //   - index of the operation in the trace
-func AdvocateWaitGroupWaitReq(mem unsafe.Pointer, id uint64) int {
+//   - id of the wait group
+func AdvocateWaitGroupWaitReq(mem unsafe.Pointer, id uint64) (int, uint64) {
 	if AdvocateTracingDisabled {
-		return -1
+		return -1, id
 	}
 
 	timer := GetNextTimeStep()
@@ -100,10 +102,11 @@ func AdvocateWaitGroupWaitReq(mem unsafe.Pointer, id uint64) int {
 	_, file, line, _ := Caller(CallerSkipWaitGroupAddWait)
 
 	if AdvocateIgnore(file) {
-		return -1
+		return -1, id
 	}
 
-	res := AdvocateTraceResource{id: id, addr: mem}
+	var res AdvocateTraceResource
+	res, id = newAdvocateTraceResource(id, mem)
 
 	elem := AdvocateTraceWaitGroup{
 		tReq: timer,
@@ -113,7 +116,7 @@ func AdvocateWaitGroupWaitReq(mem unsafe.Pointer, id uint64) int {
 		line: line,
 	}
 
-	return insertIntoTrace(elem)
+	return insertIntoTrace(elem), id
 }
 
 // AdvocateWaitGroupWaitPost adds the end counter to an operation of the trace

@@ -39,9 +39,10 @@ type AdvocateTraceOnce struct {
 //
 // Returns:
 //   - int: index of the operation in the trace
-func AdvocateOnceReq(mem unsafe.Pointer, id uint64) int {
+//   - uint64: once id
+func AdvocateOnceReq(mem unsafe.Pointer, id uint64) (int, uint64) {
 	if AdvocateTracingDisabled {
-		return -1
+		return -1, id
 	}
 
 	timer := GetNextTimeStep()
@@ -49,10 +50,11 @@ func AdvocateOnceReq(mem unsafe.Pointer, id uint64) int {
 	_, file, line, _ := Caller(2)
 
 	if AdvocateIgnore(file) {
-		return -1
+		return -1, id
 	}
 
-	res := AdvocateTraceResource{id: id, addr: mem}
+	var res AdvocateTraceResource
+	res, id = newAdvocateTraceResource(id, mem)
 
 	elem := AdvocateTraceOnce{
 		tReq: timer,
@@ -61,7 +63,7 @@ func AdvocateOnceReq(mem unsafe.Pointer, id uint64) int {
 		line: line,
 	}
 
-	return insertIntoTrace(elem)
+	return insertIntoTrace(elem), id
 }
 
 // Add the end counter to an operation of the trace

@@ -98,7 +98,8 @@ func (c *Cond) Wait() {
 	}
 
 	//record
-	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondWait)
+	var advocateIndex int
+	advocateIndex, c.id = runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondWait)
 	defer runtime.AdvocateCondCom(advocateIndex)
 
 	if chWait != nil {
@@ -129,7 +130,8 @@ func (c *Cond) Signal() {
 	}
 
 	// recording
-	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondSignal)
+	var advocateIndex int
+	advocateIndex, c.id = runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondSignal)
 	defer runtime.AdvocateCondCom(advocateIndex)
 	if chWait != nil {
 		runtime.AckReplay(key)
@@ -155,7 +157,8 @@ func (c *Cond) Broadcast() {
 	}
 
 	//recording
-	advocateIndex := runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondBroadcast)
+	var advocateIndex int
+	advocateIndex, c.id = runtime.AdvocateCondReq(unsafe.Pointer(c), c.id, runtime.OperationCondBroadcast)
 	defer runtime.AdvocateCondCom(advocateIndex)
 
 	if chWait != nil {
