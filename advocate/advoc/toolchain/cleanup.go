@@ -36,7 +36,7 @@ func collect(progPath, packagePath, destination string, total bool, collectRepla
 		if files.IsOpen(*outFile) {
 			(*outFile).Close()
 			defer func() {
-				*outFile, _ = files.OpenOutput()
+				*outFile, _ = files.Open(filepath.Join(destination, paths.NameOutput))
 			}()
 		}
 	}
