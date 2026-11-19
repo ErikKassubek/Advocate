@@ -116,6 +116,15 @@ func Important(v ...any) {
 	}
 }
 
+// Important logs an important information to the terminal
+// Printed in yellow
+//
+// Parameter:
+//   - v ...any: the content of the log
+func WriteInput(v ...any) {
+	fmt.Print(Yellow, fmt.Sprint(v...), Reset)
+}
+
 // Importantf logs an important information to the terminal
 // Printed in yellow
 //

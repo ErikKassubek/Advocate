@@ -119,3 +119,7 @@ func experimentIndexing() error {
 	return nil
 
 }
+
+func modeInit() error {
+	return buildRuntime()
+}

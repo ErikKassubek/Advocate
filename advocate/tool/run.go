@@ -51,9 +51,11 @@ func Run() error {
 	settings.SetSettings()
 	paths.BuildPaths(flags.ModeMain)
 
-	err = CheckBin()
-	if err != nil {
-		return err
+	if flags.Mode != flags.ModeShow && flags.Mode != flags.ModeInit {
+		err = CheckBin()
+		if err != nil {
+			return err
+		}
 	}
 
 	timer.Start(timer.Total)
@@ -103,8 +105,9 @@ func Run() error {
 	case flags.ModeExperiments:
 		err = modeExperiments()
 	case flags.ModeShow:
-		err = modeShowTrace()
-		return nil
+		return modeShowTrace()
+	case flags.ModeInit:
+		return modeInit()
 		// case "static": // TODO: only for testing, when working move into analysis
 		// flags.Mode = consts.ModeReplay
 	// 	flags.DeleteTraces = false

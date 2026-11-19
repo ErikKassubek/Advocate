@@ -24,8 +24,8 @@ import (
 func CheckBin() error {
 	path := filepath.Join(paths.GoPatch, "bin", osinfo.GoExec)
 	if _, err := os.Stat(path); err != nil && os.IsNotExist(err) {
-		pathMake := filepath.Join(paths.GoPatch, "src")
-		return fmt.Errorf("Could not find %s. Run make.bash or make.bat in %s before running advocate.", path, pathMake)
+		log.Errorf("Could not find %s. Trying to build runtime...", path)
+		return buildRuntime()
 	}
 
 	return nil

@@ -18,6 +18,7 @@ const (
 	ModeExperiments = "experiments"
 	ModeShow        = "show"
 	ModeGui         = "gui"
+	ModeInit        = "init"
 )
 
 // Closures
