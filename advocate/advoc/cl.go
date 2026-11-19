@@ -12,7 +12,7 @@ package advoc
 import (
 	"advocate/fuzzing/f_base"
 	"advocate/utils/flags"
-	"advocate/utils/helper"
+	"advocate/utils/help"
 	"advocate/utils/log"
 	"flag"
 	"os"
@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	help bool
+	showHelp bool
 )
 
 // CommandLine reads and processes the command line arguments
@@ -28,8 +28,8 @@ var (
 // Returns:
 //   - bool: true if execution can continue, false if it should stop, e.g. because help was selected/shown
 func CommandLine() bool {
-	flag.BoolVar(&help, "h", false, "Print help")
-	flag.BoolVar(&help, "help", false, "Print help")
+	flag.BoolVar(&showHelp, "h", false, "Print help")
+	flag.BoolVar(&showHelp, "help", false, "Print help")
 
 	flag.StringVar(&flags.ProgPath, "path", "", "Path to the program folder, for main: path to main file, for test: path to test folder")
 	flag.StringVar(&flags.RootPath, "root", "", "Path to the root of the program folder. Must only be set if different from path")
@@ -115,16 +115,16 @@ func check() bool {
 	if len(os.Args) >= 2 && !strings.HasPrefix(os.Args[1], "-") {
 		flags.Mode = os.Args[1]
 		flag.CommandLine.Parse(os.Args[2:])
-		if help {
-			helper.PrintHelpMode(flags.Mode)
+		if showHelp {
+			help.PrintHelpMode(flags.Mode)
 			return false
 		}
 	} else {
-		if help {
-			helper.PrintHelp()
+		if showHelp {
+			help.PrintHelp()
 			return false
 		}
-		helper.PrintHelp()
+		help.PrintHelp()
 		return false
 	}
 

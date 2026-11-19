@@ -15,6 +15,7 @@ import (
 	"advocate/fuzzing/f_base"
 	"advocate/utils/command"
 	"advocate/utils/control"
+	"advocate/utils/files"
 	"advocate/utils/flags"
 	"advocate/utils/log"
 	"advocate/utils/paths"
@@ -175,7 +176,7 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 
 			// Move logs and results to the appropriate directory
 			total := fuzzing != -1
-			collect(paths.Prog, packagePath, paths.CurrentResult, total, true)
+			collect(paths.Prog, packagePath, paths.CurrentResult, total, true, nil)
 
 			if err != nil {
 				log.Error(err.Error())
@@ -407,7 +408,7 @@ func unitTestFullWorkflow(
 	testName, pkg, file string,
 	fuzzing int, fuzzingTrace string) (int, bool, error) {
 
-	outFile, err := os.OpenFile(paths.NameOutput, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	outFile, err := files.OpenOutput()
 	if err != nil {
 		return 0, false, fmt.Errorf("Failed to open log file: %v", err)
 	}
@@ -479,7 +480,7 @@ func unitTestFullWorkflow(
 	if runReplay {
 		a_base.Clear(false)
 
-		numberReplay, err = unitTestReplay(paths.Prog, pkg, file, testName, paths.NameOutput, runAnalysis, origStdout, origStderr)
+		numberReplay, err = unitTestReplay(paths.Prog, pkg, file, testName, paths.NameOutput, runAnalysis, origStdout, origStderr, &outFile)
 		if err != nil {
 			return 0, false, err
 		}
@@ -630,7 +631,7 @@ func unitTestAnalyzer(pkgPath, traceName string, fuzzing int, testFile, testName
 // Returns:
 //   - int: number of executed replays
 func unitTestReplay(dir, pkg, file,
-	testName, output string, fromAnalysis bool, osOut, osErr *os.File) (int, error) {
+	testName, output string, fromAnalysis bool, osOut, osErr *os.File, outFile **os.File) (int, error) {
 	timer.Start(timer.Replay)
 	defer timer.Stop(timer.Replay)
 
@@ -670,7 +671,7 @@ func unitTestReplay(dir, pkg, file,
 
 		buildFlags, _ := buildArgsUnit(file, testName, true, -1, traceNum, record)
 
-		collect(paths.Prog, pathPkg, paths.CurrentResult, false, false)
+		collect(paths.Prog, pathPkg, paths.CurrentResult, false, false, outFile)
 
 		os.Setenv("GOROOT", paths.GoPatch)
 

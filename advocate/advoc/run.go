@@ -16,7 +16,7 @@ import (
 	"advocate/utils/command"
 	"advocate/utils/control"
 	"advocate/utils/flags"
-	"advocate/utils/helper"
+	"advocate/utils/help"
 	"advocate/utils/log"
 	"advocate/utils/paths"
 	"advocate/utils/settings"
@@ -113,7 +113,7 @@ func Run() error {
 
 	default:
 		err = fmt.Errorf("Unknown mode %s", os.Args[1])
-		helper.PrintHelp()
+		help.PrintHelp()
 	}
 
 	if err != nil {

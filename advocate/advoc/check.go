@@ -12,6 +12,7 @@ package advoc
 import (
 	"advocate/utils/flags"
 	"advocate/utils/log"
+	"advocate/utils/osinfo"
 	"advocate/utils/paths"
 	"bufio"
 	"fmt"
@@ -21,7 +22,7 @@ import (
 )
 
 func CheckBin() error {
-	path := filepath.Join(paths.GoPatch, "bin", "go")
+	path := filepath.Join(paths.GoPatch, "bin", osinfo.GoExec)
 	if _, err := os.Stat(path); err != nil && os.IsNotExist(err) {
 		pathMake := filepath.Join(paths.GoPatch, "src")
 		return fmt.Errorf("Could not find %s. Run make.bash or make.bat in %s before running advocate.", path, pathMake)

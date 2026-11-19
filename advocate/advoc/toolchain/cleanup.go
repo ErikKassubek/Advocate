@@ -10,6 +10,7 @@
 package toolchain
 
 import (
+	"advocate/utils/files"
 	"advocate/utils/flags"
 	"advocate/utils/log"
 	"advocate/utils/paths"
@@ -30,7 +31,16 @@ var LastMovedTraceDest = ""
 //   - destination string: path to the destination directory
 //   - total bool: merge all already created logs into total log, for fuzzing
 //   - collectReplayFuzzing bool: collect the constraint files
-func collect(progPath, packagePath, destination string, total bool, collectReplayFuzzing bool) {
+func collect(progPath, packagePath, destination string, total bool, collectReplayFuzzing bool, outFile **os.File) {
+	if outFile != nil && *outFile != nil {
+		if files.IsOpen(*outFile) {
+			(*outFile).Close()
+			defer func() {
+				*outFile, _ = files.OpenOutput()
+			}()
+		}
+	}
+
 	filesToMove := []string{
 		paths.NameTrace,
 		paths.NameResultMachine,

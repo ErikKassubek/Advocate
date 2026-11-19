@@ -7,7 +7,7 @@
 //
 // License: BSD-3-Clause
 
-package helper
+package help
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ var (
 	prog2 = newFlagVal("prog", "", "", "Name of the program")
 	exec1 = newFlagVal("exec", "", "-main", "Name of the executable or test. If set for test, only this test will be executed, otherwise all tests will be run")
 	exec2 = newFlagVal("exec", "", "", "Name of the executable or test")
-	trace = newFlagVal("trace", "", "", "Path to the trace folder to replay")
+	trace = newFlagVal("trace", "", "", "Path to the trace folder to replay or show")
 
 	// recording
 	recordPlus = newFlagVal("recordPlus", "false", "", "Record functions and flow controll operations.")
@@ -168,6 +168,8 @@ func PrintHelpMode(mode string) {
 		printHelpRecord()
 	case "replay":
 		printHelpReplay()
+	case "show":
+		printHelpShow()
 	case "gui":
 		printHelpGui()
 	default:
@@ -181,17 +183,19 @@ func PrintHelpMode(mode string) {
 func printHeader() {
 	fmt.Println("Usage: ./advocate [mode] [args]")
 	fmt.Println("")
-	fmt.Println("Advocate contains five different mode. These are:")
+	fmt.Println("Advocate contains the following mode. These are:")
 	fmt.Println("\trecord")
 	fmt.Println("\treplay")
 	fmt.Println("\tanalysis")
 	fmt.Println("\tfuzzing")
+	fmt.Println("\tshow")
 	fmt.Println("\tgui")
 	fmt.Println("")
 	fmt.Println("With 'record', the execution of a program or test can be recorded into a trace.")
 	fmt.Println("With 'replay', a program or test can be forced to follow the execution schedule specified in a trace.")
-	fmt.Println("With 'analyzer', a program or test can be recorded and then analyzed to find potential bugs. For some bugs, a rewrite and replay mechanism has been implemented to confirm the potential bugs.")
+	fmt.Println("With 'analysis', a program or test can be recorded and then analyzed to find potential bugs. For some bugs, a rewrite and replay mechanism has been implemented to confirm the potential bugs.")
 	fmt.Println("With 'fuzzing', different fuzzing approaches can be run on a program or test.")
+	fmt.Println("With 'show' you can show a recorded trace.")
 	fmt.Println("With 'gui', a graphical mode is started. Requires fyne dependencies. Only available if '-tags gui' is set during build (go build -tags gui).")
 	fmt.Print("\n\n")
 	fmt.Println("For more information about the mode and there functionality, see the doc folder in the repository.")
@@ -242,6 +246,16 @@ func printHelpRun() {
 
 	// panic
 	fmt.Println(alwaysPanic.toString(false))
+}
+
+func printHelpShow() {
+	fmt.Println("Mode: show")
+	fmt.Println("")
+
+	printFlagHeader()
+
+	// help
+	fmt.Println(trace.toString(true))
 }
 
 // print help for record mode

@@ -15,6 +15,7 @@ import (
 	"advocate/experiments"
 	"advocate/fuzzing/f_base"
 	"advocate/utils/command"
+	"advocate/utils/files"
 	"advocate/utils/flags"
 	"advocate/utils/log"
 	"advocate/utils/paths"
@@ -71,7 +72,7 @@ func runWorkflowMain(
 		removeLogs(paths.ProgDir)
 	}
 
-	outFile, err := os.OpenFile(paths.NameOutput, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	outFile, err := files.OpenOutput()
 	if err != nil {
 		return 0, 0, fmt.Errorf("Failed to open log file: %v", err)
 	}
@@ -169,7 +170,7 @@ func runWorkflowMain(
 			}
 		}
 
-		collect(paths.ProgDir, paths.ProgDir, paths.Result, total, false)
+		collect(paths.ProgDir, paths.ProgDir, paths.Result, total, false, &outFile)
 
 		timer.Start(timer.Replay)
 		for _, trace := range rewrittenTraces {
@@ -213,11 +214,14 @@ func runWorkflowMain(
 		timer.Stop(timer.Replay)
 	}
 
+	// required to move on windows
+	outFile.Close()
+
 	if flags.DeleteTraces && !flags.CreateStatistics {
 		RemoveTraces(paths.Prog)
 	}
 
-	collect(paths.ProgDir, paths.ProgDir, paths.Result, total, true)
+	collect(paths.ProgDir, paths.ProgDir, paths.Result, total, true, &outFile)
 
 	// Generate Bug Reports
 	var numberResults int
