@@ -7,7 +7,7 @@
 //
 // License: BSD-3-Clause
 
-package advoc
+package tool
 
 import (
 	"advocate/fuzzing/f_base"

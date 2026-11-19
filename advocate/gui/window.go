@@ -12,7 +12,9 @@
 package gui
 
 import (
+	"advocate/tool/toolchain"
 	"advocate/utils/flags"
+	"advocate/utils/types"
 	"image/color"
 	"os"
 
@@ -45,13 +47,16 @@ type window struct {
 	modeSelect     *componentModeSelect
 	projSelector   *componentPathSelector
 	mainTestSelect *componentMainTestSelect
-	runButton      *componentButton
-	cancelButton   *componentButton
-	traceButton    *componentButton
-	output         *componentOutput
-	progressBar    *componentProgress
-	settingsButton *componentButton
-	settings       *componentSetting
+	traceSelect    *componentPathSelector
+
+	runButton        *componentButton
+	cancelButton     *componentButton
+	traceButton      *componentButton
+	output           *componentOutput
+	progressBarOne   *componentProgress
+	progressBarTotal *componentProgress
+	settingsButton   *componentButton
+	settings         *componentSetting
 
 	worker *worker
 }
@@ -71,6 +76,9 @@ func (this *window) create() {
 	this.handleClose()
 
 	this.createComponents()
+
+	this.startProgressComm()
+
 }
 
 func (this *window) build() {
@@ -82,9 +90,12 @@ func (this *window) build() {
 			widget.NewSeparator(),
 			this.mainTestSelect.Container,
 			widget.NewSeparator(),
-			this.settingsButton.Container,
+			this.traceSelect.Container,
+			widget.NewSeparator(),
+			widget.NewSeparator(),
 		),
 		container.NewVBox(
+			this.settingsButton.Container,
 			this.runButton.Container,
 			this.cancelButton.Container,
 			this.traceButton.Container,
@@ -95,7 +106,10 @@ func (this *window) build() {
 
 	this.right = container.NewBorder(
 		nil,
-		this.progressBar.Container,
+		container.NewVBox(
+			this.progressBarOne.Container,
+			this.progressBarTotal.Container,
+		),
 		nil,
 		nil,
 		container.NewScroll(this.output.Container),
@@ -112,11 +126,14 @@ func (this *window) createComponents() {
 
 	this.projSelector = createPathSelector("Project", &flags.ProgPath, getAllTestNames, win.window)
 	this.mainTestSelect = creatMainTestSelector()
+	this.traceSelect = createPathSelector("Trace", &flags.TracePath, getAllTestNames, win.window)
 
 	this.runButton = createRunButton()
 	this.cancelButton = createCancelButton()
 	this.traceButton = createTraceButton()
-	this.progressBar = createProgressBar()
+
+	this.progressBarOne = createProgressBar()
+	this.progressBarTotal = createProgressBar()
 
 	this.settingsButton = createSettingsButton()
 	this.settings = createSettings()
@@ -124,6 +141,8 @@ func (this *window) createComponents() {
 	this.modeSelect = createModeSelect() // must be created last
 
 	this.cancelButton.disable()
+
+	this.traceSelect.disable()
 
 	this.projSelector.setPath(flags.ProgPath)
 }
@@ -140,4 +159,18 @@ func (this *window) handleClose() {
 		this.window.Close()
 		os.Exit(0)
 	})
+}
+
+func (this *window) startProgressComm() {
+	go func() {
+		toolchain.GuiCom = make(chan types.Pair[string, float64], 100)
+		for val := range toolchain.GuiCom {
+			switch val.X {
+			case "progressTotal":
+				this.progressBarTotal.setValue(val.Y)
+			case "progressOne":
+				this.progressBarOne.setValue(val.Y)
+			}
+		}
+	}()
 }

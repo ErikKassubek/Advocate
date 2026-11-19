@@ -101,6 +101,8 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 			continue
 		}
 
+		guiSetProgressTotal(currentFile, totalFiles)
+
 		if flags.ExecName == "" {
 			log.Progressf("Progress: %d/%d", currentFile, totalFiles)
 			log.Progressf("Processing file: %s", file)
@@ -113,7 +115,10 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 			continue
 		}
 
-		for _, testFunc := range testFunctions {
+		percPerTest := calcPerc(1, len(testFunctions))
+		for j, testFunc := range testFunctions {
+			guiSetProgressTotalPerc(calcPerc(currentFile, totalFiles) * (1 + float64(j)*percPerTest))
+
 			if flags.ExecName != "" && flags.ExecName != testFunc {
 				continue
 			}
@@ -212,6 +217,8 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 
 		currentFile++
 	}
+
+	guiSetProgressTotal(1, 1)
 
 	if flags.ExecName != "" && !ranTest {
 		return 0, 0, fmt.Errorf("could not find test function %s", flags.ExecName)

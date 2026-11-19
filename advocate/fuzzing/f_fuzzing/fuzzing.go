@@ -10,13 +10,13 @@
 package f_fuzzing
 
 import (
-	"advocate/advoc/toolchain"
 	"advocate/analysis/a_base"
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_constraints"
 	"advocate/fuzzing/modes/f_gfuzz"
 	"advocate/fuzzing/modes/f_gopie"
 	"advocate/fuzzing/modes/f_guided"
+	"advocate/tool/toolchain"
 	"advocate/utils/control"
 	"advocate/utils/flags"
 	"advocate/utils/log"

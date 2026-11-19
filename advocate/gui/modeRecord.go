@@ -30,6 +30,8 @@ func createSettingsRecord(comp *settingComponents) *settingsRecord {
 }
 
 func (this *window) setRecord() {
+	this.traceSelect.disable()
+
 	objects := []fyne.CanvasObject{
 		widget.NewSeparator(),
 		this.settings.components.label.Container,

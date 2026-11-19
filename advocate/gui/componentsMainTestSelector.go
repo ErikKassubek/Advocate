@@ -60,7 +60,11 @@ func creatMainTestSelector() *componentMainTestSelect {
 				flags.ModeMain = false
 				csmt.showAllOne = true
 				csmt.showTestName = (csmt.allOneSel.Selected == oneTest)
-				flags.ExecName = csmt.testNameSel.Selected
+				if csmt.showTestName {
+					flags.ExecName = csmt.testNameSel.Selected
+				} else {
+					flags.ExecName = ""
+				}
 
 			}
 
@@ -78,7 +82,6 @@ func creatMainTestSelector() *componentMainTestSelect {
 				flags.ExecName = ""
 				csmt.showTestName = false
 			} else {
-
 				csmt.showTestName = true
 			}
 
@@ -100,6 +103,8 @@ func creatMainTestSelector() *componentMainTestSelect {
 	csmt.mainTestSel.SetSelected(mainFunc)
 	csmt.allOneSel.SetSelected(allTests)
 
+	flags.ExecName = ""
+
 	if len(csmt.testNameSel.Options) == 0 {
 		csmt.testNameSel.PlaceHolder = "No tests found"
 	}
@@ -112,14 +117,20 @@ func (this *componentMainTestSelect) creatMainTestSelectorContainer() {
 	objects := []fyne.CanvasObject{
 		this.label.Container,
 		this.mainTestSel,
+		this.allOneSel,
+		this.testNameSel,
 	}
 
 	if this.showAllOne {
-		objects = append(objects, this.allOneSel)
+		this.allOneSel.Enable()
+	} else {
+		this.allOneSel.Disable()
 	}
 
 	if this.showTestName {
-		objects = append(objects, this.testNameSel)
+		this.testNameSel.Enable()
+	} else {
+		this.testNameSel.Disable()
 	}
 
 	this.Container.Objects = objects
@@ -141,10 +152,7 @@ func (this *componentMainTestSelect) isReplay(r bool) {
 	this.replay = r
 	if r {
 		this.allOneSel.SetSelected(oneTest)
-		this.allOneSel.Hide()
-	} else {
-		this.allOneSel.SetSelected(allTests)
-		this.allOneSel.Show()
+		this.showTestName = false
 	}
 }
 

@@ -12,7 +12,7 @@
 package main
 
 import (
-	"advocate/advoc"
+	"advocate/tool"
 	"advocate/utils/flags"
 	"advocate/utils/log"
 )
@@ -24,13 +24,13 @@ var (
 // Main function
 func main() {
 
-	cont := advoc.CommandLine()
+	cont := tool.CommandLine()
 	if !cont {
 		log.Error("Failed CL Check. Cancel...")
 		return
 	}
 
-	advoc.Initialize()
+	tool.Initialize()
 
 	flags.ContainsGui = false
 
@@ -39,7 +39,7 @@ func main() {
 		return
 	}
 
-	err := advoc.Run()
+	err := tool.Run()
 	if err != nil {
 		log.Error(err)
 	}

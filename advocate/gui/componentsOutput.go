@@ -115,7 +115,7 @@ func (this *componentOutput) write(lv log.InfoLevel, text string) {
 }
 
 func (this *window) write(lv log.InfoLevel, msg ...any) {
-	this.output.write(lv, fmt.Sprint(msg))
+	this.output.write(lv, fmt.Sprint(msg...))
 }
 
 func (this *window) writef(lv log.InfoLevel, format string, a ...any) {
@@ -124,7 +124,7 @@ func (this *window) writef(lv log.InfoLevel, format string, a ...any) {
 }
 
 func (this *window) WriteGui(msg ...any) {
-	this.output.write(log.GuiLv, fmt.Sprint(msg))
+	this.output.write(log.GuiLv, fmt.Sprint(msg...))
 }
 
 func (this *window) writeGuif(format string, a ...any) {
@@ -133,7 +133,7 @@ func (this *window) writeGuif(format string, a ...any) {
 }
 
 func (this *window) writeErr(msg ...any) {
-	this.output.write(log.ErrorLv, fmt.Sprint(msg))
+	this.output.write(log.ErrorLv, fmt.Sprint(msg...))
 }
 
 func (this *window) writeErrf(format string, a ...any) {

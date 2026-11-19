@@ -12,8 +12,8 @@
 package gui
 
 import (
-	"advocate/advoc/toolchain"
 	"advocate/analysis/a_base"
+	"advocate/tool/toolchain"
 	"advocate/trace"
 	"advocate/utils/io"
 	"advocate/utils/types"

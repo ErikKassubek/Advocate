@@ -17,6 +17,8 @@ import (
 )
 
 func (this *window) setStatic() {
+	this.traceSelect.disable()
+
 	var content []fyne.CanvasObject
 	content = []fyne.CanvasObject{
 		widget.NewSeparator(),

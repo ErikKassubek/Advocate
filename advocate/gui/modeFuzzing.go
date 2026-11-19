@@ -17,6 +17,8 @@ import (
 )
 
 func (this *window) setFuzzing() {
+	this.traceSelect.disable()
+
 	var content []fyne.CanvasObject
 	content = []fyne.CanvasObject{
 		widget.NewSeparator(),

@@ -7,12 +7,12 @@
 //
 // License: BSD-3-Clause
 
-package advoc
+package tool
 
 import (
-	"advocate/advoc/toolchain"
 	"advocate/experiments"
 	"advocate/fuzzing/f_fuzzing"
+	"advocate/tool/toolchain"
 	"advocate/utils/flags"
 	"advocate/utils/io"
 	"advocate/utils/log"

@@ -12,8 +12,8 @@
 package main
 
 import (
-	"advocate/advoc"
 	"advocate/gui"
+	"advocate/tool"
 	"advocate/utils/flags"
 	"advocate/utils/log"
 )
@@ -25,12 +25,12 @@ var (
 // Main function
 func main() {
 
-	cont := advoc.CommandLine()
+	cont := tool.CommandLine()
 	if !cont {
 		return
 	}
 
-	advoc.Initialize()
+	tool.Initialize()
 
 	flags.ContainsGui = true
 
@@ -39,7 +39,7 @@ func main() {
 		log.Info("Start Gui.")
 		gui.Run()
 	} else {
-		err := advoc.Run()
+		err := tool.Run()
 		if err != nil {
 			log.Error(err)
 		}

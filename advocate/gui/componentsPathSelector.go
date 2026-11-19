@@ -95,8 +95,10 @@ func (this *componentPathSelector) setPath(path string) {
 
 func (this *componentPathSelector) disable() {
 	this.openPathSelButton.Disable()
+	this.selectedPathLabel.SetText("")
 }
 
 func (this *componentPathSelector) enable() {
 	this.openPathSelButton.Enable()
+	this.selectedPathLabel.SetText(this.path)
 }

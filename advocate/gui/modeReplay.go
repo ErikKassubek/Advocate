@@ -17,9 +17,10 @@ import (
 )
 
 func (this *window) setReplay() {
+	this.traceSelect.enable()
+
 	objects := []fyne.CanvasObject{
 		widget.NewSeparator(),
-		this.settings.components.tracePath.Container,
 		widget.NewSeparator(),
 		this.settings.components.label.Container,
 		this.settings.components.timeout.Container,

@@ -7,7 +7,7 @@
 //
 // License: BSD-3-Clause
 
-package advoc
+package tool
 
 import (
 	"advocate/analysis/a_base"

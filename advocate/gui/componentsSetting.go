@@ -91,8 +91,6 @@ type settingComponents struct {
 	cancelTestIfBugFound *checkInput
 
 	scen *textInput
-
-	tracePath *componentPathSelector
 }
 
 const (
@@ -135,7 +133,6 @@ func createSettingComponents() *settingComponents {
 				}
 				flags.ParseAnalysisCases()
 			}, true, true),
-		tracePath: createPathSelector("Trace", &flags.TracePath, getAllTestNames, win.window),
 	}
 
 	return &to
@@ -174,8 +171,6 @@ func (this *settingComponents) disable() {
 
 	this.scen.disable()
 
-	this.tracePath.disable()
-
 	win.modeSelect.disable()
 	win.projSelector.disable()
 }
@@ -212,6 +207,4 @@ func (this *settingComponents) enable() {
 	this.cancelTestIfBugFound.enable()
 
 	this.scen.enable()
-
-	this.tracePath.enable()
 }

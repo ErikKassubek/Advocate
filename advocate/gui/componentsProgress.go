@@ -40,11 +40,17 @@ func createProgressBar() *componentProgress {
 }
 
 func (this *componentProgress) setValue(v float64) {
-	this.progressWidget.SetValue(0)
+	fyne.Do(func() {
+		this.progressWidget.SetValue(v)
+	})
 }
 
-func (this *componentProgress) setProgress(current int, outOf int) {
-	prog := float64(current) / float64(outOf)
+func (this *componentProgress) setProgress(done int, total int) {
+	if total == 0 {
+		return
+	}
+
+	prog := float64(done) / float64(total)
 
 	prog = math.Clamp(prog, 0, 1)
 
