@@ -19,9 +19,11 @@ goPatch/bin/
 goPatch/pkg/tool
 advocate/advocate
 
+# helper
+helper
 
 # vscode
 .vscode/
 
-#obsidian
+# obsidian
 .obsidian

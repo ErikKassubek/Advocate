@@ -1951,22 +1951,24 @@ func banner() {
 			xprintf("*** You need to bind %s before /bin.\n", gorootBin)
 		}
 	} else {
+		// ADVOCATE-START
 		// Check that GOROOT/bin appears in $PATH.
-		pathsep := ":"
-		if gohostos == "windows" {
-			pathsep = ";"
-		}
-		path := os.Getenv("PATH")
-		if p, ok := os.LookupEnv("DIST_UNMODIFIED_PATH"); ok {
-			// Scripts that modify $PATH and then run dist should also provide
-			// dist with an unmodified copy of $PATH via $DIST_UNMODIFIED_PATH.
-			// Use it here when determining if the user still needs to update
-			// their $PATH. See go.dev/issue/42563.
-			path = p
-		}
-		if !strings.Contains(pathsep+path+pathsep, pathsep+gorootBin+pathsep) {
-			xprintf("*** You need to add %s to your PATH.\n", gorootBin)
-		}
+		// pathsep := ":"
+		// if gohostos == "windows" {
+		// 	pathsep = ";"
+		// }
+		// path := os.Getenv("PATH")
+		// if p, ok := os.LookupEnv("DIST_UNMODIFIED_PATH"); ok {
+		// Scripts that modify $PATH and then run dist should also provide
+		// dist with an unmodified copy of $PATH via $DIST_UNMODIFIED_PATH.
+		// Use it here when determining if the user still needs to update
+		// their $PATH. See go.dev/issue/42563.
+		// path = p
+		// }
+		// if !strings.Contains(pathsep+path+pathsep, pathsep+gorootBin+pathsep) {
+		// 	xprintf("*** You need to add %s to your PATH.\n", gorootBin)
+		// }
+		// ADVOCATE-END
 	}
 }
 

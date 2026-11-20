@@ -39,6 +39,8 @@ func buildRuntime() error {
 		}
 	}
 
+	log.Important("Building Runtime...")
+
 	pathSrc := filepath.Join(paths.GoPatch, "src")
 	if _, err := os.Stat(pathSrc); err != nil && os.IsNotExist(err) {
 		log.Errorf("Could not find goPatch at: %s", pathSrc)
@@ -61,5 +63,13 @@ func buildRuntime() error {
 		return err
 	}
 
-	return command.RunCommand(nil, nil, command.NoTimeout, pathName)
+	err := command.RunCommand(nil, nil, command.NoTimeout, pathName)
+	if err != nil {
+		log.Errorf("Failed to build runtime.")
+		return err
+	}
+
+	log.Important("Runtime build successfully.")
+
+	return nil
 }

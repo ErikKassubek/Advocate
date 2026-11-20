@@ -103,5 +103,6 @@ Modifications in files are marked with
 - [src/cmd/go/internal/load/pkg.go](../goPatch/src/cmd/go/internal/load/pkg.go)
 - [src/cmd/link/internal/loader/loader.go](../goPatch/src/cmd/link/internal/loader/loader.go)
 - [src/cmd/compile/internal/types2/resolver.go](../goPatch/src/cmd/compile/internal/types2/resolver.go)
-- [src/internal/sync/mutex.go](../goPatch/src/internal/sync/mutex.go)
 - [src/cmd/go/internal/version/version.go](../goPatch/src/cmd/go/internal/version/version.go)
+- [src/cmd/dist/build.go](../goPatch/src/cmd/dist/build.go)
+- [src/internal/sync/mutex.go](../goPatch/src/internal/sync/mutex.go)
