@@ -11,6 +11,7 @@ package tool
 
 import (
 	"advocate/utils/command"
+	"advocate/utils/flags"
 	"advocate/utils/log"
 	"advocate/utils/osinfo"
 	"advocate/utils/paths"
@@ -23,22 +24,24 @@ import (
 func buildRuntime() error {
 	pathGo := filepath.Join(paths.GoPatch, "bin", osinfo.GoExec)
 
-	if _, err := os.Stat(pathGo); err == nil {
-		var rebuild string
+	if flags.Mode != flags.ModeGui {
+		if _, err := os.Stat(pathGo); err == nil {
+			var rebuild string
 
-		for rebuild != "Y" {
-			log.WriteInput("Runtime already exists. Rebuild? (Y/N): ")
-			fmt.Scan(&rebuild)
+			for rebuild != "Y" {
+				log.WriteInput("Runtime already exists. Rebuild? (Y/N): ")
+				fmt.Scan(&rebuild)
 
-			rebuild = strings.ToUpper(rebuild)
+				rebuild = strings.ToUpper(rebuild)
 
-			switch rebuild {
-			case "Y":
-			case "N":
-				log.Info("Skip Build. Exit...")
-				return nil
-			default:
-				log.Important("Invalid input.")
+				switch rebuild {
+				case "Y":
+				case "N":
+					log.Info("Skip Build. Exit...")
+					return nil
+				default:
+					log.Important("Invalid input.")
+				}
 			}
 		}
 	}

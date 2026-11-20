@@ -22,7 +22,7 @@ import (
 	"fyne.io/fyne/v2/container"
 )
 
-type traceViewer struct {
+type windowTrace struct {
 	window fyne.Window
 
 	pathSelector *componentPathSelector
@@ -33,8 +33,8 @@ type traceViewer struct {
 	trace *trace.Trace
 }
 
-func (this *window) openTraceViewer() {
-	tv := traceViewer{}
+func (this *window) openWindowTrace() {
+	tv := windowTrace{}
 
 	tv.window = this.app.NewWindow("Trace")
 
@@ -64,7 +64,7 @@ func (this *window) openTraceViewer() {
 	tv.window.Show()
 }
 
-func (this *traceViewer) updateTrace(dir string) {
+func (this *windowTrace) updateTrace(dir string) {
 	_, routs, _, err := this.readTrace(dir)
 	if err != nil {
 		win.writeErr("Could not read trace: ", err)
@@ -139,15 +139,15 @@ func (this *traceViewer) updateTrace(dir string) {
 	this.rebuild()
 }
 
-func (this *traceViewer) AddEntry(rout, row int, text string, request, commit bool) {
+func (this *windowTrace) AddEntry(rout, row int, text string, request, commit bool) {
 	noBox := false
 	this.traceViewer.AddCell(rout, row, text, noBox, request, commit)
 }
 
-func (this *traceViewer) rebuild() {
+func (this *windowTrace) rebuild() {
 	this.traceViewer.rebuild()
 }
 
-func (this *traceViewer) readTrace(dir string) (trace *trace.Trace, cols int, rows int, err error) {
+func (this *windowTrace) readTrace(dir string) (trace *trace.Trace, cols int, rows int, err error) {
 	return io.CreateTraceFromFiles(dir, true)
 }

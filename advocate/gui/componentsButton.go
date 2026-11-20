@@ -46,7 +46,11 @@ func createCancelButton() *componentButton {
 }
 
 func createTraceButton() *componentButton {
-	return createButton("Trace Viewer", win.openTraceViewer)
+	return createButton("Trace Viewer", win.openWindowTrace)
+}
+
+func createResultsButton() *componentButton {
+	return createButton("Results", win.openWindowResults)
 }
 
 func createSettingsButton() *componentButton {

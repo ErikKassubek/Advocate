@@ -449,7 +449,7 @@ func writeFile(path string, index string, description map[bugKeys]string,
 		}
 	}
 
-	folderName := path + consts.Sep + "bugs"
+	folderName := filepath.Join(path, "bugs")
 	if _, err := os.Stat(folderName); os.IsNotExist(err) {
 		err := os.Mkdir(folderName, 0755)
 		if err != nil {
@@ -462,7 +462,7 @@ func writeFile(path string, index string, description map[bugKeys]string,
 	if fuzzing == -1 {
 		fileName = filepath.Join(folderName, strings.ToLower(description[crit])) + "_" + index + ".md"
 	} else {
-		fileName = filepath.Join(folderName, fmt.Sprintf("%s_%s_%d_%s.md", strings.ToLower(description[crit]), strings.ToLower(description[crit]), fuzzing, index))
+		fileName = filepath.Join(folderName, fmt.Sprintf("bug_%s_%d_%s.md", strings.ToLower(description[crit]), fuzzing, index))
 	}
 	file, err := os.Create(fileName)
 	if err != nil {

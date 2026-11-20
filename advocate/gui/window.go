@@ -52,6 +52,7 @@ type window struct {
 	runButton        *componentButton
 	cancelButton     *componentButton
 	traceButton      *componentButton
+	resultsButton    *componentButton
 	output           *componentOutput
 	progressBarOne   *componentProgress
 	progressBarTotal *componentProgress
@@ -96,9 +97,10 @@ func (this *window) build() {
 		),
 		container.NewVBox(
 			this.settingsButton.Container,
+			this.traceButton.Container,
+			this.resultsButton.Container,
 			this.runButton.Container,
 			this.cancelButton.Container,
-			this.traceButton.Container,
 		),
 		nil,
 		nil,
@@ -131,6 +133,7 @@ func (this *window) createComponents() {
 	this.runButton = createRunButton()
 	this.cancelButton = createCancelButton()
 	this.traceButton = createTraceButton()
+	this.resultsButton = createResultsButton()
 
 	this.progressBarOne = createProgressBar()
 	this.progressBarTotal = createProgressBar()

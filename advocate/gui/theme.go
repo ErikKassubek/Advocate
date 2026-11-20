@@ -24,7 +24,7 @@ type guiTheme struct {
 
 func (t guiTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
 	if name == theme.ColorNameSeparator {
-		return color.RGBA{R: 128, G: 128, B: 128, A: 255}
+		return color.Transparent
 	}
 
 	return t.Theme.Color(name, variant)
