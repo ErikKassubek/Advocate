@@ -35,7 +35,7 @@ func buildRuntime() error {
 			switch rebuild {
 			case "Y":
 			case "N":
-				log.Important("Skip Build. Exit...")
+				log.Info("Skip Build. Exit...")
 				return nil
 			default:
 				log.Important("Invalid input.")
@@ -43,7 +43,7 @@ func buildRuntime() error {
 		}
 	}
 
-	log.Important("Building Runtime...")
+	log.Info("Building Runtime...")
 
 	pathSrc := filepath.Join(paths.GoPatch, "src")
 	if _, err := os.Stat(pathSrc); err != nil && os.IsNotExist(err) {
@@ -99,7 +99,7 @@ func buildRuntime() error {
 		return err
 	}
 
-	log.Important("Runtime build successfully.")
+	log.Info("Runtime build successfully.")
 
 	return nil
 }
