@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func buildRuntime() error {
@@ -28,6 +29,9 @@ func buildRuntime() error {
 		for rebuild != "Y" {
 			log.WriteInput("Runtime already exists. Rebuild? (Y/N): ")
 			fmt.Scan(&rebuild)
+
+			rebuild = strings.ToUpper(rebuild)
+
 			switch rebuild {
 			case "Y":
 			case "N":
@@ -63,7 +67,11 @@ func buildRuntime() error {
 		return err
 	}
 
-	err := command.RunCommand(nil, nil, command.NoTimeout, pathName)
+	// required for windows
+	cwd, _ := os.Getwd()
+	execPath := filepath.Join(cwd, pathName)
+
+	err := command.RunCommand(nil, nil, command.NoTimeout, execPath)
 	if err != nil {
 		log.Errorf("Failed to build runtime.")
 		return err
