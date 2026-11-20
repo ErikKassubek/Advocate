@@ -18,31 +18,7 @@ git config core.autocrlf false
 
 Before Advocate can be used, it must first be build.
 
-There are two elements that need to be build.
-
-### Runtime
-
-To run the recording and replay for Go, a modified version of the Go runtime
-has been provided. It can be found in the [go-path](../goPatch/) folder.
-
-Before it can be used, it needs to be build. To do this, move into
-[go-path/src](../goPatch/src/) directory and run the
-
-```shell
-./src/make.bash
-```
-
-or 
-
-```shell
-./src/make.bat
-```
-
-script. This will create a go executable in the `bin` directory.
-
-### Advocate
-
-Additionally, the advocate program needs to be build. This is a standard Go
+First, the advocate program needs to be build. This is a standard Go
 program. To build it, move into the [advocate](../advocate/) directory
 and build it with the standard
 
@@ -53,7 +29,7 @@ go build
 command. This will create an `advocate` executable, which will be used to
 run all recordings, replays, analysis and fuzzing.
 
-Advocate provides an optional gui. For this, it uses [fyne](https://fyne.io/). To build advocate with gui, the required dependencies for fyne must be installed. 
+<!-- Advocate provides an optional gui. For this, it uses [fyne](https://fyne.io/). To build advocate with gui, the required dependencies for fyne must be installed. 
 See [here](https://docs.fyne.io/started/quick/) for details.
 
 If you want to build advocate with gui, you have to enable it by building the program with 
@@ -62,15 +38,28 @@ If you want to build advocate with gui, you have to enable it by building the pr
 go build -tags gui
 ```
 
-In this case fyne is not required.
+In this case fyne is not required. -->
 
+To build the modified go runtime, located in [goPatch](../goPatch/), execute the `advocate` executable using
+
+```
+./advocate init
+```
+
+To ensure that the build process was successfull, check that the output contains the line 
+
+```
+go version go1.27.0 Advocate linux/amd64
+```
+
+or the equivalent for your OS.
 
 ## Usage
 
 All modes of advocates are started and controlled using the [advocate](../advocate/)
 program. This program implements multiple modes:
 
-- [Gui](#mode-gui)
+<!-- - [Gui](#mode-gui) -->
 - [Recording](#mode-recording)
 - [Replay](#mode-replay)
 - [Analysis](#mode-analysis)
@@ -84,12 +73,12 @@ To get an overview over the possible modes and arguments, you can run
 ./advocate -help
 ```
 
-### Mode: Gui
+<!-- ### Mode: Gui
 
 This modes starts a graphical interface allowing you to run all other modes.
 No other flags are required. 
 
-This is not available, if advocate was build with `-tags nogui`.
+This is only available, if advocate was build with `-tags nog`. -->
 
 ### Mode: Recording
 

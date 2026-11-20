@@ -21,9 +21,9 @@ import (
 )
 
 func buildRuntime() error {
-	path := filepath.Join(paths.GoPatch, "bin", osinfo.GoExec)
+	pathGo := filepath.Join(paths.GoPatch, "bin", osinfo.GoExec)
 
-	if _, err := os.Stat(path); err == nil {
+	if _, err := os.Stat(pathGo); err == nil {
 		var rebuild string
 
 		for rebuild != "Y" {
@@ -51,14 +51,14 @@ func buildRuntime() error {
 		return err
 	}
 
-	pathName := "./make.bash"
+	makeName := "./make.bash"
 	if osinfo.GetOs() == osinfo.Windows {
-		pathName = "make.bat"
+		makeName = "make.bat"
 	}
 
-	pathMake := filepath.Join(pathSrc, pathName)
+	pathMake := filepath.Join(pathSrc, makeName)
 	if _, err := os.Stat(pathMake); err != nil && os.IsNotExist(err) {
-		log.Errorf("Could not find goPatch %s at: %s", pathName, pathMake)
+		log.Errorf("Could not find goPatch %s at: %s", makeName, pathMake)
 		return err
 	}
 
@@ -69,9 +69,31 @@ func buildRuntime() error {
 
 	// required for windows
 	cwd, _ := os.Getwd()
-	execPath := filepath.Join(cwd, pathName)
+	makePath := filepath.Join(cwd, makeName)
 
-	err := command.RunCommand(nil, nil, command.NoTimeout, execPath)
+	err := command.RunCommand(nil, nil, command.NoTimeout, makePath)
+	if err != nil {
+		log.Errorf("Failed to build runtime.")
+		return err
+	}
+
+	// check that it worked
+	pathBin := filepath.Join(paths.GoPatch, "bin")
+	if _, err := os.Stat(pathGo); err != nil && os.IsNotExist(err) {
+		log.Errorf("Could not find goPatch/bin/go at: %s", pathGo)
+		log.Errorf("Runtime build failed.")
+		return err
+	}
+
+	if err := os.Chdir(pathBin); err != nil {
+		log.Errorf("Failed to change directory: %v", err)
+		return err
+	}
+
+	// required for windows
+	cwd, _ = os.Getwd()
+	pathBin = filepath.Join(cwd, makeName)
+	err = command.RunCommand(nil, nil, command.NoTimeout, pathGo, "version")
 	if err != nil {
 		log.Errorf("Failed to build runtime.")
 		return err
