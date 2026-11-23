@@ -13,12 +13,22 @@ import (
 	"runtime"
 )
 
+// os dependent
+var (
+	Os     = GetOs()
+	GoExec = map[bool]string{
+		true:  "go.exe",
+		false: "go",
+	}[Os == Windows]
+)
+
 type OsName string
 
 const (
 	Linux   OsName = "linux"
 	Windows OsName = "windows"
 	MacOs   OsName = "darwin"
+	FreeBSD OsName = "freebsd"
 	Other   OsName = ""
 )
 
@@ -30,6 +40,8 @@ func GetOs() OsName {
 		return Windows
 	case "darwin":
 		return MacOs
+	case "freebsd":
+		return FreeBSD
 	default:
 		return Other
 	}

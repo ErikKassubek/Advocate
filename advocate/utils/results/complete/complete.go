@@ -10,8 +10,8 @@
 package complete
 
 import (
-	"advocate/utils/consts"
 	"advocate/utils/log"
+	"advocate/utils/paths"
 	"advocate/utils/results/explanation"
 	"advocate/utils/types"
 	"fmt"
@@ -96,7 +96,7 @@ func areAllProgElemInTrace(progElems map[string][]int, traceElems map[string][]i
 func printNotExecutedToFiles(elements map[string][]int, selects map[string]map[int][]int,
 	path string) error {
 
-	path = fmt.Sprintf("%s%sAdvocateNotExecuted", path, consts.Sep)
+	path = fmt.Sprintf("%s%sAdvocateNotExecuted", path, paths.Seperator)
 
 	// create a folder to store results
 	err := os.MkdirAll(path, os.ModePerm)
@@ -104,8 +104,8 @@ func printNotExecutedToFiles(elements map[string][]int, selects map[string]map[i
 		return err
 	}
 
-	pathOperations := fmt.Sprintf("%s%sAdvocateNotExecutedOperations.txt", path, consts.Sep)
-	pathSelects := fmt.Sprintf("%s%sAdvocateNotExecutedSelectCases.txt", path, consts.Sep)
+	pathOperations := fmt.Sprintf("%s%sAdvocateNotExecutedOperations.txt", path, paths.Seperator)
+	pathSelects := fmt.Sprintf("%s%sAdvocateNotExecutedSelectCases.txt", path, paths.Seperator)
 
 	notExecutedOperationsFile, err := os.Create(pathOperations)
 	if err != nil {
@@ -119,7 +119,7 @@ func printNotExecutedToFiles(elements map[string][]int, selects map[string]map[i
 	}
 	defer notExecutedSelectFile.Close()
 
-	pathOperationsFolder := fmt.Sprintf("%s%sOperations", path, consts.Sep)
+	pathOperationsFolder := fmt.Sprintf("%s%sOperations", path, paths.Seperator)
 	err = os.MkdirAll(pathOperationsFolder, os.ModePerm)
 	if err != nil {
 		return err
@@ -128,9 +128,9 @@ func printNotExecutedToFiles(elements map[string][]int, selects map[string]map[i
 	// write elements that were not executed
 	if len(elements) > 0 {
 		for file, lines := range elements {
-			fileName := strings.ReplaceAll(file, consts.Sep, "_")
+			fileName := strings.ReplaceAll(file, paths.Seperator, "_")
 			fileName = strings.TrimPrefix(fileName, "_")
-			pathFile := fmt.Sprintf("%s%s%s.md", pathOperationsFolder, consts.Sep, fileName)
+			pathFile := fmt.Sprintf("%s%s%s.md", pathOperationsFolder, paths.Seperator, fileName)
 			fileFile, err := os.Create(pathFile)
 			if err != nil {
 				return err
@@ -168,7 +168,7 @@ func printNotExecutedToFiles(elements map[string][]int, selects map[string]map[i
 	// write select cases that were not selected
 	if len(selects) > 0 {
 		for file, lines := range selects {
-			fileName := strings.ReplaceAll(file, consts.Sep, "_")
+			fileName := strings.ReplaceAll(file, paths.Seperator, "_")
 			fileName = strings.TrimPrefix(fileName, "_")
 			pathFile := fmt.Sprintf("%s/%s.md", pathOperationsFolder, fileName)
 			// if file does not exist, create it otherwise append to it

@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Erik Kassubek
 //
-// File: traceViewer.go
-// Brief: Create trace viewer
+// File: windowTrace.go
+// Brief: Create trace window
 //
 // Author: Erik Kassubek
 //

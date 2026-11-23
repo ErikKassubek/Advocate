@@ -10,7 +10,6 @@
 package paths
 
 import (
-	"advocate/utils/consts"
 	"advocate/utils/flags"
 	"advocate/utils/log"
 	"errors"
@@ -21,6 +20,8 @@ import (
 	"runtime"
 	"strings"
 )
+
+var Seperator = string(filepath.Separator)
 
 // names
 const (
@@ -81,13 +82,32 @@ func BuildPaths(main bool) {
 	pathsResult(main)
 }
 
+func projectRoot() (string, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	for {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir, nil
+		}
+
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return "", fmt.Errorf("go.mod not found")
+		}
+		dir = parent
+	}
+}
+
 func pathsAdvocate() {
-	execPath, err := os.Executable()
+	advocatePath, err := projectRoot()
 	if err != nil {
 		log.Error(err.Error())
 	}
 
-	Advocate = CleanPathHome(filepath.Dir(filepath.Dir(execPath)))
+	Advocate = CleanPathHome(filepath.Dir(advocatePath))
 	GoPatch = filepath.Join(Advocate, "goPatch")
 	Go = filepath.Join(Advocate, "goPatch", "bin", "go")
 
@@ -221,8 +241,8 @@ func CheckPath(path string) (string, error) {
 // Returns:
 //   - string: name for the program
 func GetProgName(path string) string {
-	path = strings.ReplaceAll(path, "~"+consts.Sep, "")
-	path = strings.ReplaceAll(path, "."+consts.Sep, "")
+	path = strings.ReplaceAll(path, "~"+Seperator, "")
+	path = strings.ReplaceAll(path, "."+Seperator, "")
 	path = strings.ReplaceAll(path, ".", "-")
-	return strings.ReplaceAll(path, consts.Sep, "-")
+	return strings.ReplaceAll(path, Seperator, "-")
 }

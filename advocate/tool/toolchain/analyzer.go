@@ -17,11 +17,11 @@ import (
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_constraints"
 	"advocate/fuzzing/modes/f_active"
-	"advocate/utils/consts"
 	"advocate/utils/control"
 	"advocate/utils/flags"
 	"advocate/utils/io"
 	"advocate/utils/log"
+	"advocate/utils/paths"
 	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/timer"
@@ -143,7 +143,7 @@ func runAnalyzer(pathTrace string,
 		for resultIndex := 0; resultIndex < numberOfResults; resultIndex++ {
 			f_base.NumberWrittenRewrites++
 			needed, err := rewriteTrace(outMachine,
-				newTrace+"_"+strconv.Itoa(f_base.NumberWrittenRewrites)+consts.Sep, resultIndex, &rewrittenBugs)
+				newTrace+"_"+strconv.Itoa(f_base.NumberWrittenRewrites)+paths.Seperator, resultIndex, &rewrittenBugs)
 
 			if !needed {
 				notNeededRewrites++

@@ -514,7 +514,7 @@ func unitTestRun(pkg, file, testName string, origStdout, origStderr *os.File) er
 	os.Unsetenv("GOROOT")
 
 	log.Info("Run T0")
-	packagePath := paths.MakePathLocal(pkg)
+	packagePath := paths.AddLocalPathIndicator(pkg)
 	var err error
 	if flags.Timeout != -1 {
 		timeoutRecString := fmt.Sprintf("%ds", flags.Timeout)
@@ -560,7 +560,7 @@ func unitTestRecord(pkg, file, testName string,
 
 	// command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "version")
 
-	pkgPath := paths.MakePathLocal(pkg)
+	pkgPath := paths.AddLocalPathIndicator(pkg)
 	err = command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "test", buildFlags, "-v", "-count=1", "-run="+testName, pkgPath)
 	if err != nil {
 		if isFuzzing {
@@ -683,7 +683,7 @@ func unitTestReplay(dir, pkg, file,
 		os.Setenv("GOROOT", paths.GoPatch)
 
 		log.Infof("Run Program for Replay %d/%d", i+1, len(rewrittenConstraints))
-		pkgPath := paths.MakePathLocal(pkg)
+		pkgPath := paths.AddLocalPathIndicator(pkg)
 		command.RunCommand(osOut, osErr, command.NoTimeout, paths.Go, "test", buildFlags, "-v", "-count=1", "-run="+testName, pkgPath)
 		log.Infof("Finish Replay %d/%d", i+1, len(rewrittenConstraints))
 

@@ -10,7 +10,6 @@
 package paths
 
 import (
-	"advocate/utils/consts"
 	"advocate/utils/log"
 	"os"
 	"path/filepath"
@@ -18,19 +17,31 @@ import (
 )
 
 func Join(pre, post bool, elem ...string) string {
+
+	if len(elem) == 0 {
+		if pre || post {
+			return Seperator
+		}
+		return ""
+	}
+
 	res := filepath.Join(elem...)
 	if pre {
-		res = consts.Sep + res
+		if !strings.HasPrefix(res, Seperator) {
+			res = Seperator + res
+		}
 	}
 	if post {
-		res = res + consts.Sep
+		if !strings.HasSuffix(res, Seperator) {
+			res = res + Seperator
+		}
 	}
 	return res
 }
 
 func ToLocal(path string) string {
-	path = strings.ReplaceAll(path, "/", consts.Sep)
-	path = strings.ReplaceAll(path, "\\", consts.Sep)
+	path = strings.ReplaceAll(path, "/", Seperator)
+	path = strings.ReplaceAll(path, "\\", Seperator)
 	return path
 }
 
@@ -38,14 +49,14 @@ func ToUnix(path string) string {
 	return strings.ReplaceAll(path, "\\", "/")
 }
 
-// MakePathLocal transforms a path into a local path by adding a ./ at the beginning it has non
+// AddLocalPathIndicator transforms a path into a local path by adding a ./ at the beginning it has non
 //
 // Parameter:
 //   - path string: path
 //
 // Returns:
 //   - string: path starting with ./
-func MakePathLocal(path string) string {
+func AddLocalPathIndicator(path string) string {
 	pathSep := string(os.PathSeparator)
 
 	// ./path

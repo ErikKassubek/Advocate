@@ -10,7 +10,6 @@
 package stats
 
 import (
-	"advocate/utils/consts"
 	"advocate/utils/flags"
 	"advocate/utils/log"
 	"advocate/utils/paths"
@@ -75,7 +74,7 @@ func CreateStatsTotal(pathFolder string) error {
 			return nil
 		}
 
-		if !strings.Contains(path, consts.Sep+"bugs"+consts.Sep) {
+		if !strings.Contains(path, paths.Seperator+"bugs"+paths.Seperator) {
 			return nil
 		}
 

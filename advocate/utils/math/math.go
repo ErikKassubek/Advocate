@@ -15,8 +15,20 @@ type NumberType interface {
 	~int | ~int64 | ~float32 | ~float64
 }
 
+// If low <= high:
+//
+//	low if v is less than low,
+//	or high if high is less than v,
+//	otherwise v.
+//
+// Else:
+//
+//	v
 func Clamp[T NumberType](v, low, high T) T {
-	return min(max(v, low), high)
+	if low > high {
+		return v
+	}
+	return max(min(v, high), low)
 }
 
 func ToNum[T NumberType](s string) T {
@@ -26,28 +38,28 @@ func ToNum[T NumberType](s string) T {
 	case int:
 		v, err := strconv.Atoi(s)
 		if err != nil {
-			return T(-1)
+			return T(0)
 		}
 		return T(v)
 
 	case int64:
 		v, err := strconv.ParseInt(s, 10, 64)
 		if err != nil {
-			return T(-1)
+			return T(0)
 		}
 		return T(v)
 
 	case float32:
 		v, err := strconv.ParseFloat(s, 32)
 		if err != nil {
-			return T(-1)
+			return T(0)
 		}
 		return T(v)
 
 	case float64:
 		v, err := strconv.ParseFloat(s, 64)
 		if err != nil {
-			return T(-1)
+			return T(0)
 		}
 		return T(v)
 	}

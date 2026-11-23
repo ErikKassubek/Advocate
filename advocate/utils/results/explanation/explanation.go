@@ -442,8 +442,8 @@ func writeFile(path string, index string, description map[bugKeys]string,
 	// }
 
 	// if in path, the folder "bugs" does not exist, create it
-	if _, err := os.Stat(path + consts.Sep + "bugs"); os.IsNotExist(err) {
-		err := os.Mkdir(path+consts.Sep+"bugs", 0755)
+	if _, err := os.Stat(path + paths.Seperator + "bugs"); os.IsNotExist(err) {
+		err := os.Mkdir(path+paths.Seperator+"bugs", 0755)
 		if err != nil {
 			return err
 		}

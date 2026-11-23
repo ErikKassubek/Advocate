@@ -108,7 +108,7 @@ func runWorkflowMain(
 			// run the program
 			log.Info("Execute Program")
 			timer.Start(timer.Run)
-			execPath := paths.MakePathLocal(flags.ExecName)
+			execPath := paths.AddLocalPathIndicator(flags.ExecName)
 			if err := command.RunCommand(origStdout, origStderr, command.NoTimeout, execPath); err != nil {
 				log.Error("Error in Executing Program: ", err.Error())
 			}
@@ -130,7 +130,7 @@ func runWorkflowMain(
 		// run the recording
 		log.Info("Run program for execution")
 		timer.Start(timer.Recording)
-		execPath := paths.MakePathLocal(flags.ExecName)
+		execPath := paths.AddLocalPathIndicator(flags.ExecName)
 		command.RunCommand(origStdout, origStderr, command.NoTimeout, execPath)
 
 		timer.Stop(timer.Recording)
@@ -199,7 +199,7 @@ func runWorkflowMain(
 
 			// run the program
 			log.Info("Run program for replay")
-			execPath := paths.MakePathLocal(flags.ExecName)
+			execPath := paths.AddLocalPathIndicator(flags.ExecName)
 			command.RunCommand(origStdout, origStderr, command.NoTimeout, execPath)
 
 			analyzerOutput := filepath.Join(paths.ProgDir, paths.NameTrace)

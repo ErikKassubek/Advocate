@@ -1,3 +1,14 @@
+// Copyright (c) 2026 Erik Kassubek
+//
+// File: windowResult.go
+// Brief: Create results window
+//
+// Author: Erik Kassubek
+//
+// License: BSD-3-Clause
+
+//go:build gui
+
 package gui
 
 import (

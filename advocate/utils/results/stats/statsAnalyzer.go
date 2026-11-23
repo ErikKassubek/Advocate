@@ -187,7 +187,7 @@ func processBugFile(filePath string, foundBugs map[string]processedBug,
 			bug.bugType = bugType
 		} else if strings.HasPrefix(line, "-> ") { // get paths
 			bug.paths = append(bug.paths, strings.TrimPrefix(line, "-> "))
-		} else if strings.Contains(line, "The analyzer found a way to resolve the leak") {
+		} else if strings.Contains(line, consts.TheAnalyzerFoundAWayToResolveTheLeak) {
 			bug.replayWritten = true
 		} else if strings.Contains(line, consts.TheAnalyzerHasTriedToRewriteTheTraceInSuchAWay) {
 			bug.replayWritten = true
