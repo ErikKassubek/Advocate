@@ -1,6 +1,8 @@
 package s_ssa
 
 import (
+	"advocate/trace"
+
 	"golang.org/x/tools/go/ssa"
 )
 
@@ -21,6 +23,8 @@ type Instruction interface {
 	HasWG() bool
 
 	Class() InstClass
+
+	CanUnblockSimple(elem trace.Element) bool
 
 	setVariable(name string, global bool)
 	setTerm(term string, global bool)

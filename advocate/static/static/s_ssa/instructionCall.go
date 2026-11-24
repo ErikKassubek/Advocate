@@ -10,6 +10,9 @@
 package s_ssa
 
 import (
+	"advocate/trace"
+	"strings"
+
 	"golang.org/x/tools/go/ssa"
 )
 
@@ -69,4 +72,37 @@ func (this *InstructionCall) setRelevant(data *Data) {
 
 	this.relevant = true
 	this.inTrace = true
+}
+
+func (this *InstructionCall) CanUnblockSimple(elem trace.Element) bool {
+	switch elem := elem.(type) {
+	case (*trace.ElementChannel):
+		if !this.HasChannel() {
+			return false
+		}
+		return strings.HasPrefix(this.term, "close(")
+	case (*trace.ElementMutex):
+		if !this.HasMutex() {
+			return false
+		}
+		if elem.Type(true) == trace.MutexLock {
+			return strings.HasPrefix(this.term, "(*sync.Mutex).Unlock(") || strings.HasPrefix(this.term, "(*sync.RWMutex).Unlock(")
+		}
+		if elem.Type(true) == trace.MutexRLock {
+			return strings.HasPrefix(this.term, "(*sync.RWMutex).RUnlock(")
+		}
+
+	case (*trace.ElementCond):
+		if !this.HasCond() {
+			return false
+		}
+		return strings.HasPrefix(this.term, "(*sync.Cond).Signal(") || strings.HasPrefix(this.term, "(*sync.Cond).Broadcast(")
+	case (*trace.ElementWait):
+		if !this.HasWG() {
+			return false
+		}
+		return strings.HasPrefix(this.term, "(*sync.WaitGroup).Done(")
+	}
+
+	return false
 }

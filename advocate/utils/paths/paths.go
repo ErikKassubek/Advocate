@@ -77,7 +77,6 @@ var (
 )
 
 func BuildPaths(main bool) {
-	pathsAdvocate()
 	pathsProg()
 	pathsResult(main)
 }
@@ -101,7 +100,7 @@ func projectRoot() (string, error) {
 	}
 }
 
-func pathsAdvocate() {
+func PathsAdvocate() {
 	advocatePath, err := projectRoot()
 	if err != nil {
 		log.Error(err.Error())

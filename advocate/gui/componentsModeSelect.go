@@ -12,6 +12,7 @@
 package gui
 
 import (
+	"advocate/tool"
 	"advocate/utils/flags"
 	"go/ast"
 	"go/parser"
@@ -39,7 +40,7 @@ const (
 	replay   = "Replay"
 	analysis = "Analysis"
 	fuzzing  = "Fuzzing"
-	// static   = "Static"
+	static   = "Static"
 )
 
 func createModeSelect() *componentModeSelect {
@@ -51,7 +52,7 @@ func createModeSelect() *componentModeSelect {
 			replay,
 			analysis,
 			fuzzing,
-			// static,
+			static,
 		},
 		func(value string) {
 			flags.Mode = strings.ToLower(value)
@@ -73,8 +74,8 @@ func createModeSelect() *componentModeSelect {
 				win.setReplay()
 			case fuzzing:
 				win.setFuzzing()
-				// case static:
-				// 	win.setStatic()
+			case static:
+				win.setStatic()
 			}
 
 		},
@@ -98,6 +99,12 @@ func (this *componentModeSelect) disable() {
 
 func (this *componentModeSelect) enable() {
 	this.modeSelectWidget.Enable()
+}
+
+func projSelect(path string) {
+	win.WriteGui("Set Project: ", path)
+	getAllTestNames(path)
+	tool.CheckProg()
 }
 
 func getAllTestNames(path string) {

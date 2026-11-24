@@ -134,7 +134,7 @@ func check() bool {
 	if !checkClosure() {
 		return false
 	}
-	if flags.Mode != "show" {
+	if flags.Mode != flags.ModeShow && flags.Mode != flags.ModeGui {
 		CheckProg()
 	}
 
@@ -163,6 +163,8 @@ func checkMode() bool {
 		flags.Mode = flags.ModeGui
 	case "init":
 		flags.Mode = flags.ModeInit
+	case "static":
+		flags.Mode = flags.ModeStatic
 	default:
 		log.Error("Unknown mode: ", flags.Mode)
 		log.ErrorInfo("Possible Values: ")

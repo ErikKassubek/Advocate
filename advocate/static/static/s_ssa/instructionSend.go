@@ -10,6 +10,8 @@
 package s_ssa
 
 import (
+	"advocate/trace"
+
 	"golang.org/x/tools/go/ssa"
 )
 
@@ -28,4 +30,19 @@ func (this *InstructionSend) Instruction() *ssa.Send {
 func (this *InstructionSend) setRelevant(_ *Data) {
 	this.relevant = true
 	this.inTrace = true
+}
+
+// TODO: check that send and receive have the same type
+// TODO: check if select has correct direction
+func (this *InstructionSend) CanUnblockSimple(elem trace.Element) bool {
+	switch elem := elem.(type) {
+	case *trace.ElementChannel:
+		if elem.Type(true) == trace.ChannelRecv {
+			return true
+		}
+	case *trace.ElementSelect:
+		return true
+	}
+
+	return false
 }

@@ -13,6 +13,7 @@ import (
 	"advocate/analysis/a_base"
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_fuzzing"
+	"advocate/static/s_blocking"
 	"advocate/utils/command"
 	"advocate/utils/control"
 	"advocate/utils/flags"
@@ -50,13 +51,6 @@ func Run() error {
 
 	settings.SetSettings()
 	paths.BuildPaths(flags.ModeMain)
-
-	if flags.Mode != flags.ModeShow && flags.Mode != flags.ModeInit {
-		err = CheckBin()
-		if err != nil {
-			return err
-		}
-	}
 
 	timer.Start(timer.Total)
 	defer timer.Stop(timer.Total)
@@ -108,11 +102,10 @@ func Run() error {
 		return modeShowTrace()
 	case flags.ModeInit:
 		return modeInit()
-		// case "static": // TODO: only for testing, when working move into analysis
-		// flags.Mode = consts.ModeReplay
-	// 	flags.DeleteTraces = false
-	// 	err = modeToolchain(modeMainTest, record, analysis, !replay)
-	// 	err = s_blocking.BuildStaticBlockingAnalysis()
+	case flags.ModeStatic: // TODO: only for testing, when working move into analysis
+		flags.DeleteTraces = false
+		err = modeToolchain(record, analysis, !replay)
+		err = s_blocking.BuildStaticBlockingAnalysis()
 
 	default:
 		err = fmt.Errorf("Unknown mode %s", os.Args[1])
@@ -149,7 +142,18 @@ func Run() error {
 	return nil
 }
 
-func Initialize() {
+func Initialize() error {
 	progPathDir := paths.GetDirectory(flags.ProgPath)
 	timer.Init(progPathDir)
+
+	paths.PathsAdvocate()
+
+	if flags.Mode != flags.ModeShow && flags.Mode != flags.ModeInit {
+		err := CheckBin()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -30,7 +30,11 @@ func main() {
 		return
 	}
 
-	tool.Initialize()
+	err := tool.Initialize()
+	if err != nil {
+		log.Error(err)
+		return
+	}
 
 	flags.ContainsGui = false
 
@@ -39,7 +43,7 @@ func main() {
 		return
 	}
 
-	err := tool.Run()
+	err = tool.Run()
 	if err != nil {
 		log.Error(err)
 	}

@@ -63,7 +63,7 @@ type window struct {
 }
 
 func (this *window) create() {
-	this.app = app.New()
+	this.app = app.NewWithID("advocate")
 	this.window = this.app.NewWindow("Advocate")
 
 	// self.w.Resize(fyne.NewSize(800, 500))
@@ -126,7 +126,7 @@ func (this *window) build() {
 func (this *window) createComponents() {
 	this.output = createOutput()
 
-	this.projSelector = createPathSelector("Project", &flags.ProgPath, getAllTestNames, win.window)
+	this.projSelector = createPathSelector("Project", &flags.ProgPath, projSelect, win.window)
 	this.mainTestSelect = creatMainTestSelector()
 	this.traceSelect = createPathSelector("Trace", &flags.TracePath, getAllTestNames, win.window)
 

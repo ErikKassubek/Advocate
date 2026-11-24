@@ -28,7 +28,8 @@ func BuildStaticBlockingAnalysis() (err error) {
 	data.Ssa().PrintAnalysis()
 	// data.Ssa().PrintSsa(true)
 
-	isBlockingBug()
+	// isBlockingBug()
+	isBlockingSimple()
 
 	// tr := a_base.MainTrace.AsIterator()
 	// for elem := tr.Next(); elem != nil; elem = tr.Next() {
@@ -70,6 +71,30 @@ func isBlockingBug() {
 
 		for ub := range unbl {
 			log.Resultf(true, true, "", "Found possible partner for: %s", ub)
+		}
+	}
+}
+
+// TODO: add break and label back in
+func isBlockingSimple() {
+	blocking.blocked, blocking.blockedResources = getBlockedResources()
+
+	for b := range blocking.blocked {
+		found := false
+		// here:
+		for _, f := range data.Ssa().Funcs() {
+			for _, block := range f.Blocks() {
+				for _, inst := range block.Instrs() {
+					if inst.CanUnblockSimple(b) {
+						found = true
+						// break here
+					}
+				}
+			}
+		}
+
+		if !found {
+			log.Resultf(true, true, "", "Found blocking bug after static: %s", b)
 		}
 	}
 }

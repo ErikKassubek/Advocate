@@ -28,7 +28,7 @@ func TestPathsAdvocate(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	root := filepath.Dir(filepath.Dir(filepath.Dir(filepath.Dir(filename))))
 
-	pathsAdvocate()
+	PathsAdvocate()
 
 	tests := []struct {
 		name     string
