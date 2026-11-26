@@ -12,9 +12,17 @@ package s_blocking
 import (
 	"advocate/analysis/a_base"
 	"advocate/static/static"
+	"advocate/trace"
 	"advocate/utils/flags"
 	"advocate/utils/log"
+	"advocate/utils/results/buginfo"
+	"advocate/utils/results/results"
 )
+
+// Check if static data has already been build
+func StaticBuild() bool {
+	return data != nil
+}
 
 // init to static blocking analysis
 func BuildStaticBlockingAnalysis() (err error) {
@@ -28,9 +36,6 @@ func BuildStaticBlockingAnalysis() (err error) {
 	// data.Ssa().PrintAnalysis()
 	// data.Ssa().PrintSsa(true)
 
-	// isBlockingBug()
-	isBlockingSimple()
-
 	// tr := a_base.MainTrace.AsIterator()
 	// for elem := tr.Next(); elem != nil; elem = tr.Next() {
 	// 	f, instr := data.Ssa().TraceToSSA(elem)
@@ -42,8 +47,33 @@ func BuildStaticBlockingAnalysis() (err error) {
 	return nil
 }
 
-func isBlockingBug() {
-	blocking.blocked, blocking.blockedResources = getBlockedResources()
+// Check for blocking bugs based on static
+// Blocking bugs are directly reported
+//
+// Parameter:
+//   - routs map[int]bool: only consider blocked operations in the given routines
+//
+// Returns:
+//   - []int: routines that are blocking bugs
+//   - []int: routines that are leaks
+func CheckBlocking(routs map[int]bool) ([]int, []int) {
+	log.Info("Check Blocking with Static")
+	log.Debug2("Check Blocking Static")
+	// return isBlockingBug(routs)
+	return isBlockingSimple(routs)
+}
+
+// Check for blocking bugs based on static
+// Blocking bugs are directly reported
+//
+// Parameter:
+//   - routs map[int]bool: only consider blocked operations in the given routines
+//
+// Returns:
+//   - []int: routines that are blocking bugs
+//   - []int: routines that are leaks
+func isBlockingBug(routs map[int]bool) ([]int, []int) {
+	blocking.blocked, blocking.blockedResources = getBlockedResources(routs)
 
 	for _, res := range blocking.blockedResources {
 		f, s := data.Ssa().TraceToSSA(res.Alloc())
@@ -59,6 +89,9 @@ func isBlockingBug() {
 
 	determineResouceToSSAAtTermination()
 
+	bug := make([]int, 0)
+	leak := make([]int, 0)
+
 	for rout, path := range blocking.pathPerRoutine {
 		if ok, _ := a_base.MainTrace.IsRoutTerm(rout); ok {
 			continue
@@ -66,35 +99,65 @@ func isBlockingBug() {
 		unbl := MayUnblock(rout, path.Peek().last())
 
 		for ub := range blocking.blocked {
-			log.Resultf(true, true, "", "Found blocking bug after static: %s", ub)
+			arg1 := results.TraceElementResult{
+				RoutineID:  ub.RoutineID(),
+				ResourceID: ub.ResourceID(),
+				TRequest:   ub.T(trace.Request),
+				ObjType:    ub.Type(true),
+				File:       ub.File(),
+				Line:       ub.Line(),
+			}
+
+			bug = append(bug, ub.RoutineID())
+			results.Result(results.CRITICAL, buginfo.SBlocking,
+				[]results.ResultElem{arg1}, []results.ResultElem{})
 		}
 
 		for ub := range unbl {
+			leak = append(leak, ub.RoutineID())
 			log.Resultf(true, true, "", "Found possible partner for: %s", ub)
 		}
 	}
+
+	return bug, leak
 }
 
-// TODO: add break and label back in
-func isBlockingSimple() {
-	blocking.blocked, blocking.blockedResources = getBlockedResources()
+// Check for blocking bugs based on static
+// Blocking bugs are directly reported
+//
+// Parameter:
+//   - routs map[int]bool: only consider blocked operations in the given routines
+//
+// Returns:
+//   - []int: routines that are blocking bugs
+//   - []int: routines that are leaks
+func isBlockingSimple(routs map[int]bool) ([]int, []int) {
+	blocking.blocked, blocking.blockedResources = getBlockedResources(routs)
+
+	bug := make([]int, 0)
+	leak := make([]int, 0)
 
 	for b := range blocking.blocked {
 		found := false
-		// here:
+	here:
 		for _, f := range data.Ssa().Funcs() {
 			for _, block := range f.Blocks() {
 				for _, inst := range block.Instrs() {
 					if inst.CanUnblockSimple(b) {
 						found = true
-						// break here
+						break here
 					}
 				}
 			}
 		}
 
 		if !found {
+			bug = append(bug, b.RoutineID())
 			log.Resultf(true, true, "", "Found blocking bug after static: %s", b)
+		} else {
+			leak = append(leak, b.RoutineID())
 		}
 	}
+
+	return bug, leak
 }

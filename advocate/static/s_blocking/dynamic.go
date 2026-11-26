@@ -18,15 +18,24 @@ import (
 
 // getBlockedResources returns the resources of which at least one routine is blocking
 //
+// Parameter:
+//   - routs map[int]bool: consider only blocking elements in the given routine
+//
 // Returns:
 //   - map[int]trace.Resource: blocked object id to blocked resource.
 //   - []trace.Resource: list of blocked resources
-func getBlockedResources() (map[trace.Element][]trace.Resource, map[int]trace.Resource) {
+func getBlockedResources(routs map[int]bool) (map[trace.Element][]trace.Resource, map[int]trace.Resource) {
 	res := make(map[trace.Element][]trace.Resource)
 
 	blockedRes := make(map[int]trace.Resource)
 
 	for _, e := range a_base.MainTrace.GetBlocked() {
+		if routs != nil {
+			if _, ok := routs[e.RoutineID()]; !ok {
+				continue
+			}
+		}
+
 		// TODO: handle select
 		resources := a_base.MainTrace.GetResources(e)
 

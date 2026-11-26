@@ -41,7 +41,7 @@ func (this *window) setRecord() {
 		twoCheck(this.settings.components.measureTime.Container, this.settings.components.createStatistics.Container),
 		twoCheck(this.settings.components.checkForNotExecuted.Container, this.settings.components.ignoreAtomics.Container),
 		twoCheck(this.settings.components.deleteTrace.Container, this.settings.components.cont.Container),
-		twoCheck(this.settings.components.noWarning.Container, this.settings.components.noInfo.Container),
+		twoCheck(this.settings.components.noWarning.Container, this.settings.components.verbose.Container),
 		twoCheck(this.settings.components.noProgress.Container, this.settings.components.output.Container),
 		twoCheck(this.settings.components.alwaysPanic.Container, this.settings.components.noMemorySup.Container),
 	}

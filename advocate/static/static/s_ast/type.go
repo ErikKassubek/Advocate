@@ -11,7 +11,6 @@ package s_ast
 
 import (
 	"advocate/static/static/s_base"
-	"fmt"
 	"go/ast"
 	"go/token"
 	"go/types"
@@ -36,7 +35,8 @@ func (self *Data) getNameRec(id ast.Expr) string {
 	case *ast.CallExpr:
 		return self.getNameRec(e.Fun)
 	default:
-		panic(fmt.Sprintf("Unknown expr type %T", e))
+		return "Other"
+		// panic(fmt.Sprintf("Unknown expr type %T", e))
 	}
 }
 

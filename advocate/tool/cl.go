@@ -62,7 +62,7 @@ func CommandLine() bool {
 	flag.BoolVar(&flags.Continue, "cont", false, "Continue a partial analysis of tests")
 
 	flag.BoolVar(&flags.NoWarning, "noWarning", false, "Only show critical bugs")
-	flag.BoolVar(&flags.NoInfo, "noInfo", false, "Do not show infos in the terminal (will only show results, errors, important and progress)")
+	flag.BoolVar(&flags.Verbose, "verbose", false, "Show additional info in terminal")
 	flag.BoolVar(&flags.NoProgress, "noProgress", false, "Do not show progress info")
 	flag.BoolVar(&flags.Output, "output", false, "Show the output of the executed programs in the terminal. Otherwise it is only in output.log file.")
 
@@ -91,6 +91,9 @@ func CommandLine() bool {
 
 	flag.StringVar(&flags.FuzzingMode, "mode", "",
 		"Mode for fuzzing. Possible values are:\n\tGuided\n\tGFuzz\n\tGFuzzHB\n\tGFuzzHBFlow\n\tFlow\n\tGoPie\n\tGoCR\n\tGoCRHB\n\tDefault: Guided")
+
+	flag.BoolVar(&flags.Static, "static", false,
+		"Enable static blocking bug detection")
 
 	flag.BoolVar(&flags.ModeMain, "main", false, "set to run on main function")
 
@@ -163,8 +166,6 @@ func checkMode() bool {
 		flags.Mode = flags.ModeGui
 	case "init":
 		flags.Mode = flags.ModeInit
-	case "static":
-		flags.Mode = flags.ModeStatic
 	default:
 		log.Error("Unknown mode: ", flags.Mode)
 		log.ErrorInfo("Possible Values: ")

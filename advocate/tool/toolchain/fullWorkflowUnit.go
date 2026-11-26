@@ -65,6 +65,10 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 		return 0, 0, errors.New("Directory is empty")
 	}
 
+	if canceledGui {
+		return 0, 0, fmt.Errorf("Canceled...")
+	}
+
 	isFuzzing := (fuzzing != -1)
 
 	// Change to the directory
@@ -83,6 +87,10 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 		removeLogs(paths.Prog)
 	}
 
+	if canceledGui {
+		return 0, 0, fmt.Errorf("Canceled...")
+	}
+
 	// Find all _test.go files in the directory
 	testFiles, _, totalFiles, err := FindTestFiles(paths.Prog, flags.Continue && flags.ExecName == "")
 	if err != nil {
@@ -97,6 +105,10 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 	ranTest := false
 	// Process each test file
 	for _, file := range testFiles {
+		if canceledGui {
+			return 0, 0, fmt.Errorf("Canceled...")
+		}
+
 		if pathToTest != "" && pathToTest != file {
 			continue
 		}
@@ -117,6 +129,10 @@ func runWorkflowUnit(runRecord, runAnalysis, runReplay bool,
 
 		percPerTest := calcPerc(1, len(testFunctions))
 		for j, testFunc := range testFunctions {
+			if canceledGui {
+				return 0, 0, fmt.Errorf("Canceled...")
+			}
+
 			guiSetProgressTotalPerc(calcPerc(currentFile, totalFiles) * (1 + float64(j)*percPerTest))
 
 			if flags.ExecName != "" && flags.ExecName != testFunc {
@@ -454,6 +470,10 @@ func unitTestFullWorkflow(
 
 	pkg = strings.TrimPrefix(pkg, paths.Prog)
 
+	if canceledGui {
+		return 0, false, fmt.Errorf("Canceled...")
+	}
+
 	if runRecord {
 		if flags.MeasureTime && fuzzing < 1 {
 			err := unitTestRun(pkg, file, testName, origStdout, origStderr)
@@ -464,11 +484,19 @@ func unitTestFullWorkflow(
 			}
 		}
 
+		if canceledGui {
+			return 0, false, fmt.Errorf("Canceled...")
+		}
+
 		err = unitTestRecord(pkg, file,
 			testName, fuzzing, fuzzingTrace, paths.NameOutput, origStdout, origStderr)
 		if err != nil {
 			log.Error("Recording failed: ", err.Error())
 		}
+	}
+
+	if canceledGui {
+		return 0, false, fmt.Errorf("Canceled...")
 	}
 
 	if runAnalysis {
@@ -481,6 +509,10 @@ func unitTestFullWorkflow(
 		if flags.OnlyAPanicAndLeak {
 			return 0, true, nil
 		}
+	}
+
+	if canceledGui {
+		return 0, false, fmt.Errorf("Canceled...")
 	}
 
 	numberReplay := 0

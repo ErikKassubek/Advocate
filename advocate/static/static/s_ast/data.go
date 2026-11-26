@@ -129,7 +129,7 @@ func (self *Data) loadPackages() error {
 		Tests: true,
 	}
 
-	pkgs, err := packages.Load(cfg, self.dir)
+	pkgs, err := packages.Load(cfg, "./...")
 	if err != nil {
 		return fmt.Errorf("static analysis: failed to load packages: %w", err)
 	}

@@ -90,6 +90,10 @@ func runAnalyzer(pathTrace string,
 		return nil
 	}
 
+	if canceledGui {
+		return fmt.Errorf("Canceled...")
+	}
+
 	a_analysis.RunAnalysis(fuzzingRun >= 0)
 
 	if control.WasCanceled() {
@@ -103,6 +107,10 @@ func runAnalyzer(pathTrace string,
 	}
 	log.Info("Analysis finished")
 
+	if canceledGui {
+		return fmt.Errorf("Canceled...")
+	}
+
 	numberOfResults, err := results.CreateResultFiles(true)
 	if err != nil {
 		log.Error("Error in printing summary: ", err.Error())
@@ -115,6 +123,10 @@ func runAnalyzer(pathTrace string,
 	if flags.NoRewrite {
 		log.Info("Skip rewrite")
 		return nil
+	}
+
+	if canceledGui {
+		return fmt.Errorf("Canceled...")
 	}
 
 	numberRewrittenTrace := 0
@@ -211,10 +223,18 @@ func rewriteTrace(outMachine string, newTrace string, resultIndex int,
 		return false, nil
 	}
 
+	if canceledGui {
+		return false, fmt.Errorf("Canceled...")
+	}
+
 	constr, code, err := f_active.RewriteTrace(bug, *rewrittenTrace)
 
 	if err != nil {
 		return constr != nil, err
+	}
+
+	if canceledGui {
+		return constr != nil, fmt.Errorf("Canceled...")
 	}
 
 	closure := f_constraints.CalcuateClosure(constr)
@@ -222,6 +242,10 @@ func rewriteTrace(outMachine string, newTrace string, resultIndex int,
 	err = f_base.WriteConstraint(newTrace, &a_base.MainTrace, constr, closure)
 	if err != nil {
 		return constr != nil, err
+	}
+
+	if canceledGui {
+		return constr != nil, fmt.Errorf("Canceled...")
 	}
 
 	err = io.WriteRewriteInfoFile(newTrace, bug, code, resultIndex)

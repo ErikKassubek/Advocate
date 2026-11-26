@@ -460,7 +460,7 @@ func writeFile(path string, index string, description map[bugKeys]string,
 	// create the file
 	fileName := ""
 	if fuzzing == -1 {
-		fileName = filepath.Join(folderName, strings.ToLower(description[crit])) + "_" + index + ".md"
+		fileName = filepath.Join(folderName, fmt.Sprintf("bug_%s_%s.md", strings.ToLower(description[crit]), index))
 	} else {
 		fileName = filepath.Join(folderName, fmt.Sprintf("bug_%s_%d_%s.md", strings.ToLower(description[crit]), fuzzing, index))
 	}

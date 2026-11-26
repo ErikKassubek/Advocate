@@ -53,6 +53,10 @@ func (rt ResultType) Args() (string, string) {
 	case AMixedDeadlock:
 		return "", ""
 
+	// static
+	case SBlocking:
+		return "blocking", ""
+
 	// possible
 	case PSendOnClosed:
 		return "send", "close"
@@ -109,6 +113,8 @@ func (rt ResultType) String() string {
 		return "Actual close on nil channel:"
 	case AConcurrentRecv:
 		return "Concurrent Receive:"
+	case SBlocking:
+		return "Actual Blocking (static):"
 	case ABlocking:
 		return "Blocking routine:"
 	case ADeadlock:

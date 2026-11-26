@@ -138,7 +138,6 @@ func WasCanceledRAM() bool {
 // Reset the cancel values to false
 func Reset() {
 	if WasCanceled() {
-		log.Important("RAM Reset")
 		isCanceled.Store(false)
 		IsCanceledRAM.Store(false)
 	}

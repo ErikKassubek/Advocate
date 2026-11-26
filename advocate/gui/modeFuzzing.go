@@ -34,9 +34,10 @@ func (this *window) setFuzzing() {
 		twoCheck(this.settings.components.ignoreAtomics.Container, this.settings.components.onlyAPanicAndLeak.Container),
 		twoCheck(this.settings.components.noRewrite.Container, this.settings.components.deleteTrace.Container),
 		twoCheck(this.settings.components.cont.Container, this.settings.components.noWarning.Container),
-		twoCheck(this.settings.components.noInfo.Container, this.settings.components.noProgress.Container),
+		twoCheck(this.settings.components.verbose.Container, this.settings.components.noProgress.Container),
 		twoCheck(this.settings.components.output.Container, this.settings.components.alwaysPanic.Container),
 		twoCheck(this.settings.components.noMemorySup.Container, this.settings.components.cancelTestIfBugFound.Container),
+		this.settings.components.runStatic.Container,
 	}
 
 	this.setSettings(content)

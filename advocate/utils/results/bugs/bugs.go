@@ -192,6 +192,10 @@ func ProcessBug(bugStr string) (bool, Bug, error) {
 		actual = true
 	case "A09":
 		bug.Type = buginfo.AMixedDeadlock
+		actual = true
+	case "S00":
+		bug.Type = buginfo.SBlocking
+		actual = true
 	case "P01":
 		bug.Type = buginfo.PSendOnClosed
 	case "P02":

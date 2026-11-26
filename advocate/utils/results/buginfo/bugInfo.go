@@ -26,6 +26,9 @@ const (
 	AMixedDeadlock          ResultType = "A08"
 	AConcurrentRecv         ResultType = "A09"
 
+	// statoc
+	SBlocking ResultType = "S00"
+
 	// possible
 	PSendOnClosed     ResultType = "P01"
 	PNegWG            ResultType = "P02"
@@ -61,6 +64,7 @@ var ResultTypes = []ResultType{
 	ADeadlock,
 	AConcurrentRecv,
 	AMixedDeadlock,
+	SBlocking,
 	PSendOnClosed,
 	PNegWG,
 	PUnlockBeforeLock,
@@ -85,6 +89,7 @@ var ResultTypesActual = []ResultType{
 	ADeadlock,
 	AConcurrentRecv,
 	AMixedDeadlock,
+	SBlocking,
 }
 
 var ResultTypesPotential = []ResultType{
@@ -131,6 +136,8 @@ func ResultTypeFromString(code string) ResultType {
 		return AMixedDeadlock
 	case "A09":
 		return AConcurrentRecv
+	case "S00":
+		return SBlocking
 	case "P01":
 		return PSendOnClosed
 	case "P02":
@@ -195,6 +202,8 @@ var ResultTypeMap = map[ResultType]string{
 	ADeadlock:               "Actual Deadlock",
 	ANegWG:                  "Actual negative Wait Group",
 	AUnlockOfNotLockedMutex: "Actual unlock of not locked mutex",
+
+	SBlocking: "Actual Blocking Bug (static)",
 
 	PSendOnClosed:     "Possible send on closed channel",
 	PNegWG:            "Possible negative waitgroup counter",

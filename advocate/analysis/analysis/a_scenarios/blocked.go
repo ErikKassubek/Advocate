@@ -11,7 +11,10 @@ package a_scenarios
 
 import (
 	"advocate/analysis/a_base"
+	"advocate/static/s_blocking"
 	"advocate/trace"
+	"advocate/utils/flags"
+	"advocate/utils/log"
 	"advocate/utils/results/buginfo"
 	"advocate/utils/results/results"
 	"advocate/utils/types"
@@ -75,7 +78,23 @@ func Blocked() error {
 
 	reportBlocking(cyclic, buginfo.ADeadlock)
 	reportBlocking(b, buginfo.ABlocking)
-	reportLeak(l)
+
+	if flags.Static && len(l) > 0 {
+		var err error
+		if !s_blocking.StaticBuild() {
+			err = s_blocking.BuildStaticBlockingAnalysis()
+		}
+
+		if err == nil {
+			_, l = s_blocking.CheckBlocking(types.SliceAsMap(l))
+		} else {
+			log.Error(err)
+		}
+	}
+
+	if len(l) > 0 {
+		reportLeak(l)
+	}
 
 	return nil
 }

@@ -40,7 +40,6 @@ const (
 	replay   = "Replay"
 	analysis = "Analysis"
 	fuzzing  = "Fuzzing"
-	static   = "Static"
 )
 
 func createModeSelect() *componentModeSelect {
@@ -52,7 +51,6 @@ func createModeSelect() *componentModeSelect {
 			replay,
 			analysis,
 			fuzzing,
-			static,
 		},
 		func(value string) {
 			flags.Mode = strings.ToLower(value)
@@ -74,8 +72,6 @@ func createModeSelect() *componentModeSelect {
 				win.setReplay()
 			case fuzzing:
 				win.setFuzzing()
-			case static:
-				win.setStatic()
 			}
 
 		},

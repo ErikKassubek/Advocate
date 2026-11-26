@@ -13,7 +13,6 @@ import (
 	"advocate/analysis/a_base"
 	"advocate/fuzzing/f_base"
 	"advocate/fuzzing/f_fuzzing"
-	"advocate/static/s_blocking"
 	"advocate/utils/command"
 	"advocate/utils/control"
 	"advocate/utils/flags"
@@ -102,10 +101,6 @@ func Run() error {
 		return modeShowTrace()
 	case flags.ModeInit:
 		return modeInit()
-	case flags.ModeStatic: // TODO: only for testing, when working move into analysis
-		flags.DeleteTraces = false
-		err = modeToolchain(record, analysis, !replay)
-		err = s_blocking.BuildStaticBlockingAnalysis()
 
 	default:
 		err = fmt.Errorf("Unknown mode %s", os.Args[1])

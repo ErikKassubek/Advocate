@@ -106,7 +106,9 @@ func SetExitCodeFromPanicMsg(msg any) {
 		preprintpanics(&p)
 		printpanics(&p)
 		print("\n")
+		println("START STACK")
 		printAllGoroutines()
+		println("END STACK")
 	}
 
 	_, file, line, _ := Caller(skip)

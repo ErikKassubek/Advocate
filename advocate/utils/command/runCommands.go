@@ -15,6 +15,7 @@ import (
 	"advocate/utils/log"
 	"advocate/utils/paths"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -51,6 +52,12 @@ func RunCommand(osOut, osErr *os.File, timeout int, name string, args ...string)
 
 	cmd := exec.CommandContext(ctx, name, args...)
 
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return err
+	}
+	log.Command("WD: ", dir)
 	log.Command(cmd.String())
 
 	if flags.Output {

@@ -18,7 +18,7 @@ import (
 	"strings"
 )
 
-var data *static.Data
+var data *static.Data = nil
 var blocking = newBlockData()
 
 type BlockingData struct {

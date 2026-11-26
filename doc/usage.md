@@ -374,8 +374,8 @@ If the analysis of multiple tests was interrupted, running the toolchain
 again would start from the beginning. If you want to skip all the already
 finished tests, you can set `-cont`.
 
-During the runtime, multiple status messages are shown in the terminal.
-To disable them and only show found bugs, you can set `-noInfo`.
+During the runtime, multiple status messages can be shown in the terminal.
+To enable them set `-verbose`.
 
 Sometimes the analysis or execution of a test may result in a panic in
 advocatego. Since it would be annoying to terminate the total analysis of all tests,

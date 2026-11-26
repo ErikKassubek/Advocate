@@ -19,7 +19,6 @@ const (
 	ModeShow        = "show"
 	ModeGui         = "gui"
 	ModeInit        = "init"
-	ModeStatic      = "static"
 )
 
 // Closures

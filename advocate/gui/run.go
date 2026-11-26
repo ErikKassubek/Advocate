@@ -13,6 +13,7 @@ package gui
 
 import (
 	"advocate/tool"
+	"advocate/tool/toolchain"
 	"context"
 
 	"fyne.io/fyne/v2"
@@ -39,6 +40,7 @@ func (this *window) startRunMode() {
 	win.projSelector.disable()
 	win.runButton.disable()
 	win.cancelButton.enable()
+	win.settingsButton.disable()
 }
 
 func (this *window) endRunMode() {
@@ -47,6 +49,7 @@ func (this *window) endRunMode() {
 	win.projSelector.enable()
 	win.runButton.enable()
 	win.cancelButton.disable()
+	win.settingsButton.enable()
 }
 
 func (this *window) start() {
@@ -79,6 +82,8 @@ func (this *window) start() {
 }
 
 func (this *window) cancel() {
-	this.writeErr("Cancel Run...")
-	this.worker.cancel()
+	toolchain.Cancel()
+	win.worker.cancel()
+	win.WriteGui("Cancel...")
+	win.endRunMode()
 }

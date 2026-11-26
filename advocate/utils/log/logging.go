@@ -41,6 +41,8 @@ var preventPanicFlag bool
 var guiChanSet bool
 var guiChan chan GuiInfo
 
+var showInTerminal = true
+
 type InfoLevel int
 
 const (
@@ -65,6 +67,7 @@ type GuiInfo struct {
 func GetGuiChan() chan GuiInfo {
 	guiChanSet = true
 	guiChan = make(chan GuiInfo, 100)
+	// showInTerminal = false
 	return guiChan
 }
 
@@ -74,15 +77,14 @@ func GetGuiChan() chan GuiInfo {
 // Parameter:
 //   - v ...any: the content of the log
 func Info(v ...any) {
-	if flags.NoInfo {
+	if !flags.Verbose {
 		return
 	}
 
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprint(v...), InfoLv}
-	} else {
-		log.Println(v...)
 	}
+	log.Println(v...)
 }
 
 // Infof logs an information to the terminal
@@ -92,14 +94,16 @@ func Info(v ...any) {
 //   - format string: the format (e.g. "%s")
 //   - v ...any: the content of the log
 func Infof(format string, v ...any) {
-	if flags.NoInfo {
+	if !flags.Verbose {
 		return
 	}
 
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprintf(format, v...), InfoLv}
-	} else {
-		log.Printf(format, v...)
+	}
+
+	if showInTerminal {
+		log.Println(v...)
 	}
 }
 
@@ -111,7 +115,8 @@ func Infof(format string, v ...any) {
 func Important(v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprint(v...), ImportantLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Print(Yellow, fmt.Sprint(v...), Reset, "\n")
 	}
 }
@@ -134,7 +139,8 @@ func WriteInput(v ...any) {
 func Importantf(format string, v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprintf(format, v...), ImportantLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Printf(Yellow+format+Reset, v...)
 	}
 }
@@ -144,9 +150,14 @@ func Importantf(format string, v ...any) {
 // Parameter:
 //   - v ...any: the content of the log
 func Command(v ...any) {
+	if !flags.Verbose { // TODO: add its own setting
+		return
+	}
+
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprint(v...), CommandLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Print(Cyan, fmt.Sprint(v...), Reset, "\n")
 	}
 }
@@ -157,9 +168,14 @@ func Command(v ...any) {
 //   - format string: the format (e.g. "%s")
 //   - v ...any: the content of the log
 func Commandf(format string, v ...any) {
+	if !flags.Verbose { // TODO: add its own setting
+		return
+	}
+
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprintf(format, v...), CommandLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Printf(Cyan+format+Reset, v...)
 	}
 }
@@ -172,7 +188,8 @@ func Commandf(format string, v ...any) {
 func Debug(v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprint(v...), DebugLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Print(Yellow, fmt.Sprint(v...), Reset, "\n")
 	}
 }
@@ -186,7 +203,8 @@ func Debug(v ...any) {
 func Debugf(format string, v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprintf(format, v...), DebugLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Printf(Yellow+format+Reset+"\n", v...)
 	}
 }
@@ -199,7 +217,8 @@ func Debugf(format string, v ...any) {
 func Debug2(v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprint(v...), Debug2Lv}
-	} else {
+	}
+	if showInTerminal {
 		log.Print(Pink, fmt.Sprint(v...), Reset, "\n")
 	}
 }
@@ -213,7 +232,8 @@ func Debug2(v ...any) {
 func Debugf2(format string, v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprintf(format, v...), Debug2Lv}
-	} else {
+	}
+	if showInTerminal {
 		log.Printf(Pink+format+Reset+"\n", v...)
 	}
 }
@@ -248,7 +268,8 @@ func Todof(format string, v ...any) {
 func Result(count, actual bool, name string, v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprint(v...), ResultLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Print(Green, fmt.Sprint(v...), Reset, "\n")
 	}
 
@@ -276,7 +297,8 @@ func Result(count, actual bool, name string, v ...any) {
 func Resultf(count, actual bool, name string, format string, v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprintf(format, v...), ResultLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Printf(Green+format+Reset, v...)
 	}
 
@@ -304,9 +326,11 @@ func Progress(v ...any) {
 
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprint(v...), ProgressLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Print(Blue, fmt.Sprint(v...), Reset, "\n")
 	}
+
 }
 
 // Progressf logs a the progress to the terminal
@@ -322,9 +346,11 @@ func Progressf(format string, v ...any) {
 
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprintf(format, v...), ProgressLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Printf(Blue+format+Reset, v...)
 	}
+
 }
 
 // Timeout logs a timeout to the terminal
@@ -336,7 +362,8 @@ func Progressf(format string, v ...any) {
 func Timeout(v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprint(v...), TimeoutLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Print(Purple, fmt.Sprint(v...), Reset, "\n")
 	}
 
@@ -353,7 +380,8 @@ func Timeout(v ...any) {
 func Timeoutf(format string, v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprintf(format, v...), TimeoutLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Printf(Purple+format+Reset, v...)
 	}
 
@@ -369,7 +397,8 @@ func Timeoutf(format string, v ...any) {
 func Error(v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprint(v...), ErrorLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Print(Red, fmt.Sprint(v...), Reset, "\n")
 	}
 
@@ -386,7 +415,8 @@ func Error(v ...any) {
 func Errorf(format string, v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprintf(format, v...), ErrorLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Printf(Red+format+Reset, v...)
 	}
 
@@ -402,9 +432,11 @@ func Errorf(format string, v ...any) {
 func ErrorInfo(v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprint(v...), ErrorLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Print(Red, fmt.Sprint(v...), Reset, "\n")
 	}
+
 }
 
 // Errorf logs an error to the terminal
@@ -417,9 +449,11 @@ func ErrorInfo(v ...any) {
 func ErrorInfof(format string, v ...any) {
 	if guiChanSet {
 		guiChan <- GuiInfo{fmt.Sprintf(format, v...), ErrorLv}
-	} else {
+	}
+	if showInTerminal {
 		log.Printf(Red+format+Reset, v...)
 	}
+
 }
 
 // GetLoggingNumbers returns the number of results, errors and timeouts

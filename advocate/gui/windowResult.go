@@ -14,6 +14,7 @@ package gui
 import (
 	"advocate/trace"
 	"advocate/utils/flags"
+	"advocate/utils/paths"
 	"bufio"
 	"io/fs"
 	"os"
@@ -90,11 +91,6 @@ func (this *windowResults) addBug(file string) {
 	name = strings.TrimPrefix(name, "bug_")
 	name = strings.TrimSuffix(name, ".md")
 
-	id := this.resultsViwer.AddTab(name)
-
-	this.resultsViwer.AddLine(id, file)
-	this.resultsViwer.AddLine(id, "")
-
 	f, err := os.Open(file)
 	if err != nil {
 		return
@@ -102,6 +98,26 @@ func (this *windowResults) addBug(file string) {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+
+	var firstLine = ""
+	for scanner.Scan() {
+		firstLine = scanner.Text()
+		if firstLine != "" {
+			break
+		}
+	}
+
+	tabName := "bug"
+	fl := strings.Split(firstLine, ": ")
+	if len(fl) >= 2 {
+		tabName = strings.Split(fl[1], " -")[0]
+	}
+
+	id := this.resultsViwer.AddTab(tabName)
+
+	this.resultsViwer.AddLine(id, file)
+	this.resultsViwer.AddLine(id, "")
+	this.resultsViwer.AddLine(id, firstLine)
 
 	for scanner.Scan() {
 		line := scanner.Text()

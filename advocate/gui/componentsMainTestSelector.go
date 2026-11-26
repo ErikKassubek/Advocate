@@ -65,7 +65,6 @@ func creatMainTestSelector() *componentMainTestSelect {
 				} else {
 					flags.ExecName = ""
 				}
-
 			}
 
 			csmt.creatMainTestSelectorContainer()
@@ -92,18 +91,18 @@ func creatMainTestSelector() *componentMainTestSelect {
 	csmt.testNameSel = widget.NewSelect(
 		[]string{},
 		func(s string) {
-			flags.ExecName = s
+			if csmt.showTestName {
+				flags.ExecName = s
+			}
 		},
 	)
 
 	csmt.Container = container.NewVBox()
 
-	csmt.creatMainTestSelectorContainer()
+	// csmt.creatMainTestSelectorContainer()
 
-	csmt.mainTestSel.SetSelected(mainFunc)
+	csmt.mainTestSel.SetSelected(unitTest)
 	csmt.allOneSel.SetSelected(allTests)
-
-	flags.ExecName = ""
 
 	if len(csmt.testNameSel.Options) == 0 {
 		csmt.testNameSel.PlaceHolder = "No tests found"

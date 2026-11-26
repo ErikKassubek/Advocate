@@ -28,6 +28,8 @@ import (
 	"advocate/utils/timer"
 )
 
+var GuiCanceled = false
+
 // RunAnalysis starts the analysis of the main trace
 //
 // Parameter:
@@ -49,10 +51,22 @@ func RunAnalysis(fuzzing bool) {
 	timer.Start(timer.Analysis)
 	defer timer.Stop(timer.Analysis)
 
+	if GuiCanceled {
+		return
+	}
+
 	a_scenarios.RunAnalysisOnExitCodes(flags.OnlyAPanicAndLeak)
+
+	if GuiCanceled {
+		return
+	}
 
 	if !fuzzing || f_base.UseHBInfoFuzzing {
 		RunHBAnalysis(fuzzing)
+	}
+
+	if GuiCanceled {
+		return
 	}
 
 	if a_base.AnalysisCasesMap[flags.Leak] || flags.OnlyAPanicAndLeak {
@@ -113,6 +127,9 @@ func RunHBAnalysis(fuzzing bool) {
 
 	traceIter := a_base.MainTrace.AsIterator()
 	for elem := traceIter.Next(); elem != nil; elem = traceIter.Next() {
+		if GuiCanceled {
+			return
+		}
 
 		// not enough memory
 		if control.IsCanceledRAM.Load() {
@@ -206,7 +223,7 @@ func RunHBAnalysis(fuzzing bool) {
 		a_scenarios.CheckForSelectCaseWithPartner()
 	}
 
-	if control.WasCanceled() {
+	if control.WasCanceled() || GuiCanceled {
 		return
 	}
 
@@ -214,7 +231,7 @@ func RunHBAnalysis(fuzzing bool) {
 		a_scenarios.CheckForDoneBeforeAdd()
 	}
 
-	if control.WasCanceled() {
+	if control.WasCanceled() || GuiCanceled {
 		return
 	}
 
@@ -222,7 +239,7 @@ func RunHBAnalysis(fuzzing bool) {
 		a_scenarios.CheckForResourceDeadlock()
 	}
 
-	if control.WasCanceled() {
+	if control.WasCanceled() || GuiCanceled {
 		return
 	}
 
@@ -230,7 +247,7 @@ func RunHBAnalysis(fuzzing bool) {
 		a_scenarios.CheckForMixedDeadlock()
 	}
 
-	if control.WasCanceled() {
+	if control.WasCanceled() || GuiCanceled {
 		return
 	}
 

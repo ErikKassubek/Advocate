@@ -11,7 +11,6 @@ package s_ssa
 
 import (
 	"advocate/trace"
-	"advocate/utils/log"
 	"go/types"
 	"strings"
 
@@ -60,7 +59,6 @@ func (this *InstructionSelect) CanUnblockSimple(elem trace.Element) bool {
 
 // Contains send, recv, default
 func (this *InstructionSelect) containsDirection() (bool, bool, bool) {
-	log.Debug2(this.term)
 
 	containsSend := false
 	containsRecv := false

@@ -78,8 +78,10 @@ type settingComponents struct {
 	deleteTrace *checkInput
 	cont        *checkInput
 
+	runStatic *checkInput
+
 	noWarning  *checkInput
-	noInfo     *checkInput
+	verbose    *checkInput
 	noProgress *checkInput
 	output     *checkInput
 
@@ -103,13 +105,14 @@ const (
 func createSettingComponents() *settingComponents {
 	to := settingComponents{
 		label:                  createSectionLabel("Settings"),
-		timeout:                createInputNumeric("Timeout Replay [s]: ", &flags.Timeout, canBeDisabled),
+		timeout:                createInputNumeric("Timeout Run [s]: ", &flags.Timeout, canBeDisabled),
 		toFuzzing:              createInputNumeric("Timeout Fuzzing [s]: ", &flags.TimeoutFuzzing, canBeDisabled),
 		maxFuzzingRun:          createInputNumeric("Max. Fuzzing Runs: ", &flags.MaxFuzzingRun, canBeDisabled),
 		maxNumberElements:      createInputNumeric("Max. Number Elements: ", &flags.MaxNumberElements, canBeDisabled),
 		measureTime:            createInputCheck("Measure Time: ", &flags.MeasureTime, direct),
 		createStatistics:       createInputCheck("Create Statistics: ", &flags.CreateStatistics, direct),
 		checkForNotExecuted:    createInputCheck("Check for not Executed Ops: ", &flags.NotExecuted, direct),
+		runStatic:              createInputCheck("Run Static Blocking Analysis: ", &flags.Static, direct),
 		ignoreCriticalSections: createInputCheck("Ignore Critical Sections: ", &flags.IgnoreCriticalSection, direct),
 		ignoreAtomics:          createInputCheck("Ignore Atomics: ", &flags.IgnoreAtomics, direct),
 		onlyAPanicAndLeak:      createInputCheck("Disable Prediction: ", &flags.OnlyAPanicAndLeak, direct),
@@ -117,7 +120,7 @@ func createSettingComponents() *settingComponents {
 		deleteTrace:            createInputCheck("Delete Trace:", &flags.DeleteTraces, direct),
 		cont:                   createInputCheck("Continue: ", &flags.Continue, direct),
 		noWarning:              createInputCheck("Disable Warning Massages: ", &flags.NoWarning, direct),
-		noInfo:                 createInputCheck("Disable Info Messages: ", &flags.NoInfo, direct),
+		verbose:                createInputCheck("Verbose Messages: ", &flags.Verbose, direct),
 		noProgress:             createInputCheck("Disable Progress Massages: ", &flags.NoProgress, direct),
 		output:                 createInputCheck("Show Program/Test Output: ", &flags.Output, direct),
 		alwaysPanic:            createInputCheck("Always Panic: ", &flags.AlwaysPanic, direct),
@@ -135,6 +138,9 @@ func createSettingComponents() *settingComponents {
 			}, true, true),
 	}
 
+	// TODO: Only for testing select. Remove
+	to.runStatic.check.SetChecked(true)
+
 	return &to
 }
 
@@ -149,6 +155,8 @@ func (this *settingComponents) disable() {
 	this.createStatistics.disable()
 	this.checkForNotExecuted.disable()
 
+	this.runStatic.disable()
+
 	this.ignoreCriticalSections.disable()
 	this.ignoreAtomics.disable()
 	this.onlyAPanicAndLeak.disable()
@@ -158,7 +166,7 @@ func (this *settingComponents) disable() {
 	this.cont.disable()
 
 	this.noWarning.disable()
-	this.noInfo.disable()
+	this.verbose.disable()
 	this.noProgress.disable()
 	this.output.disable()
 
@@ -186,6 +194,8 @@ func (this *settingComponents) enable() {
 	this.createStatistics.enable()
 	this.checkForNotExecuted.enable()
 
+	this.runStatic.enable()
+
 	this.ignoreCriticalSections.enable()
 	this.ignoreAtomics.enable()
 	this.onlyAPanicAndLeak.enable()
@@ -195,7 +205,7 @@ func (this *settingComponents) enable() {
 	this.cont.enable()
 
 	this.noWarning.enable()
-	this.noInfo.enable()
+	this.verbose.enable()
 	this.noProgress.enable()
 	this.output.enable()
 

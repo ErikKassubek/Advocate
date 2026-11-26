@@ -10,11 +10,14 @@
 package toolchain
 
 import (
+	"advocate/analysis/a_analysis"
 	"advocate/utils/math"
 	"advocate/utils/types"
 )
 
 var GuiCom chan types.Pair[string, float64] = nil
+
+var canceledGui bool
 
 func calcPerc(done, total int) float64 {
 	if total == 0 {
@@ -49,4 +52,18 @@ func guiSetProgressOne(done, total int) {
 	}
 
 	GuiCom <- types.NewPair("progressOne", calcPerc(done, total))
+}
+
+func CanceledGui() bool {
+	return canceledGui
+}
+
+func Cancel() {
+	canceledGui = true
+	a_analysis.GuiCanceled = true
+}
+
+func ResetCancel() {
+	canceledGui = false
+	a_analysis.GuiCanceled = false
 }

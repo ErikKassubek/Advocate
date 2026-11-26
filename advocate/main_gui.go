@@ -36,7 +36,7 @@ func main() {
 
 	if flags.Mode == flags.ModeGui {
 		flags.Mode = flags.ModeRecord
-		log.Info("Start Gui.")
+		log.Info("Start Gui")
 		gui.Run()
 	} else {
 		err := tool.Run()

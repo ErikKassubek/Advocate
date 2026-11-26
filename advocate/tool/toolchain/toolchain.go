@@ -42,6 +42,7 @@ func Run(pathToTest string,
 	firstRun bool, fileNumber, testNumber int) (int, int, error) {
 
 	a_base.Clear(true)
+	ResetCancel()
 
 	switch flags.ModeMain {
 	case true:

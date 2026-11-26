@@ -41,58 +41,64 @@ type ResultTypeInfo struct {
 }
 
 var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
-	buginfo.RUnknownPanic: ResultTypeInfo{Bug, Runtime, "Unknown Panic", "During the execution of the program, a unknown panic occurred"},
-	buginfo.RTimeout:      ResultTypeInfo{Diagnostic, Runtime, "Timeout", "The execution of the program timed out"},
-	buginfo.RReplayFail:   ResultTypeInfo{Diagnostic, Runtime, "Replay Failed", "The replay was not able to execute the full constraint.\nAt the end of the execution, the replay mechanism was still holding back elements."},
+	buginfo.RUnknownPanic: {Bug, Runtime, "Unknown Panic", "During the execution of the program, a unknown panic occurred"},
+	buginfo.RTimeout:      {Diagnostic, Runtime, "Timeout", "The execution of the program timed out"},
+	buginfo.RReplayFail:   {Diagnostic, Runtime, "Replay Failed", "The replay was not able to execute the full constraint.\nAt the end of the execution, the replay mechanism was still holding back elements."},
 
-	buginfo.ASendOnClosed: ResultTypeInfo{
+	buginfo.ASendOnClosed: {
 		Bug, Actual,
 		"Actual Send on Closed Channel",
 		"During the execution of the program, a send on a closed channel occurred.\n" +
 			"The occurrence of a send on closed leads to a panic."},
-	buginfo.ACloseOnClosed: ResultTypeInfo{
+	buginfo.ACloseOnClosed: {
 		Bug, Actual,
 		"Actual Close on Closed Channel",
 		"During the execution of the program, a close on a close channel occurred.\n" +
 			"The occurrence of a close on a closed channel lead to a panic."},
-	buginfo.ACloseOnNilChannel: ResultTypeInfo{
+	buginfo.ACloseOnNilChannel: {
 		Bug, Actual,
 		"Actual Close on Nil Channel",
 		"During the execution of the program, a close on a nil channel occurred.\n" +
 			"The occurrence of a close on a nil channel lead to a panic."},
-	buginfo.ANegWG: ResultTypeInfo{
+	buginfo.ANegWG: {
 		Bug, Actual,
 		"Actual Negative Wait Group",
 		"During the execution, a negative wait group counter occurred.\n" +
 			"The occurrence of a negative wait group counter lead to a panic."},
-	buginfo.AUnlockOfNotLockedMutex: ResultTypeInfo{
+	buginfo.AUnlockOfNotLockedMutex: {
 		Bug, Actual,
 		"Actual Unlock of Not Locked Mutex",
 		"During the execution, a not locked mutex was unlocked.\n" +
 			"The occurrence of this lead to a panic."},
-	buginfo.ABlocking: ResultTypeInfo{
+	buginfo.ABlocking: {
 		Bug, Actual,
 		"Actual Non-Cyclic Blocking Bug",
 		"During the execution, a blocking bug was detected.\n" +
 			"This means, there is a routine that is blocked, and there is not possibility of it being unblocked in the future"},
-	buginfo.ADeadlock: ResultTypeInfo{
+	buginfo.ADeadlock: {
 		Bug, Actual,
 		"Actual Deadlock",
 		"During the execution, a deadlock was detected.\n" +
 			"This means, there is are routine that are (cyclical) blocked, and there is not possibility of it being unblocked in the future"},
-	buginfo.AConcurrentRecv: ResultTypeInfo{
+	buginfo.AConcurrentRecv: {
 		Diagnostic, Actual,
 		"Actual Concurrent Receive",
 		"During the execution of the program, a channel waited to receive at multiple positions at the same time.\n" +
 			"In this case, the actual receiver of a send message is chosen randomly.\n" +
 			"This can lead to nondeterministic behavior."},
-	buginfo.AMixedDeadlock: ResultTypeInfo{
+	buginfo.AMixedDeadlock: {
 		Bug, Actual,
 		"Actual Mixed Deadlock",
 		"During the execution, a mixed deadlock was detected.\n" +
 			"This means, there is are routine that are (cyclical) blocked on a combination of different primitives, and there is not possibility of it being unblocked in the future"},
+	buginfo.SBlocking: {
+		Bug, Actual,
+		"Actual Blocking Bug (static)",
+		"During the execution, a blocking bug was detected.\n" +
+			"This means, there is a routine that is blocked, and there is not possibility of it being unblocked in the future.\n" +
+			"The bug was detected based on static analysis."},
 
-	buginfo.PSendOnClosed: ResultTypeInfo{
+	buginfo.PSendOnClosed: {
 		Bug, Potential,
 		"Possible Send on Closed Channel",
 		"The analyzer detected a possible send on a closed channel.\n" +
@@ -100,7 +106,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"it is possible that it will occur, based on the happens before relation.\n" +
 			"Such a send on a closed channel leads to a panic.",
 	},
-	buginfo.PNegWG: ResultTypeInfo{
+	buginfo.PNegWG: {
 		Bug, Potential,
 		"Possible Negative WaitGroup Counter",
 		"The analyzer detected a possible negative WaitGroup counter.\n" +
@@ -108,7 +114,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"it is possible that it will occur, based on the happens before relation.\n" +
 			"A negative counter will lead to a panic.",
 	},
-	buginfo.PUnlockBeforeLock: ResultTypeInfo{
+	buginfo.PUnlockBeforeLock: {
 		Bug, Potential,
 		"Possible Unlock of Not Locked Mutex",
 		"The analyzer detected a possible unlock on a not locked mutex.\n" +
@@ -116,7 +122,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"it is possible that it will occur, based on the happens before relation.\n" +
 			"A unlock of a not locked mutex will result in a panic.",
 	},
-	buginfo.PCyclicDeadlock: ResultTypeInfo{
+	buginfo.PCyclicDeadlock: {
 		Bug, Potential,
 		"Possible Cyclic Deadlock",
 		"The analysis detected a possible cyclic deadlock.\n" +
@@ -124,7 +130,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"result in the program getting stuck. Otherwise it can lead to an unnecessary use of " +
 			"resources.",
 	},
-	buginfo.PMixedDeadlock: ResultTypeInfo{
+	buginfo.PMixedDeadlock: {
 		Bug, Potential,
 		"Possible Mixed Deadlock",
 		"The analysis detected a Possible Mixed Deadlock.\n" +
@@ -135,7 +141,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"Otherwise it can lead to an unnecessary use of resources.",
 	},
 
-	buginfo.LUnknown: ResultTypeInfo{
+	buginfo.LUnknown: {
 		Leak, Actual,
 		"Leak on unknown object",
 		"The analyzer detected a leak.\n" +
@@ -144,7 +150,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"A Leak could potentially resolve itself, if the program would run longer.\n" +
 			"This can be a desired behavior, but it can also be a signal for a not otherwise detected block.",
 	},
-	buginfo.LChan: ResultTypeInfo{
+	buginfo.LChan: {
 		Leak, Actual,
 		"Leak on Channel",
 		"The analyzer detected a Leak on a channel.\n" +
@@ -152,7 +158,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"still blocking at the end of the program.\n" +
 			"A Leak could potentially resolve itself, if the program would run longer.\n",
 	},
-	buginfo.LNilChan: ResultTypeInfo{
+	buginfo.LNilChan: {
 		Leak, Actual,
 		"Leak on Nil Channel",
 		"The analyzer detected a leak on a nil channel.\n" +
@@ -160,7 +166,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"A nil channel is a channel, which was never initialized or set to nil." +
 			"An operation on a nil channel will block indefinitely.",
 	},
-	buginfo.LSelect: ResultTypeInfo{
+	buginfo.LSelect: {
 		Leak, Actual,
 		"Leak on Select",
 		"The analyzer detected a Leak on a select with a possible partner.\n" +
@@ -169,7 +175,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"The partner is a corresponding send or receive operation, which communicated with another operation, " +
 			"but could communicated with the stuck operation instead, resolving the leak.",
 	},
-	buginfo.LMutex: ResultTypeInfo{
+	buginfo.LMutex: {
 		Leak, Actual,
 		"Leak on Sync.Mutex",
 		"The analyzer detected a leak on a sync.Mutex.\n" +
@@ -177,7 +183,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"A Leak could potentially resolve itself, if the program would run longer.\n" +
 			"A sync.Mutex lock operation is a operation, which is blocking, because the lock is already acquired.",
 	},
-	buginfo.LWaitGroup: ResultTypeInfo{
+	buginfo.LWaitGroup: {
 		Leak, Actual,
 		"Leak on Sync.WaitGroup",
 		"The analyzer detected a leak on a sync.WaitGroup.\n" +
@@ -185,7 +191,7 @@ var bugInfo = map[buginfo.ResultType]ResultTypeInfo{
 			"A Leak could potentially resolve itself, if the program would run longer.\n" +
 			"A sync.WaitGroup wait is blocking, because the counter is not zero.",
 	},
-	buginfo.LCond: ResultTypeInfo{
+	buginfo.LCond: {
 		Leak, Actual,
 		"Leak on Sync.Cond",
 		"The analyzer detected a leak on a sync.Cond.\n" +

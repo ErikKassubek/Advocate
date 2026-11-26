@@ -66,6 +66,10 @@ func RewriteTrace(bug bugs.Bug, rewrittenBugs map[buginfo.ResultType][]string) (
 	case buginfo.PMixedDeadlock:
 		constr, err = rewriteMixedDeadlock(bug)
 
+	// STATIC
+	case buginfo.SBlocking:
+		err = errors.New("Static. No rewrite")
+
 	// LEAKS
 	case buginfo.LUnknown, buginfo.LChan, buginfo.LSelect, buginfo.LNilChan, buginfo.LMutex, buginfo.LWaitGroup, buginfo.LCond:
 		err = errors.New("Leak. No rewrite")

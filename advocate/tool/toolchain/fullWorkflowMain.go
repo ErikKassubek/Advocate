@@ -54,6 +54,10 @@ func runWorkflowMain(
 		return 0, 0, fmt.Errorf("file %s does not exist", paths.Prog)
 	}
 
+	if canceledGui {
+		return 0, 0, fmt.Errorf("Canceled...")
+	}
+
 	log.Info("Run main")
 
 	// Change to the directory of the main file
@@ -70,6 +74,10 @@ func runWorkflowMain(
 		// Remove possibly leftover traces from unexpected aborts that could interfere with replay
 		RemoveTraces(paths.ProgDir)
 		removeLogs(paths.ProgDir)
+	}
+
+	if canceledGui {
+		return 0, 0, fmt.Errorf("Canceled...")
 	}
 
 	outFile, err := files.OpenOutput()
@@ -95,6 +103,11 @@ func runWorkflowMain(
 	}
 	// Unset GOROOT
 	defer os.Unsetenv("GOROOT")
+
+	if canceledGui {
+		return 0, 0, fmt.Errorf("Canceled...")
+	}
+
 	if runRecord {
 		// build the program
 		if flags.MeasureTime && fuzzing < 1 {
@@ -103,6 +116,11 @@ func runWorkflowMain(
 			if err := command.RunCommand(origStdout, origStderr, command.NoTimeout, paths.Go, "build"); err != nil {
 				log.Error("Error in building program, removing header and stopping workflow")
 				return 0, 0, err
+			}
+
+			if canceledGui {
+				timer.Start(timer.Run)
+				return 0, 0, fmt.Errorf("Canceled...")
 			}
 
 			// run the program
@@ -115,10 +133,18 @@ func runWorkflowMain(
 			timer.Stop(timer.Run)
 		}
 
+		if canceledGui {
+			return 0, 0, fmt.Errorf("Canceled...")
+		}
+
 		// Build args
 		buildFlags, err := buildArgsMain(paths.Prog, false, "1", false, fuzzing, false)
 		if err != nil {
 			return 0, 0, fmt.Errorf("Error in adding header: %v", err)
+		}
+
+		if canceledGui {
+			return 0, 0, fmt.Errorf("Canceled...")
 		}
 
 		// build the program
@@ -127,6 +153,11 @@ func runWorkflowMain(
 			log.Error("Error in building program, removing header and stopping workflow")
 			return 0, 0, err
 		}
+
+		if canceledGui {
+			return 0, 0, fmt.Errorf("Canceled...")
+		}
+
 		// run the recording
 		log.Info("Run program for execution")
 		timer.Start(timer.Recording)
@@ -134,6 +165,10 @@ func runWorkflowMain(
 		command.RunCommand(origStdout, origStderr, command.NoTimeout, execPath)
 
 		timer.Stop(timer.Recording)
+	}
+
+	if canceledGui {
+		return 0, 0, fmt.Errorf("Canceled...")
 	}
 
 	// Apply analyzer
@@ -146,6 +181,10 @@ func runWorkflowMain(
 		if err != nil {
 			return 0, 0, err
 		}
+	}
+
+	if canceledGui {
+		return 0, 0, fmt.Errorf("Canceled...")
 	}
 
 	if flags.Mode == flags.ModeExperiments && flags.Experiment == experiments.IndexingEx {
@@ -172,8 +211,17 @@ func runWorkflowMain(
 
 		collect(paths.ProgDir, paths.ProgDir, paths.Result, total, false, &outFile)
 
+		if canceledGui {
+			return 0, 0, fmt.Errorf("Canceled...")
+		}
+
 		timer.Start(timer.Replay)
 		for _, trace := range rewrittenTraces {
+			if canceledGui {
+				timer.Stop(timer.Replay)
+				break
+			}
+
 			traceNum := extractTraceNum(trace)
 
 			traceNumInt, err := strconv.Atoi(traceNum)
@@ -195,6 +243,11 @@ func runWorkflowMain(
 			if err := command.RunCommand(origStdout, origStderr, command.NoTimeout, paths.Go, "build", buildFlags); err != nil {
 				log.Error("Error in building program, removing header and stopping workflow")
 				continue
+			}
+
+			if canceledGui {
+				timer.Stop(timer.Replay)
+				break
 			}
 
 			// run the program
@@ -222,6 +275,10 @@ func runWorkflowMain(
 	}
 
 	collect(paths.ProgDir, paths.ProgDir, paths.Result, total, true, &outFile)
+
+	if canceledGui {
+		return 0, 0, fmt.Errorf("Canceled...")
+	}
 
 	// Generate Bug Reports
 	var numberResults int

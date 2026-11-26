@@ -49,6 +49,8 @@ var (
 	noWarning = newFlagVal("noWarning", "false", "", "Only show critical bugs")
 	onlyA     = newFlagVal("onlyActual", "false", "", "only test for actual bugs leading to panic and actual leaks. This will overwrite `scen`")
 
+	static = newFlagVal("static", "false", "", "Enable static blockin bug detection")
+
 	// timeout
 	timeout       = newFlagVal("timeout", "180", "", "Set a timeout in seconds for one run. To disable set to -1")
 	timeoutFuz    = newFlagVal("timeoutFuz", "420", "", "Timeout of fuzzing per test/program in seconds. To Disable, set to -1")
@@ -60,7 +62,7 @@ var (
 	stats       = newFlagVal("stats", "false", "", "Create statistics")
 
 	// logging and output
-	noInfo     = newFlagVal("noInfo", "false", "", "Do not show infos in the terminal (will only show results, errors, important and progress)")
+	verbose    = newFlagVal("verbose", "true", "", "Show additional indo during run")
 	noProgress = newFlagVal("noProgress", "false", "", "Do not show progress info")
 	output     = newFlagVal("output", "false", "", "Show the output of the executed programs in the terminal. Otherwise it is only in output.log file.")
 
@@ -232,7 +234,7 @@ func printHelpRun() {
 	fmt.Println(stats.toString(false))
 
 	// logging and output
-	fmt.Println(noInfo.toString(false))
+	fmt.Println(verbose.toString(false))
 	fmt.Println(noProgress.toString(false))
 	fmt.Println(output.toString(false))
 
@@ -289,7 +291,7 @@ func printHelpRecord() {
 	fmt.Println(stats.toString(false))
 
 	// logging and output
-	fmt.Println(noInfo.toString(false))
+	fmt.Println(verbose.toString(false))
 	fmt.Println(noProgress.toString(false))
 	fmt.Println(output.toString(false))
 
@@ -371,6 +373,7 @@ func printHelpAnalysis() {
 	fmt.Println(scenarios.toString(false))
 	fmt.Println(noWarning.toString(false))
 	fmt.Println(onlyA.toString(false))
+	fmt.Println(static.toString(false))
 
 	// timeout
 	fmt.Println(timeout.toString(false))
@@ -381,7 +384,7 @@ func printHelpAnalysis() {
 	fmt.Println(stats.toString(false))
 
 	// logging and output
-	fmt.Println(noInfo.toString(false))
+	fmt.Println(verbose.toString(false))
 	fmt.Println(noProgress.toString(false))
 	fmt.Println(output.toString(false))
 
@@ -432,6 +435,7 @@ func printHelpFuzzing() {
 	fmt.Println(scenarios.toString(false))
 	fmt.Println(noWarning.toString(false))
 	fmt.Println(onlyA.toString(false))
+	fmt.Println(static.toString(false))
 
 	// timeout
 	fmt.Println(timeout.toString(false))
@@ -444,7 +448,7 @@ func printHelpFuzzing() {
 	fmt.Println(stats.toString(false))
 
 	// logging and output
-	fmt.Println(noInfo.toString(false))
+	fmt.Println(verbose.toString(false))
 	fmt.Println(noProgress.toString(false))
 	fmt.Println(output.toString(false))
 
