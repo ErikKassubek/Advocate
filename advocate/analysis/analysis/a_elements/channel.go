@@ -143,7 +143,7 @@ func UpdateSelect(se *trace.ElementSelect) {
 	}
 
 	if a_base.AnalysisCasesMap[flags.SendOnClosed] {
-		chosenIndex := se.GetChosenIndex()
+		chosenIndex := se.ChosenIndex()
 		for i, c := range cases {
 			if i == chosenIndex {
 				continue
@@ -188,7 +188,7 @@ func Unbuffered(sender trace.Element, recv trace.Element) {
 		case *trace.ElementChannel:
 			a_scenarios.CheckForConcurrentRecv(r, a_vc.CurrentVC)
 		case *trace.ElementSelect:
-			a_scenarios.CheckForConcurrentRecv(r.GetChosenCase(), a_vc.CurrentVC)
+			a_scenarios.CheckForConcurrentRecv(r.ChosenCase(), a_vc.CurrentVC)
 		}
 	}
 
@@ -197,7 +197,7 @@ func Unbuffered(sender trace.Element, recv trace.Element) {
 		case *trace.ElementChannel:
 			a_scenarios.GetConcurrentSendForFuzzing(s)
 		case *trace.ElementSelect:
-			a_scenarios.GetConcurrentSendForFuzzing(s.GetChosenCase())
+			a_scenarios.GetConcurrentSendForFuzzing(s.ChosenCase())
 		}
 	}
 

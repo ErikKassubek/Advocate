@@ -81,10 +81,10 @@ func UpdateHBChannel(graph *PoGraph, ch *trace.ElementChannel, recorded bool) {
 //   - se *trace.TraceElementSelect: the select element
 //   - recorded bool: true if it is a recorded trace, false if it is rewritten/mutated
 func UpdateHBSelect(graph *PoGraph, se *trace.ElementSelect, recorded bool) {
-	noChannel := se.GetChosenDefault() || !se.Committed()
+	noChannel := se.ChosenDefault() || !se.Committed()
 
 	if !noChannel {
-		chosenCase := se.GetChosenCase()
+		chosenCase := se.ChosenCase()
 		chosenCase.SetVc(a_clock.Strong, se.VC(a_clock.Strong))
 
 		UpdateHBChannel(graph, chosenCase, recorded)

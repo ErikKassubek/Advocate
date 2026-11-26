@@ -685,8 +685,8 @@ func (this *ElementSelect) NumberConcurrent(vcType a_clock.VcType, sameElem bool
 func (this *ElementSelect) SetNumberConcurrent(c int, vcType a_clock.VcType, sameElem bool) {
 	this.ci.SetNumberConcurrent(c, vcType, sameElem)
 
-	if this.GetChosenCase() != nil {
-		this.GetChosenCase().SetNumberConcurrent(c, vcType, sameElem)
+	if this.ChosenCase() != nil {
+		this.ChosenCase().SetNumberConcurrent(c, vcType, sameElem)
 	}
 }
 
@@ -805,51 +805,78 @@ func (this *ElementSelect) IsValid() bool {
 // MARK: Others
 // ========================================================
 
-// GetChosenCase returns the chosen case
+// ChosenCase returns the chosen case
 //
 // Returns:
 //   - the chosen case
-func (this *ElementSelect) GetChosenCase() *ElementChannel {
+func (this *ElementSelect) ChosenCase() *ElementChannel {
 	if this.chosenDefault || this.tPost == 0 {
 		return nil
 	}
 	return this.chosenCase
 }
 
-// GetChosenIndex returns the index of the chosen case in se.cases
+// ChosenIndex returns the index of the chosen case in se.cases
 //
 // Returns:
 //   - The internal index of the chosen case
-func (this *ElementSelect) GetChosenIndex() int {
+func (this *ElementSelect) ChosenIndex() int {
 	return this.chosenIndex
 }
 
-// GetContainsDefault returns whether the select contains a default case
+// ContainsDefault returns whether the select contains a default case
 //
 // Returns:
 //   - bool: true if select contains default, false otherwise
-func (this *ElementSelect) GetContainsDefault() bool {
-	return this.chosenDefault
+func (this *ElementSelect) ContainsDefault() bool {
+	return this.containsDefault
 }
 
-// GetPartner returns the communication partner of the select. If there is none,
+// ContainsDirection returns whether the select contains send, recv and default cases
+//
+// Returns:
+//   - bool: true if it contains at least one send case
+//   - bool: true if it contains at least one recv case
+//   - bool: true if it contains a default case
+func (this *ElementSelect) ContainsDirection() (bool, bool, bool) {
+	containsSend := false
+	containsRecv := false
+
+	for _, c := range this.cases {
+		op := c.Type(true)
+		switch op {
+		case ChannelSend:
+			containsSend = true
+		case ChannelRecv:
+			containsRecv = true
+		}
+
+		if containsSend && containsRecv {
+			break
+		}
+	}
+
+	return containsSend, containsRecv, this.containsDefault
+}
+
+// Partner returns the communication partner of the select. If there is none,
 // it returns nil
 //
 // Returns:
 //   - *TraceElementChannel: The communication partner of the select or nil
-func (this *ElementSelect) GetPartner() *ElementChannel {
+func (this *ElementSelect) Partner() *ElementChannel {
 	if this.chosenCase.tCom != 0 && !this.chosenDefault {
 		return this.chosenCase.partner
 	}
 	return nil
 }
 
-// GetCasiWithPosPartner returns a list of all internal indices, where the
+// CasiWithPosPartner returns a list of all internal indices, where the
 // corresponding case as a potential partner
 //
 // Returns:
 //   - []int: list of indices
-func (this *ElementSelect) GetCasiWithPosPartner() []int {
+func (this *ElementSelect) CasiWithPosPartner() []int {
 	return this.casesWithPosPartner
 }
 
@@ -861,11 +888,11 @@ func (this *ElementSelect) AddCasesWithPosPartner(casi int) {
 	this.casesWithPosPartner = append(this.casesWithPosPartner, casi)
 }
 
-// GetCasesWithPosPartner returns casesWithPosPartner
+// CasesWithPosPartner returns casesWithPosPartner
 //
 // Returns:
 //   - []int: list of cases with potential partner
-func (this *ElementSelect) GetCasesWithPosPartner() []int {
+func (this *ElementSelect) CasesWithPosPartner() []int {
 	return this.casesWithPosPartner
 }
 
@@ -887,10 +914,10 @@ func (this *ElementSelect) SetChosenCase(index int) error {
 	return nil
 }
 
-// GetChosenDefault if the default case is the executed case
+// ChosenDefault if the default case is the executed case
 //
 // Returns: bool: true if default case
-func (this *ElementSelect) GetChosenDefault() bool {
+func (this *ElementSelect) ChosenDefault() bool {
 	return this.chosenDefault
 }
 

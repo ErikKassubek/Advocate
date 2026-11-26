@@ -156,7 +156,7 @@ func parseChannelOp(elem *trace.ElementChannel, selID int) {
 				selIDRecv := -2
 				selRecv := recv.GetSelect()
 				if selRecv != nil {
-					selIDRecv = selRecv.GetChosenIndex()
+					selIDRecv = selRecv.ChosenIndex()
 				}
 
 				if e, ok := f_gfuzz.PairInfoTrace[key]; ok {
@@ -187,9 +187,9 @@ func parseSelectOp(elem *trace.ElementSelect) {
 	if f_base.FuzzingModeGFuzz {
 		f_gfuzz.AddFuzzingSelect(elem)
 
-		if elem.GetChosenDefault() {
+		if elem.ChosenDefault() {
 			return
 		}
-		parseChannelOp(elem.GetChosenCase(), elem.GetChosenIndex())
+		parseChannelOp(elem.ChosenCase(), elem.ChosenIndex())
 	}
 }

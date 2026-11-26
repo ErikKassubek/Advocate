@@ -32,8 +32,6 @@ func (this *InstructionSend) setRelevant(_ *Data) {
 	this.inTrace = true
 }
 
-// TODO: check that send and receive have the same type
-// TODO: check if select has correct direction
 func (this *InstructionSend) CanUnblockSimple(elem trace.Element) bool {
 	switch elem := elem.(type) {
 	case *trace.ElementChannel:
@@ -41,7 +39,9 @@ func (this *InstructionSend) CanUnblockSimple(elem trace.Element) bool {
 			return true
 		}
 	case *trace.ElementSelect:
-		return true
+		if _, recv, _ := elem.ContainsDirection(); recv {
+			return true
+		}
 	}
 
 	return false

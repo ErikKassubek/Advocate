@@ -25,7 +25,7 @@ func BuildStaticBlockingAnalysis() (err error) {
 		return err
 	}
 
-	data.Ssa().PrintAnalysis()
+	// data.Ssa().PrintAnalysis()
 	// data.Ssa().PrintSsa(true)
 
 	// isBlockingBug()

@@ -11,6 +11,9 @@ package s_ssa
 
 import (
 	"advocate/trace"
+	"advocate/utils/log"
+	"go/types"
+	"strings"
 
 	"golang.org/x/tools/go/ssa"
 )
@@ -32,13 +35,50 @@ func (this *InstructionSelect) setRelevant(_ *Data) {
 	this.inTrace = true
 }
 
-// TODO: check that select has correct direction
-// TODO: check that send and receive have the same type
 func (this *InstructionSelect) CanUnblockSimple(elem trace.Element) bool {
-	switch elem.(type) {
-	case *trace.ElementChannel, *trace.ElementSelect:
-		return true
+	switch elem := elem.(type) {
+	case *trace.ElementChannel:
+		send, recv, _ := this.containsDirection()
+		t := elem.Type(true)
+
+		switch t {
+		case trace.ChannelSend, trace.ChannelClose:
+			return recv
+		case trace.ChannelRecv:
+			return send
+		}
+
+	case *trace.ElementSelect:
+		e_send, e_recv, _ := elem.ContainsDirection()
+		this_send, this_recv, _ := this.containsDirection()
+
+		return (e_send && this_recv) || (e_recv && this_send)
 	}
 
 	return false
+}
+
+// Contains send, recv, default
+func (this *InstructionSelect) containsDirection() (bool, bool, bool) {
+	log.Debug2(this.term)
+
+	containsSend := false
+	containsRecv := false
+
+	for _, state := range this.Instruction().States {
+		switch state.Dir {
+		case types.SendOnly:
+			containsSend = true
+		case types.RecvOnly:
+			containsRecv = true
+		}
+
+		if containsSend && containsRecv {
+			break
+		}
+	}
+
+	containsDefault := strings.Contains(this.term, "nonblocking")
+
+	return containsSend, containsRecv, containsDefault
 }

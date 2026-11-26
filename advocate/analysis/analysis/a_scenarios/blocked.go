@@ -86,7 +86,7 @@ func checkSelectDefaultOrTImer(tr *trace.Trace, b map[int]struct{}) []int {
 	for rout := range b {
 		last := tr.GetLastElemInRout(rout)
 		if elem, ok := last.(*trace.ElementSelect); ok {
-			if elem.GetContainsDefault() {
+			if elem.ContainsDefault() {
 				del = append(del, rout)
 				continue
 			}

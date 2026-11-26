@@ -275,22 +275,22 @@ func MutSelect(cs *f_constraints.Constraint) map[string]f_constraints.Constraint
 		}
 
 		sel := elem.(*trace.ElementSelect)
-		chosen := sel.GetChosenCase()
+		chosen := sel.ChosenCase()
 		if chosen != nil {
-			partner := sel.GetChosenCase().GetPartner()
+			partner := sel.ChosenCase().GetPartner()
 			if partner != nil && cs.Contains(partner) {
 				continue
 			}
 		}
 
-		if sel.GetContainsDefault() && !sel.GetChosenDefault() {
+		if sel.ContainsDefault() && !sel.ChosenDefault() {
 			c := cs.Copy()
 			c.Elems[i].(*trace.ElementSelect).SetCaseByIndex(-1)
 			res[c.String()] = c
 		}
 
 		for ca := range sel.GetCases() {
-			if ca == sel.GetChosenIndex() {
+			if ca == sel.ChosenIndex() {
 				continue
 			}
 

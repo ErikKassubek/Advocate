@@ -10,8 +10,6 @@
 package s_ssa
 
 import (
-	"fmt"
-
 	"golang.org/x/tools/go/ssa"
 )
 
@@ -42,7 +40,6 @@ func (this *Data) runSSAAnalysis() {
 			if isMain(fn) {
 				this.mainFunc = &f
 			} else if isInit(fn) {
-				fmt.Println("INIT: ", f.Name())
 				this.initFunc = &f
 			}
 

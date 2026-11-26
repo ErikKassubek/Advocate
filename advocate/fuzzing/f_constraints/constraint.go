@@ -199,7 +199,7 @@ func (this *Constraint) String() string {
 		res += fmt.Sprintf("%d:%s", e.RoutineID(), e.Pos())
 		switch f := e.(type) {
 		case *trace.ElementSelect:
-			res += fmt.Sprintf("%d", f.GetChosenIndex())
+			res += fmt.Sprintf("%d", f.ChosenIndex())
 		}
 		res += "&"
 	}

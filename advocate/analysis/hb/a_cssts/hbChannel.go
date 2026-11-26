@@ -80,10 +80,10 @@ func UpdateHBChannel(ch *trace.ElementChannel) {
 // Parameter:
 //   - se *trace.TraceElementSelect: the select element
 func UpdateHBSelect(se *trace.ElementSelect) {
-	noChannel := se.GetChosenDefault() || !se.Committed()
+	noChannel := se.ChosenDefault() || !se.Committed()
 
 	if !noChannel {
-		chosenCase := se.GetChosenCase()
+		chosenCase := se.ChosenCase()
 		chosenCase.SetVc(a_clock.Strong, se.VC(a_clock.Strong))
 
 		UpdateHBChannel(chosenCase)

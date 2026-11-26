@@ -80,7 +80,16 @@ func (this *InstructionCall) CanUnblockSimple(elem trace.Element) bool {
 		if !this.HasChannel() {
 			return false
 		}
-		return strings.HasPrefix(this.term, "close(")
+
+		return elem.Type(true) == trace.ChannelRecv && strings.HasPrefix(this.term, "close(")
+	case (*trace.ElementSelect):
+		if !this.HasChannel() {
+			return false
+		}
+
+		_, recv, _ := elem.ContainsDirection()
+
+		return recv && strings.HasPrefix(this.term, "close(")
 	case (*trace.ElementMutex):
 		if !this.HasMutex() {
 			return false

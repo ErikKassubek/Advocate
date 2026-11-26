@@ -76,7 +76,7 @@ func (this *windowResults) updateResults(dir string) {
 		}
 
 		name := d.Name()
-		if strings.HasPrefix(name, "bug_") && strings.HasSuffix(name, ".md") {
+		if strings.Contains(path, paths.NameResult) && strings.HasPrefix(name, "bug_") && strings.HasSuffix(name, ".md") {
 			this.addBug(path)
 		}
 

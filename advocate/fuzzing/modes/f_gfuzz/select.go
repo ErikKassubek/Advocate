@@ -23,10 +23,10 @@ func AddFuzzingSelect(e *trace.ElementSelect) {
 	fs := f_base.FuzzingSelect{
 		ID:              e.ReplayID(),
 		T:               e.T(trace.Commit),
-		ChosenCase:      e.GetChosenIndex(),
+		ChosenCase:      e.ChosenIndex(),
 		NumberCases:     len(e.GetCases()),
-		ContainsDefault: e.GetContainsDefault(),
-		CasiWithPos:     e.GetCasiWithPosPartner(),
+		ContainsDefault: e.ContainsDefault(),
+		CasiWithPos:     e.CasiWithPosPartner(),
 	}
 
 	SelectInfoTrace[fs.ID] = append(SelectInfoTrace[fs.ID], fs)

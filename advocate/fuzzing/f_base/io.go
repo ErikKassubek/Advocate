@@ -200,7 +200,7 @@ func writeConstraintOrder(fuzzingTracePath string, tr *trace.Trace, mut *f_const
 		info := "0"
 		switch e := elem.(type) {
 		case *trace.ElementSelect:
-			info = fmt.Sprintf("%d", e.GetChosenIndex())
+			info = fmt.Sprintf("%d", e.ChosenIndex())
 		}
 
 		if elem.Pos().File() == "" {

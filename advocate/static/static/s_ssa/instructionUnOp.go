@@ -37,8 +37,6 @@ func (this *InstructionUnOp) isRecv() bool {
 	return this.Inst().(*ssa.UnOp).Op == token.ARROW
 }
 
-// TODO: check that send and receive have the same type
-// TODO: check that select has correct direction
 func (this *InstructionUnOp) CanUnblockSimple(elem trace.Element) bool {
 	if !this.isRecv() {
 		return false
@@ -50,7 +48,9 @@ func (this *InstructionUnOp) CanUnblockSimple(elem trace.Element) bool {
 			return true
 		}
 	case *trace.ElementSelect:
-		return true
+		if send, _, _ := elem.ContainsDirection(); send {
+			return true
+		}
 	}
 
 	return false

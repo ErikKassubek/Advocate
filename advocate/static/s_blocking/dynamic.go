@@ -27,7 +27,6 @@ func getBlockedResources() (map[trace.Element][]trace.Resource, map[int]trace.Re
 	blockedRes := make(map[int]trace.Resource)
 
 	for _, e := range a_base.MainTrace.GetBlocked() {
-		log.Debug("Blocked: ", e)
 		// TODO: handle select
 		resources := a_base.MainTrace.GetResources(e)
 
