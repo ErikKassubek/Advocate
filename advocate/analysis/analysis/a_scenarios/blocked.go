@@ -79,6 +79,21 @@ func Blocked() error {
 	reportBlocking(cyclic, buginfo.ADeadlock)
 	reportBlocking(b, buginfo.ABlocking)
 
+	blockedInL := make([]int, 0)
+	nonBlockedInL := make([]int, 0)
+
+	for _, r := range l {
+		if tr.GetLastElemInRout(r).Committed() {
+			nonBlockedInL = append(nonBlockedInL, r)
+		} else {
+			blockedInL = append(blockedInL, r)
+		}
+	}
+
+	reportLeak(nonBlockedInL)
+
+	l = blockedInL
+
 	if flags.Static && len(l) > 0 {
 		var err error
 		if !s_blocking.StaticBuild() {

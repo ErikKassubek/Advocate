@@ -33,7 +33,7 @@ func CheckForCommunicationOnClosedChannel(ch *trace.ElementChannel) {
 	id := ch.ResourceID()
 
 	// check if there is an earlier send, that could happen concurrently to close
-	if a_base.AnalysisCasesMap[flags.SendOnClosed] && a_base.HasSend[id] {
+	if flags.AnalysisCasesMap[flags.SendOnClosed] && a_base.HasSend[id] {
 		for routine, mrs := range a_base.MostRecentSend {
 			happensBefore := a_clock.GetHappensBefore(mrs[id].Vc, a_base.CloseData[id].VC(a_clock.Strong))
 

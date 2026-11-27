@@ -11,14 +11,10 @@
 
 package a_base
 
-import "advocate/utils/flags"
-
 // Settings for the analysis
 var (
 	ModeIsFuzzing bool
 
-	// analysis cases to run
-	AnalysisCasesMap    = make(map[flags.AnalysisCases]bool)
 	AnalysisFuzzingFlow = false
 
 	// exit code info

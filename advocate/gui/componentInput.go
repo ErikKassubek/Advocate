@@ -12,7 +12,6 @@
 package gui
 
 import (
-	"advocate/fuzzing/f_base"
 	"advocate/utils/math"
 	"strings"
 	"unicode"
@@ -239,6 +238,16 @@ func createInputCheck(labelStr string, valToSet *bool, invert bool) *checkInput 
 	return &checkInput{Container: row, label: label, check: check}
 }
 
+func createInputCheckFunc(labelStr string, f func(b bool, letter string), letter string, checked bool) *checkInput {
+	check := widget.NewCheck("", func(b bool) { f(b, letter) })
+
+	check.SetChecked(checked)
+
+	label, row := createSettingField(labelStr, check, nil)
+
+	return &checkInput{Container: row, label: label, check: check}
+}
+
 func (this *checkInput) disable() {
 	this.check.Disable()
 }
@@ -259,12 +268,12 @@ type selectInput struct {
 	check *widget.Check
 }
 
-func createInputSelect(labelStr string, valToSet *string, values []string, canBeDisabled bool) *selectInput {
+func createInputSelect(labelStr string, valToSet *string, values []string, defaultVal string, canBeDisabled bool) *selectInput {
 	entry := widget.NewSelect(values, func(s string) {
 		*valToSet = s
 	})
 
-	entry.SetSelected(f_base.Modes[0])
+	entry.SetSelected(defaultVal)
 
 	var check *widget.Check
 	var middle fyne.CanvasObject
@@ -311,9 +320,9 @@ func (this *selectInput) enable() {
 // -------------------------------------------------------------------------------------------------------
 
 const rowHeight float32 = 40
-const labelWidth float32 = 260
+const labelWidth float32 = 350
 const checkWidth float32 = 40
-const inputWidth float32 = labelWidth + checkWidth
+const inputWidth float32 = 200
 
 func createSettingField(labelStr string, middle fyne.CanvasObject, right fyne.CanvasObject) (*widget.Label, *fyne.Container) {
 	label := widget.NewLabel(labelStr)

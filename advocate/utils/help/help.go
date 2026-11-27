@@ -38,14 +38,14 @@ var (
 	scenarios = newFlagVal("scen", "", "", "Select which analysis scenario to run, e.g. -scen srd for the option s, r and d",
 		"If not set, all scenarios are run.",
 		"Options:",
-		"\ts: Send on closed channel",
-		"\tr: Receive on closed channel",
-		"\tw: Done before add on waitGroup",
-		"\tn: Close of closed channel",
-		"\tb: Concurrent receive on channel",
-		"\tl: Leaking routine",
-		"\tu: Unlock of unlocked mutex",
-		"\tc: Cyclic deadlock")
+		"\ts: Send on closed channel\n",
+		"\tw: Done before add on waitGroup\n",
+		"\tc: Close of closed channel\n",
+		"\tl: Leaking routine\n",
+		"\tu: Unlock of unlocked mutex\n",
+		"\td: Cyclic deadlock\n",
+		"\tm: Mixed deadlock\n",
+		"\tr: Concurrent receive on the same channel")
 	noWarning = newFlagVal("noWarning", "false", "", "Only show critical bugs")
 	onlyA     = newFlagVal("onlyActual", "false", "", "only test for actual bugs leading to panic and actual leaks. This will overwrite `scen`")
 

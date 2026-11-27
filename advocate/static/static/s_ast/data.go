@@ -108,7 +108,8 @@ func BuildAst(dir string) (*Data, error) {
 
 	data.buildAst()
 
-	data.CollectOperations()
+	// TODO: for now removed, add for individual packages
+	// data.CollectOperations()
 
 	return data, nil
 }

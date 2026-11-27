@@ -30,13 +30,16 @@ const (
 	ResourceDeadlock AnalysisCases = "resourceDeadlock"
 )
 
+// analysis cases to run
+var AnalysisCasesMap = make(map[AnalysisCases]bool)
+
 // ParseAnalysisCases parses the given analysis cases
 //
 // Returns:
 //   - map[AnalysisCases]bool: A map of the analysis cases and if they are set
 //   - error: An error if the cases could not be parsed
-func ParseAnalysisCases() (map[AnalysisCases]bool, error) {
-	analysisCases := map[AnalysisCases]bool{
+func ParseAnalysisCases() error {
+	AnalysisCasesMap = map[AnalysisCases]bool{
 		All:          false, // all cases enabled
 		SendOnClosed: false,
 		// ReceiveOnClosed:  false,
@@ -50,49 +53,42 @@ func ParseAnalysisCases() (map[AnalysisCases]bool, error) {
 	}
 
 	if Scenarios == "-" {
-		return analysisCases, nil
+		return nil
 	}
 
 	if Scenarios == "" {
-		for c := range analysisCases {
-			analysisCases[c] = true
+		for c := range AnalysisCasesMap {
+			AnalysisCasesMap[c] = true
 		}
 
-		// not in thesis
-		analysisCases[ConcurrentRecv] = false
-		// analysisCases[ReceiveOnClosed] = false
-
-		return analysisCases, nil
+		return nil
 	}
 
 	for _, c := range Scenarios {
 		switch c {
 		case 's':
-			analysisCases[SendOnClosed] = true
-		case 'r':
-			// analysisCases[ReceiveOnClosed] = true
+			AnalysisCasesMap[SendOnClosed] = true
 		case 'w':
-			analysisCases[DoneBeforeAdd] = true
-		case 'n':
-			analysisCases[CloseOnClosed] = true
-		case 'b':
-			analysisCases[ConcurrentRecv] = true
-		case 'l':
-			analysisCases[Leak] = true
-		case 'u':
-			analysisCases[UnlockBeforeLock] = true
+			AnalysisCasesMap[DoneBeforeAdd] = true
 		case 'c':
-			analysisCases[ResourceDeadlock] = true
-		// MIXED DEADLOCK [REMOVE]
+			AnalysisCasesMap[CloseOnClosed] = true
+		case 'l':
+			AnalysisCasesMap[Leak] = true
+		case 'r':
+			AnalysisCasesMap[ConcurrentRecv] = true
+		case 'u':
+			AnalysisCasesMap[UnlockBeforeLock] = true
+		case 'd':
+			AnalysisCasesMap[ResourceDeadlock] = true
 		case 'm':
-			analysisCases[MixedDeadlock] = true
+			AnalysisCasesMap[MixedDeadlock] = true
 		default:
-			return nil, fmt.Errorf("Invalid analysis case: %c", c)
+			return fmt.Errorf("Invalid analysis case: %c", c)
 		}
 	}
 
 	all := true
-	for key, val := range analysisCases {
+	for key, val := range AnalysisCasesMap {
 		if key == All {
 			continue
 		}
@@ -103,8 +99,8 @@ func ParseAnalysisCases() (map[AnalysisCases]bool, error) {
 	}
 
 	if all {
-		analysisCases[All] = true
+		AnalysisCasesMap[All] = true
 	}
 
-	return analysisCases, nil
+	return nil
 }

@@ -40,7 +40,7 @@ func UpdateMutex(mu *trace.ElementMutex, alt bool) {
 		a_base.CurrentlyHoldLock[id] = mu
 		a_scenarios.IncFuzzingCounter(mu)
 
-		if a_base.AnalysisCasesMap[flags.UnlockBeforeLock] {
+		if flags.AnalysisCasesMap[flags.UnlockBeforeLock] {
 			a_scenarios.CheckForUnlockBeforeLockLock(mu)
 		}
 
@@ -49,7 +49,7 @@ func UpdateMutex(mu *trace.ElementMutex, alt bool) {
 		a_base.CurrentlyHoldLock[id] = mu
 		a_scenarios.IncFuzzingCounter(mu)
 
-		if a_base.AnalysisCasesMap[flags.UnlockBeforeLock] {
+		if flags.AnalysisCasesMap[flags.UnlockBeforeLock] {
 			a_scenarios.CheckForUnlockBeforeLockLock(mu)
 		}
 
@@ -59,7 +59,7 @@ func UpdateMutex(mu *trace.ElementMutex, alt bool) {
 			a_base.CurrentlyHoldLock[id] = mu
 			a_scenarios.IncFuzzingCounter(mu)
 
-			if a_base.AnalysisCasesMap[flags.UnlockBeforeLock] {
+			if flags.AnalysisCasesMap[flags.UnlockBeforeLock] {
 				a_scenarios.CheckForUnlockBeforeLockLock(mu)
 			}
 		}
@@ -70,7 +70,7 @@ func UpdateMutex(mu *trace.ElementMutex, alt bool) {
 			a_base.CurrentlyHoldLock[id] = mu
 			a_scenarios.IncFuzzingCounter(mu)
 
-			if a_base.AnalysisCasesMap[flags.UnlockBeforeLock] {
+			if flags.AnalysisCasesMap[flags.UnlockBeforeLock] {
 				a_scenarios.CheckForUnlockBeforeLockLock(mu)
 			}
 		}
@@ -89,7 +89,7 @@ func UpdateMutex(mu *trace.ElementMutex, alt bool) {
 
 		a_base.CurrentlyHoldLock[id] = nil
 
-		if a_base.AnalysisCasesMap[flags.UnlockBeforeLock] {
+		if flags.AnalysisCasesMap[flags.UnlockBeforeLock] {
 			a_scenarios.CheckForUnlockBeforeLockUnlock(mu)
 		}
 
@@ -102,7 +102,7 @@ func UpdateMutex(mu *trace.ElementMutex, alt bool) {
 
 		a_base.CurrentlyHoldLock[id] = nil
 
-		if a_base.AnalysisCasesMap[flags.UnlockBeforeLock] {
+		if flags.AnalysisCasesMap[flags.UnlockBeforeLock] {
 			a_scenarios.CheckForUnlockBeforeLockUnlock(mu)
 		}
 

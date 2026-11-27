@@ -107,7 +107,7 @@ func CheckForConcurrentRecv(ch *trace.ElementChannel, vc map[int]*a_clock.Vector
 				}
 			}
 
-			if a_base.AnalysisCasesMap[flags.ConcurrentRecv] {
+			if flags.AnalysisCasesMap[flags.ConcurrentRecv] {
 				arg1 := results.TraceElementResult{
 					RoutineID:  routine,
 					ResourceID: id,

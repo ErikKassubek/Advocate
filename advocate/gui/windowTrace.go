@@ -49,7 +49,7 @@ func (this *window) openWindowTrace() {
 		tv.closeButton.Container,
 		nil,
 		nil,
-		container.NewStack(tv.traceViewer.Scroll),
+		tv.traceViewer,
 	)
 
 	tv.window.SetContent(content)
@@ -82,7 +82,7 @@ func (this *windowTrace) updateTrace(dir string) {
 		this.closeButton.Container,
 		nil,
 		nil,
-		container.NewStack(this.traceViewer.Scroll),
+		this.traceViewer,
 	)
 
 	this.window.SetContent(content)

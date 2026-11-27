@@ -132,18 +132,21 @@ func isBlockingBug(routs map[int]bool) ([]int, []int) {
 //   - []int: routines that are blocking bugs
 //   - []int: routines that are leaks
 func isBlockingSimple(routs map[int]bool) ([]int, []int) {
-	blocking.blocked, blocking.blockedResources = getBlockedResources(routs)
+	log.Debug2("IS BLOCKING SIMPLE: ", blocking.blocked)
 
 	bug := make([]int, 0)
 	leak := make([]int, 0)
 
-	for b := range blocking.blocked {
+	tr := &a_base.MainTrace
+
+	for r := range routs {
+		e := tr.GetLastElemInRout(r)
 		found := false
 	here:
 		for _, f := range data.Ssa().Funcs() {
 			for _, block := range f.Blocks() {
 				for _, inst := range block.Instrs() {
-					if inst.CanUnblockSimple(b) {
+					if inst.CanUnblockSimple(e) {
 						found = true
 						break here
 					}
@@ -151,11 +154,13 @@ func isBlockingSimple(routs map[int]bool) ([]int, []int) {
 			}
 		}
 
+		log.Debug2("AFTER HERE")
+
 		if !found {
-			bug = append(bug, b.RoutineID())
-			log.Resultf(true, true, "", "Found blocking bug after static: %s", b)
+			bug = append(bug, e.RoutineID())
+			log.Resultf(true, true, "", "Found blocking bug after static: %s", e)
 		} else {
-			leak = append(leak, b.RoutineID())
+			leak = append(leak, e.RoutineID())
 		}
 	}
 

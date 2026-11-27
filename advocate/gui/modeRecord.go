@@ -14,7 +14,6 @@ package gui
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
 )
 
 type settingsRecord struct {
@@ -32,18 +31,42 @@ func createSettingsRecord(comp *settingComponents) *settingsRecord {
 func (this *window) setRecord() {
 	this.traceSelect.disable()
 
-	objects := []fyne.CanvasObject{
-		widget.NewSeparator(),
-		this.settings.components.label.Container,
-		this.settings.components.label,
+	modes := []fyne.CanvasObject{}
+
+	limits := []fyne.CanvasObject{
 		this.settings.components.timeout.Container,
 		this.settings.components.maxNumberElements.Container,
-		twoCheck(this.settings.components.measureTime.Container, this.settings.components.createStatistics.Container),
-		twoCheck(this.settings.components.checkForNotExecuted.Container, this.settings.components.ignoreAtomics.Container),
-		twoCheck(this.settings.components.deleteTrace.Container, this.settings.components.cont.Container),
-		twoCheck(this.settings.components.noWarning.Container, this.settings.components.verbose.Container),
-		twoCheck(this.settings.components.noProgress.Container, this.settings.components.output.Container),
-		twoCheck(this.settings.components.alwaysPanic.Container, this.settings.components.noMemorySup.Container),
 	}
-	this.setSettings(objects)
+
+	statistics := []fyne.CanvasObject{
+		this.settings.components.createStatistics.Container,
+		this.settings.components.measureTime.Container,
+		this.settings.components.checkForNotExecuted.Container,
+	}
+
+	recordings := []fyne.CanvasObject{
+		this.settings.components.recordPlus.Container,
+		this.settings.components.ignoreAtomics.Container,
+	}
+
+	behaviours := []fyne.CanvasObject{
+		this.settings.components.deleteTrace.Container,
+		this.settings.components.cont.Container,
+		this.settings.components.alwaysPanic.Container,
+		this.settings.components.noMemorySup.Container,
+	}
+
+	loggings := []fyne.CanvasObject{
+		this.settings.components.verbose.Container,
+		this.settings.components.noWarning.Container,
+		this.settings.components.noProgress.Container,
+		this.settings.components.output.Container,
+	}
+
+	this.setSettings(mode, modes)
+	this.setSettings(limit, limits)
+	this.setSettings(recording, recordings)
+	this.setSettings(statistic, statistics)
+	this.setSettings(behaviour, behaviours)
+	this.setSettings(logging, loggings)
 }

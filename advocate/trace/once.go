@@ -341,7 +341,7 @@ func (this *ElementOnce) StringDebug() string {
 //   - string: The gui string representation of the element
 func (this *ElementOnce) StringGui() string {
 	res := "O,"
-	res += strconv.Itoa(this.objId) + ","
+	res += strconv.Itoa(this.Resource().shortID) + ","
 	if this.suc {
 		res += "t"
 	} else {

@@ -265,7 +265,7 @@ func (this *ElementFork) StringDebug() string {
 // Returns:
 //   - string: The simple gui representation of the element
 func (this *ElementFork) StringGui() string {
-	return "G" + "," + strconv.Itoa(this.objId) +
+	return "G" + "," + strconv.Itoa(this.Resource().shortID) +
 		"\n" + this.Pos().Short()
 }
 

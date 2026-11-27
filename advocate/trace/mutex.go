@@ -430,7 +430,7 @@ func (this *ElementMutex) StringDebug() string {
 //   - string: The gui string representation of the element
 func (this *ElementMutex) StringGui() string {
 	res := "M,"
-	res += strconv.Itoa(this.objId) + ","
+	res += strconv.Itoa(this.Resource().shortID) + ","
 
 	if this.rw {
 		res += "R,"

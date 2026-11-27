@@ -35,7 +35,7 @@ func (self *Data) getNameRec(id ast.Expr) string {
 	case *ast.CallExpr:
 		return self.getNameRec(e.Fun)
 	default:
-		return "Other"
+		return "Other" // TODO: write for others
 		// panic(fmt.Sprintf("Unknown expr type %T", e))
 	}
 }
@@ -49,48 +49,78 @@ func (self *Data) getPackage(expr ast.Expr) string {
 }
 
 // parse the files the determine the type information
+// TODO: this takes very long, maybe only apply to the files/packages where it is necessary
 func (self *Data) CollectOperations() {
-	// per function
 	for _, file := range self.ast {
 		self.detOpsInFile(file)
 	}
 }
 
+func (self *Data) detOpsInPackage(pkgName string) {
+	for _, file := range self.ast {
+		if file.Name.Name != pkgName {
+			continue
+		}
+
+		self.detOpsInFile(file)
+	}
+}
+
+func (self *Data) detOpsInPAth(path string) {
+	for _, file := range self.ast {
+		filePath := self.Fset.Position(file.Pos()).Filename
+		if filePath != path {
+			continue
+		}
+
+		self.detOpsInFile(file)
+	}
+}
+
 func (self *Data) detOpsInFile(file *ast.File) {
+	if file == nil {
+		return
+	}
+
 	for _, decl := range file.Decls {
 		fdecl, ok := decl.(*ast.FuncDecl)
 		if !ok || fdecl.Body == nil {
 			continue
 		}
+
 		self.detOpsInFunc(fdecl)
 	}
-
-	ast.Inspect(file, func(n ast.Node) bool {
-		if ifStmt, ok := n.(*ast.IfStmt); ok {
-			self.IfStmtMap[ifStmt.Pos()] = ifStmt
-		}
-		return true
-	})
 }
 
 func (self *Data) detOpsInFunc(fdecl *ast.FuncDecl) {
+	if fdecl == nil || fdecl.Body == nil {
+		return
+	}
+
 	self.addFuncIfNotExists(fdecl)
 
-	ast.Inspect(fdecl, func(n ast.Node) bool {
+	self.FuncDeclMap[fdecl.Name.Pos()] = fdecl
+
+	ast.Inspect(fdecl.Body, func(n ast.Node) bool {
+		if n == nil {
+			return false
+		}
+
 		switch x := n.(type) {
-		case *ast.FuncDecl:
-			self.FuncDeclMap[x.Name.Pos()] = x
-		case *ast.GoStmt: // new routine
+		case *ast.IfStmt:
+			self.IfStmtMap[x.Pos()] = x
+
+		case *ast.GoStmt:
 			self.recordGoStatement(fdecl, x)
-			// self.recordFunctionCall(fdecl, x.Call)
-		case *ast.SendStmt: // channel send
+
+		case *ast.SendStmt:
 			self.recordOperation(fdecl, x.Chan, s_base.ChanSend)
-			return true
-		case *ast.UnaryExpr: // channel recv
+
+		case *ast.UnaryExpr:
 			if x.Op == token.ARROW {
 				self.recordOperation(fdecl, x.X, s_base.ChanRecv)
-				return true
 			}
+
 		case *ast.CallExpr:
 			ft := s_base.UnknownFunc
 
@@ -100,21 +130,22 @@ func (self *Data) detOpsInFunc(fdecl *ast.FuncDecl) {
 					if len(x.Args) == 1 && self.isChannel(x.Args[0]) {
 						ft = s_base.ChanClose
 					}
+
 				case "make":
-					if len(x.Args) != 0 {
-						switch x.Args[0].(type) {
-						case *ast.ChanType:
+					if len(x.Args) > 0 {
+						if _, ok := x.Args[0].(*ast.ChanType); ok {
 							ft = s_base.MakeChan
 						}
 					}
 				}
+
 				if ft != s_base.UnknownFunc {
 					self.recordOperation(fdecl, x.Args[0], ft)
 					return true
 				}
 			}
 
-			if sel, ok := x.Fun.(*ast.SelectorExpr); ok { // a.x()
+			if sel, ok := x.Fun.(*ast.SelectorExpr); ok {
 				if self.isMutex(x) {
 					switch sel.Sel.Name {
 					case "Lock":
@@ -124,7 +155,7 @@ func (self *Data) detOpsInFunc(fdecl *ast.FuncDecl) {
 					case "RLock":
 						ft = s_base.MutexRLock
 					case "TryRLock":
-						ft = s_base.MutexRLock
+						ft = s_base.MutexTryRLock
 					case "Unlock":
 						ft = s_base.MutexUnlock
 					case "RUnlock":
@@ -140,8 +171,8 @@ func (self *Data) detOpsInFunc(fdecl *ast.FuncDecl) {
 					case "Broadcast":
 						ft = s_base.CondBroadcast
 					}
-				} else if self.isWaitGroup(x) {
 
+				} else if self.isWaitGroup(x) {
 					switch sel.Sel.Name {
 					case "Wait":
 						ft = s_base.WgWait
@@ -159,6 +190,7 @@ func (self *Data) detOpsInFunc(fdecl *ast.FuncDecl) {
 					return true
 				}
 			}
+
 			self.recordFunctionCall(fdecl, x)
 		}
 
@@ -191,9 +223,15 @@ func (self *Data) isWaitGroup(id *ast.CallExpr) bool {
 }
 
 func (self *Data) isConcObj(call *ast.CallExpr, on s_base.ObjName) bool {
-	sel, ok := call.Fun.(*ast.SelectorExpr)
+	if call == nil {
+		return false
+	}
 
-	// Find the package containing this node.
+	sel, ok := call.Fun.(*ast.SelectorExpr)
+	if !ok {
+		return false
+	}
+
 	pkg := self.npm[call]
 	if pkg == nil {
 		return false
@@ -206,7 +244,6 @@ func (self *Data) isConcObj(call *ast.CallExpr, on s_base.ObjName) bool {
 
 	selection := info.Selections[sel]
 	if selection == nil {
-		// Not a method call (e.g. pkg.Func()).
 		return false
 	}
 
@@ -230,11 +267,13 @@ func (self *Data) isConcObj(call *ast.CallExpr, on s_base.ObjName) bool {
 	case s_base.Mutex:
 		return (obj.Name() == "Mutex" || obj.Name() == "RWMutex") &&
 			obj.Pkg().Path() == "sync"
+
 	case s_base.Wg:
 		return obj.Name() == "WaitGroup" &&
 			obj.Pkg().Path() == "sync"
+
 	case s_base.CondVar:
-		return obj.Name() == "CondVar" &&
+		return obj.Name() == "Cond" &&
 			obj.Pkg().Path() == "sync"
 	}
 

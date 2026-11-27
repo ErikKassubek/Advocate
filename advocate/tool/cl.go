@@ -15,6 +15,7 @@ import (
 	"advocate/utils/help"
 	"advocate/utils/log"
 	"flag"
+	"fmt"
 	"os"
 	"strings"
 )
@@ -79,18 +80,17 @@ func CommandLine() bool {
 		"If not set, all scenarios are run.\n"+
 		"Options:\n"+
 		"\ts: Send on closed channel\n"+
-		// "\tr: Receive on closed channel\n"+
 		"\tw: Done before add on waitGroup\n"+
-		"\tn: Close of closed channel\n"+
-		// "\tb: Concurrent receive on channel\n"+
+		"\tc: Close of closed channel\n"+
 		"\tl: Leaking routine\n"+
 		"\tu: Unlock of unlocked mutex\n"+
-		"\tc: Cyclic deadlock\n"+
-		"\tm: Mixed deadlock\n",
+		"\td: Cyclic deadlock\n"+
+		"\tm: Mixed deadlock\n"+
+		"\tr: Concurrent receive on the same channel",
 	)
 
-	flag.StringVar(&flags.FuzzingMode, "mode", "",
-		"Mode for fuzzing. Possible values are:\n\tGuided\n\tGFuzz\n\tGFuzzHB\n\tGFuzzHBFlow\n\tFlow\n\tGoPie\n\tGoCR\n\tGoCRHB\n\tDefault: Guided")
+	flag.StringVar(&flags.FuzzingMode, "mode", f_base.Full,
+		fmt.Sprintf("Mode for fuzzing. Possible values are:\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s. Default %s", f_base.GoPie, f_base.GoCR, f_base.Full, f_base.GFuzz, f_base.GFuzzHBFlow, f_base.GFuzzHB, f_base.Guided, f_base.Full))
 
 	flag.BoolVar(&flags.Static, "static", false,
 		"Enable static blocking bug detection")

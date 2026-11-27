@@ -20,6 +20,7 @@ type Data struct { // always use buildStaticData, never staticData{}
 }
 
 func BuildStaticData(dir string) (*Data, error) {
+
 	ast, err := s_ast.BuildAst(dir)
 	if err != nil {
 		return nil, err

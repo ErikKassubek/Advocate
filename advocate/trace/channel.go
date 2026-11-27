@@ -501,7 +501,7 @@ func (this *ElementChannel) StringDebug() string {
 func (this *ElementChannel) StringGui() string {
 	opString := string(string(this.op)[1])
 
-	res := fmt.Sprintf("C,%d,%s\n%s", this.objId, opString, this.Pos().Short())
+	res := fmt.Sprintf("C,%d,%s\n%s", this.Resource().shortID, opString, this.Pos().Short())
 
 	if this.pan {
 		res += ",🗲"

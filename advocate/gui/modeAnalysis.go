@@ -13,29 +13,55 @@ package gui
 
 import (
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/widget"
 )
 
 func (this *window) setAnalysis() {
 	this.traceSelect.disable()
 
-	var content []fyne.CanvasObject
-	content = []fyne.CanvasObject{
-		widget.NewSeparator(),
-		this.settings.components.label.Container,
-		this.settings.components.scen.Container,
+	l := len(this.settings.components.scen)
+	modes := make([]fyne.CanvasObject, l+3)
+	for i, s := range this.settings.components.scen {
+		modes[i] = s.Container
+	}
+	modes[l] = this.settings.components.runStatic.Container
+	modes[l+1] = this.settings.components.onlyAPanicAndLeak.Container
+
+	limits := []fyne.CanvasObject{
 		this.settings.components.timeout.Container,
 		this.settings.components.maxNumberElements.Container,
-		twoCheck(this.settings.components.measureTime.Container, this.settings.components.createStatistics.Container),
-		twoCheck(this.settings.components.checkForNotExecuted.Container, this.settings.components.ignoreCriticalSections.Container),
-		twoCheck(this.settings.components.ignoreAtomics.Container, this.settings.components.onlyAPanicAndLeak.Container),
-		twoCheck(this.settings.components.noRewrite.Container, this.settings.components.deleteTrace.Container),
-		twoCheck(this.settings.components.cont.Container, this.settings.components.noWarning.Container),
-		twoCheck(this.settings.components.verbose.Container, this.settings.components.noProgress.Container),
-		twoCheck(this.settings.components.output.Container, this.settings.components.alwaysPanic.Container),
-		this.settings.components.noMemorySup.Container,
-		this.settings.components.runStatic.Container,
 	}
 
-	this.setSettings(content)
+	statistics := []fyne.CanvasObject{
+		this.settings.components.createStatistics.Container,
+		this.settings.components.measureTime.Container,
+		this.settings.components.checkForNotExecuted.Container,
+	}
+
+	recordings := []fyne.CanvasObject{
+		this.settings.components.recordPlus.Container,
+		this.settings.components.ignoreCriticalSections.Container,
+		this.settings.components.ignoreAtomics.Container,
+	}
+
+	behaviours := []fyne.CanvasObject{
+		this.settings.components.noRewrite.Container,
+		this.settings.components.deleteTrace.Container,
+		this.settings.components.cont.Container,
+		this.settings.components.alwaysPanic.Container,
+		this.settings.components.noMemorySup.Container,
+	}
+
+	loggings := []fyne.CanvasObject{
+		this.settings.components.verbose.Container,
+		this.settings.components.noWarning.Container,
+		this.settings.components.noProgress.Container,
+		this.settings.components.output.Container,
+	}
+
+	this.setSettings(mode, modes)
+	this.setSettings(limit, limits)
+	this.setSettings(recording, recordings)
+	this.setSettings(statistic, statistics)
+	this.setSettings(behaviour, behaviours)
+	this.setSettings(logging, loggings)
 }

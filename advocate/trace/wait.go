@@ -402,7 +402,7 @@ func (this *ElementWait) StringDebug() string {
 //   - string: The simple string representation of the element
 func (this *ElementWait) StringGui() string {
 	res := "W,"
-	res += strconv.Itoa(this.objId) + ","
+	res += strconv.Itoa(this.Resource().shortID) + ","
 	switch this.op {
 	case WaitAdd, WaitDone:
 		res += "A,"

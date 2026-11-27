@@ -97,8 +97,10 @@ func (this *window) build() {
 		),
 		container.NewVBox(
 			this.settingsButton.Container,
+			widget.NewSeparator(),
 			this.traceButton.Container,
 			this.resultsButton.Container,
+			widget.NewSeparator(),
 			this.runButton.Container,
 			this.cancelButton.Container,
 		),
@@ -118,7 +120,7 @@ func (this *window) build() {
 	)
 
 	content := container.NewHSplit(this.left, this.right)
-	content.SetOffset(0.33)
+	content.SetOffset(0.25)
 
 	this.window.SetContent(content)
 }

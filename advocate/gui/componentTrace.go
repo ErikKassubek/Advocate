@@ -17,6 +17,8 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/driver/desktop"
+	"fyne.io/fyne/v2/widget"
 )
 
 type traceConnection struct {
@@ -25,13 +27,18 @@ type traceConnection struct {
 }
 
 type componentTraceViewer struct {
-	*container.Scroll
+	widget.BaseWidget
+
+	scroll *container.Scroll
 
 	rows, cols int
 	cells      map[string]fyne.CanvasObject
 	grid       *fyne.Container
 
 	links []traceConnection
+
+	dragging bool
+	lastPos  fyne.Position
 }
 
 func createTraceViewer(cols, rows int) *componentTraceViewer {
@@ -40,13 +47,20 @@ func createTraceViewer(cols, rows int) *componentTraceViewer {
 	scroll := container.NewScroll(grid)
 	scroll.SetMinSize(fyne.NewSize(0, 0))
 
-	return &componentTraceViewer{
-		Scroll: scroll,
+	v := &componentTraceViewer{
+		scroll: scroll,
 		rows:   rows,
 		cols:   cols,
 		cells:  make(map[string]fyne.CanvasObject),
 		grid:   grid,
 	}
+
+	v.ExtendBaseWidget(v)
+	return v
+}
+
+func (v *componentTraceViewer) CreateRenderer() fyne.WidgetRenderer {
+	return widget.NewSimpleRenderer(v.scroll)
 }
 
 func key(rout, row int) string {
@@ -83,3 +97,35 @@ func (this *componentTraceViewer) rebuild() {
 
 	this.grid.Refresh()
 }
+
+func (v *componentTraceViewer) MouseDown(ev *desktop.MouseEvent) {
+	if ev.Button != desktop.MouseButtonTertiary {
+		return
+	}
+
+	v.dragging = true
+	v.lastPos = ev.Position
+}
+
+func (v *componentTraceViewer) MouseUp(ev *desktop.MouseEvent) {
+	if ev.Button == desktop.MouseButtonTertiary {
+		v.dragging = false
+	}
+}
+
+func (v *componentTraceViewer) MouseMoved(ev *desktop.MouseEvent) {
+	if !v.dragging {
+		return
+	}
+
+	delta := ev.Position.Subtract(v.lastPos)
+	v.lastPos = ev.Position
+
+	v.scroll.ScrollToOffset(fyne.NewPos(
+		v.scroll.Offset.X-delta.X,
+		v.scroll.Offset.Y-delta.Y,
+	))
+}
+
+func (v *componentTraceViewer) MouseIn(*desktop.MouseEvent) {}
+func (v *componentTraceViewer) MouseOut()                   { v.dragging = false }

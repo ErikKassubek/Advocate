@@ -70,7 +70,7 @@ func Run() error {
 		flags.FuzzingMode = f_base.Full
 	}
 
-	a_base.AnalysisCasesMap, err = flags.ParseAnalysisCases()
+	err = flags.ParseAnalysisCases()
 	if err != nil {
 		log.Error("Could not read analysis cases: ", err)
 		return err

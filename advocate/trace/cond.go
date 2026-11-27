@@ -355,7 +355,7 @@ func (this *ElementCond) StringDebug() string {
 func (this *ElementCond) StringGui() string {
 	opString := string(string(this.op)[1])
 
-	return fmt.Sprintf("D,%d,%s\n%s", this.objId, opString, this.Pos().Short())
+	return fmt.Sprintf("D,%d,%s\n%s", this.Resource().shortID, opString, this.Pos().Short())
 }
 
 // StringGui returns the gui string representation of the element

@@ -142,7 +142,7 @@ func UpdateSelect(se *trace.ElementSelect) {
 		}
 	}
 
-	if a_base.AnalysisCasesMap[flags.SendOnClosed] {
+	if flags.AnalysisCasesMap[flags.SendOnClosed] {
 		chosenIndex := se.ChosenIndex()
 		for i, c := range cases {
 			if i == chosenIndex {
@@ -183,7 +183,7 @@ func UpdateSelect(se *trace.ElementSelect) {
 //   - tID_send string: the position of the send in the program
 //   - tID_recv string: the position of the receive in the program
 func Unbuffered(sender trace.Element, recv trace.Element) {
-	if a_base.AnalysisCasesMap[flags.ConcurrentRecv] || a_base.AnalysisFuzzingFlow { // or fuzzing
+	if flags.AnalysisCasesMap[flags.ConcurrentRecv] || a_base.AnalysisFuzzingFlow { // or fuzzing
 		switch r := recv.(type) {
 		case *trace.ElementChannel:
 			a_scenarios.CheckForConcurrentRecv(r, a_vc.CurrentVC)
@@ -224,7 +224,7 @@ func Unbuffered(sender trace.Element, recv trace.Element) {
 		}
 	}
 
-	if a_base.AnalysisCasesMap[flags.SendOnClosed] {
+	if flags.AnalysisCasesMap[flags.SendOnClosed] {
 		if _, ok := a_base.CloseData[sender.ResourceID()]; ok {
 			a_scenarios.FoundSendOnClosedChannel(sender, true)
 		}
@@ -267,7 +267,7 @@ func Send(ch *trace.ElementChannel, vc, wVc map[int]*a_clock.VectorClock) {
 		Val:  id,
 	}
 
-	if a_base.AnalysisCasesMap[flags.SendOnClosed] {
+	if flags.AnalysisCasesMap[flags.SendOnClosed] {
 		if _, ok := a_base.CloseData[id]; ok {
 			a_scenarios.FoundSendOnClosedChannel(ch, true)
 		}
@@ -303,7 +303,7 @@ func Recv(ch *trace.ElementChannel, vc, wVc map[int]*a_clock.VectorClock) {
 	id := ch.ResourceID()
 	routine := ch.RoutineID()
 
-	if a_base.AnalysisCasesMap[flags.ConcurrentRecv] || a_base.AnalysisFuzzingFlow {
+	if flags.AnalysisCasesMap[flags.ConcurrentRecv] || a_base.AnalysisFuzzingFlow {
 		a_scenarios.CheckForConcurrentRecv(ch, vc)
 	}
 
@@ -357,13 +357,13 @@ func Close(ch *trace.ElementChannel) {
 
 	ch.SetClosed(true)
 
-	if a_base.AnalysisCasesMap[flags.CloseOnClosed] {
+	if flags.AnalysisCasesMap[flags.CloseOnClosed] {
 		a_scenarios.CheckForClosedOnClosed(ch) // must be called before closePos is updated
 	}
 
 	a_base.CloseData[id] = ch
 
-	if a_base.AnalysisCasesMap[flags.SendOnClosed] { // || baseA.AnalysisCasesMap[flags.ReceiveOnClosed] {
+	if flags.AnalysisCasesMap[flags.SendOnClosed] { // || baseA.AnalysisCasesMap[flags.ReceiveOnClosed] {
 		a_scenarios.CheckForCommunicationOnClosedChannel(ch)
 	}
 
@@ -381,7 +381,7 @@ func Close(ch *trace.ElementChannel) {
 
 // SendC record an actual send on closed
 func SendC(ch *trace.ElementChannel) {
-	if a_base.AnalysisCasesMap[flags.SendOnClosed] {
+	if flags.AnalysisCasesMap[flags.SendOnClosed] {
 		a_scenarios.FoundSendOnClosedChannel(ch, true)
 	}
 }

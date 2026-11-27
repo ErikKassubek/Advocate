@@ -12,26 +12,32 @@
 package gui
 
 import (
+	"advocate/utils/flags"
+	"advocate/utils/types"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 )
 
 type settings struct {
 	window fyne.Window
+
+	closeButton *componentButton
 }
 
 func (this *window) openSettings() {
 	se := settings{}
-	se.window = this.app.NewWindow("Settings")
+	se.window = this.app.NewWindow("Settings " + types.CapitalizeFirst(flags.Mode))
+
+	se.closeButton = createButton("Close", se.window.Close)
 
 	content := container.NewBorder(
-		nil, nil, nil, nil,
-		container.NewScroll(this.settings.Container),
+		nil, se.closeButton.Container, nil, nil,
+		this.settings.Container,
 	)
 
 	se.window.SetContent(content)
 	se.window.Resize(fyne.NewSize(1728, 972))
 
 	se.window.Show()
-
 }

@@ -14,35 +14,74 @@ package gui
 import (
 	"advocate/fuzzing/f_base"
 	"advocate/utils/flags"
+	"image/color"
+	"strings"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
+)
+
+type settingSec string
+
+const (
+	mode      settingSec = "Modes and Scenarios"
+	limit     settingSec = "Timeout and Limits"
+	statistic settingSec = "Statistics"
+	recording settingSec = "Recording"
+	behaviour settingSec = "Behaviour"
+	logging   settingSec = "Logging"
 )
 
 type componentSetting struct {
-	*fyne.Container
-
+	Container  *fyne.Container
+	record     *settingsRecord
 	components *settingComponents
 
-	record *settingsRecord
+	boxes map[settingSec]*fyne.Container
 }
 
 func createSettings() *componentSetting {
 	comp := createSettingComponents()
 
-	cs := &componentSetting{
-		Container: container.NewVBox(),
+	boxes := map[settingSec]*fyne.Container{
+		mode:      container.NewVBox(widget.NewLabel("Column 1 - Row 1")),
+		limit:     container.NewVBox(widget.NewLabel("Column 2 - Row 1")),
+		statistic: container.NewVBox(widget.NewLabel("Column 3 - Row 1")),
+		recording: container.NewVBox(widget.NewLabel("Column 1 - Row 2")),
+		behaviour: container.NewVBox(widget.NewLabel("Column 2 - Row 2")),
+		logging:   container.NewVBox(widget.NewLabel("Column 3 - Row 2")),
+	}
 
+	cs := &componentSetting{
+		Container: container.NewGridWithColumns(3,
+			boxes[mode],
+			boxes[limit],
+			boxes[logging],
+			boxes[behaviour],
+			boxes[statistic],
+			boxes[recording],
+		),
 		record:     createSettingsRecord(comp),
 		components: comp,
+		boxes:      boxes,
 	}
 
 	return cs
 }
 
-func (this *window) setSettings(content []fyne.CanvasObject) {
-	this.settings.Container.Objects = content
-	this.settings.Refresh()
+func (this *window) setSettings(name settingSec, content []fyne.CanvasObject) {
+	box, ok := this.settings.boxes[name]
+	if !ok {
+		return
+	}
+
+	label := canvas.NewText(string(name), color.RGBA{255, 0, 0, 255})
+
+	content = append([]fyne.CanvasObject{widget.NewSeparator(), label}, content...)
+	box.Objects = content
+	box.Refresh()
 }
 
 func (this *componentSetting) disable() {
@@ -58,8 +97,6 @@ func (this *componentSetting) enable() {
 // ------------------------------------------------------------------------------------
 
 type settingComponents struct {
-	label *componentSectionLabel
-
 	timeout   *textInput
 	toFuzzing *textInput
 
@@ -80,6 +117,8 @@ type settingComponents struct {
 
 	runStatic *checkInput
 
+	recordPlus *checkInput
+
 	noWarning  *checkInput
 	verbose    *checkInput
 	noProgress *checkInput
@@ -92,7 +131,7 @@ type settingComponents struct {
 
 	cancelTestIfBugFound *checkInput
 
-	scen *textInput
+	scen []*checkInput
 }
 
 const (
@@ -104,7 +143,6 @@ const (
 
 func createSettingComponents() *settingComponents {
 	to := settingComponents{
-		label:                  createSectionLabel("Settings"),
 		timeout:                createInputNumeric("Timeout Run [s]: ", &flags.Timeout, canBeDisabled),
 		toFuzzing:              createInputNumeric("Timeout Fuzzing [s]: ", &flags.TimeoutFuzzing, canBeDisabled),
 		maxFuzzingRun:          createInputNumeric("Max. Fuzzing Runs: ", &flags.MaxFuzzingRun, canBeDisabled),
@@ -125,23 +163,55 @@ func createSettingComponents() *settingComponents {
 		output:                 createInputCheck("Show Program/Test Output: ", &flags.Output, direct),
 		alwaysPanic:            createInputCheck("Always Panic: ", &flags.AlwaysPanic, direct),
 		noMemorySup:            createInputCheck("Disable Memory Supervisor", &flags.NoMemorySupervisor, direct),
-		fuzzingMode:            createInputSelect("Fuzzing Mode: ", &flags.FuzzingMode, f_base.Modes, canNotBeDisabled),
+		fuzzingMode:            createInputSelect("Fuzzing Mode: ", &flags.FuzzingMode, f_base.Modes, f_base.Full, canNotBeDisabled),
 		cancelTestIfBugFound:   createInputCheck("Cancel Fuzzing If Bug Found: ", &flags.CancelTestIfBugFound, direct),
-		scen: createInputTextFunc("Scenations (disabled = all): ", "",
-			func(e bool, s string) {
-				if e {
-					flags.Scenarios = s
-				} else {
-					flags.Scenarios = ""
-				}
-				flags.ParseAnalysisCases()
-			}, true, true),
+		recordPlus:             createInputCheck("Record Function and Controll Flow", &flags.RecordPlus, direct),
+		scen:                   createScen(),
 	}
 
 	// TODO: Only for testing select. Remove
 	to.runStatic.check.SetChecked(true)
 
 	return &to
+}
+
+func createScen() []*checkInput {
+	res := make([]*checkInput, 8)
+
+	checked := true
+	res[0] = createInputCheckFunc("Scenario - Send on Closed Channel: ", scenChange(), "s", checked)
+	res[1] = createInputCheckFunc("Scenario - Close of Closed Channel: ", scenChange(), "c", checked)
+	res[2] = createInputCheckFunc("Scenario - Negative WaitGroup Counter: ", scenChange(), "w", checked)
+	res[3] = createInputCheckFunc("Scenario - Unlock before Lock: ", scenChange(), "u", checked)
+	res[4] = createInputCheckFunc("Scenario - Resource Deadlock: ", scenChange(), "d", checked)
+	res[5] = createInputCheckFunc("Scenario - Mixed Deadlock: ", scenChange(), "m", checked)
+	res[6] = createInputCheckFunc("Scenario - Leak: ", scenChange(), "l", checked)
+	res[7] = createInputCheckFunc("Scenario - Concurrent Recveive on same Channel: ", scenChange(), "r", checked)
+
+	return res
+}
+
+func scenChange() func(b bool, letter string) {
+	return func(b bool, letter string) {
+		if b {
+			if flags.Scenarios == "-" {
+				flags.Scenarios = ""
+			}
+			if !strings.Contains(flags.Scenarios, letter) {
+				flags.Scenarios += letter
+			}
+		} else {
+			flags.Scenarios = strings.ReplaceAll(flags.Scenarios, letter, "")
+			if flags.Scenarios == "" {
+				flags.Scenarios = "-"
+			}
+		}
+
+		err := flags.ParseAnalysisCases()
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (this *settingComponents) disable() {
@@ -177,7 +247,9 @@ func (this *settingComponents) disable() {
 
 	this.cancelTestIfBugFound.disable()
 
-	this.scen.disable()
+	for _, s := range this.scen {
+		s.disable()
+	}
 
 	win.modeSelect.disable()
 	win.projSelector.disable()
@@ -216,5 +288,7 @@ func (this *settingComponents) enable() {
 
 	this.cancelTestIfBugFound.enable()
 
-	this.scen.enable()
+	for _, s := range this.scen {
+		s.enable()
+	}
 }

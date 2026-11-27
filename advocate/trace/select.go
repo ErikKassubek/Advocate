@@ -568,7 +568,7 @@ func (this *ElementSelect) StringDebug() string {
 // Returns:
 //   - string: The gui string representation of the element
 func (this *ElementSelect) StringGui() string {
-	res := "S" + "," + strconv.Itoa(this.objId) + ","
+	res := "S" + ","
 
 	notNil := 0
 	for _, ca := range this.cases { // cases

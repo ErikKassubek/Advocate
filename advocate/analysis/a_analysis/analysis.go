@@ -69,7 +69,7 @@ func RunAnalysis(fuzzing bool) {
 		return
 	}
 
-	if a_base.AnalysisCasesMap[flags.Leak] || flags.OnlyAPanicAndLeak {
+	if flags.AnalysisCasesMap[flags.Leak] || flags.OnlyAPanicAndLeak {
 		err := a_scenarios.Blocked()
 		if err != nil {
 			log.Error("Failed to read block info: ", err.Error())
@@ -95,8 +95,8 @@ func RunHBAnalysis(fuzzing bool) {
 	// NOTE: Do not use predictive analysis if the first parameter is false
 	a_hbcalc.SetHbSettings(true, false, false)
 	if flags.OnlyAPanicAndLeak || !a_hbcalc.CalcVC {
-		for key := range a_base.AnalysisCasesMap {
-			a_base.AnalysisCasesMap[key] = false
+		for key := range flags.AnalysisCasesMap {
+			flags.AnalysisCasesMap[key] = false
 		}
 	}
 
@@ -112,11 +112,11 @@ func RunHBAnalysis(fuzzing bool) {
 		a_cssts.InitCSSTs(a_base.GetTraceLengths())
 	}
 
-	if a_base.AnalysisCasesMap[flags.ResourceDeadlock] {
+	if flags.AnalysisCasesMap[flags.ResourceDeadlock] {
 		a_scenarios.ResetState()
 	}
 
-	if a_base.AnalysisCasesMap[flags.MixedDeadlock] {
+	if flags.AnalysisCasesMap[flags.MixedDeadlock] {
 		a_scenarios.ResetMixedDeadlockState()
 	}
 
@@ -195,14 +195,14 @@ func RunHBAnalysis(fuzzing bool) {
 			a_elements.AnalyzeNew(e)
 		}
 
-		if a_base.AnalysisCasesMap[flags.ResourceDeadlock] {
+		if flags.AnalysisCasesMap[flags.ResourceDeadlock] {
 			switch e := elem.(type) {
 			case *trace.ElementMutex:
 				a_scenarios.HandleMutexEventForRessourceDeadlock(*e)
 			}
 		}
 
-		if a_base.AnalysisCasesMap[flags.MixedDeadlock] {
+		if flags.AnalysisCasesMap[flags.MixedDeadlock] {
 			switch e := elem.(type) {
 			case *trace.ElementMutex:
 				a_scenarios.HandleMutexEventForMixedDeadlock(e)
@@ -227,7 +227,7 @@ func RunHBAnalysis(fuzzing bool) {
 		return
 	}
 
-	if a_base.AnalysisCasesMap[flags.DoneBeforeAdd] {
+	if flags.AnalysisCasesMap[flags.DoneBeforeAdd] {
 		a_scenarios.CheckForDoneBeforeAdd()
 	}
 
@@ -235,7 +235,7 @@ func RunHBAnalysis(fuzzing bool) {
 		return
 	}
 
-	if a_base.AnalysisCasesMap[flags.ResourceDeadlock] {
+	if flags.AnalysisCasesMap[flags.ResourceDeadlock] {
 		a_scenarios.CheckForResourceDeadlock()
 	}
 
@@ -243,7 +243,7 @@ func RunHBAnalysis(fuzzing bool) {
 		return
 	}
 
-	if a_base.AnalysisCasesMap[flags.MixedDeadlock] {
+	if flags.AnalysisCasesMap[flags.MixedDeadlock] {
 		a_scenarios.CheckForMixedDeadlock()
 	}
 
@@ -251,7 +251,7 @@ func RunHBAnalysis(fuzzing bool) {
 		return
 	}
 
-	if a_base.AnalysisCasesMap[flags.UnlockBeforeLock] {
+	if flags.AnalysisCasesMap[flags.UnlockBeforeLock] {
 		a_scenarios.CheckForUnlockBeforeLock()
 	}
 

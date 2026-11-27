@@ -29,9 +29,10 @@ func getBlockedResources(routs map[int]bool) (map[trace.Element][]trace.Resource
 
 	blockedRes := make(map[int]trace.Resource)
 
-	for _, e := range a_base.MainTrace.GetBlocked() {
+	for rout, e := range a_base.MainTrace.GetBlocked() {
+		log.Debug2("Blocked Rout: ", rout, " ", e.StringMin())
 		if routs != nil {
-			if _, ok := routs[e.RoutineID()]; !ok {
+			if _, ok := routs[rout]; !ok {
 				continue
 			}
 		}
@@ -43,11 +44,6 @@ func getBlockedResources(routs map[int]bool) (map[trace.Element][]trace.Resource
 			res[e] = append(res[e], r)
 			blockedRes[r.Id()] = r
 		}
-	}
-
-	// TODO: added to trace all variables, remove
-	if false {
-		return res, a_base.MainTrace.Resources()
 	}
 
 	return res, blockedRes
